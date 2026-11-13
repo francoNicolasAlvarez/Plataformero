@@ -1,0 +1,47 @@
+extends AnimatableBody2D
+## Plataforma móvil con cuatro comportamientos (2026-11-12):
+## - Lineal/diagonal: viaja entre dos puntos con `travel` y `speed`.
+## - Circular: orbita su origen con `circle_radius` y `circle_speed`.
+## - Giro sobre su eje: `rotation_speed` (rad/s), independiente del movimiento.
+## La inclinación nunca supera MAX_TILT_RADIANS (30°): las plataformas oscilan
+## en vez de dar vueltas completas, así siguen siendo pisables.
+## Los valores por defecto conservan el vaivén horizontal de los niveles 2 y 3.
+
+const MAX_TILT_RADIANS := PI / 6.0
+
+@export var travel: Vector2 = Vector2(260.0, 0.0)
+@export_range(0.1, 5.0, 0.05) var speed: float = 1.1
+@export var circle_radius: float = 0.0
+@export_range(0.0, 5.0, 0.05) var circle_speed: float = 0.9
+@export_range(-6.0, 6.0, 0.05) var rotation_speed: float = 0.0
+
+var _origin: Vector2
+var _time: float = 0.0
+var _base_rotation: float = 0.0
+
+
+func _ready() -> void:
+	sync_to_physics = true
+	_origin = position
+	_base_rotation = clampf(rotation, -MAX_TILT_RADIANS, MAX_TILT_RADIANS)
+	rotation = _base_rotation
+
+
+func _physics_process(delta: float) -> void:
+	_time += delta
+	if circle_radius > 0.0:
+		var angle := _time * circle_speed
+		position = _origin + Vector2(cos(angle), sin(angle)) * circle_radius
+	else:
+		position = _origin + travel * (0.5 - 0.5 * cos(_time * speed))
+	if not is_zero_approx(rotation_speed):
+		rotation = _base_rotation + sin(_time * rotation_speed) * MAX_TILT_RADIANS
+
+
+func teleport_to(new_origin: Vector2) -> void:
+	# Reinicia la plataforma en un nuevo origen sin tocar sync_to_physics.
+	_origin = new_origin
+	_time = 0.0
+	_base_rotation = 0.0
+	rotation = 0.0
+	position = new_origin

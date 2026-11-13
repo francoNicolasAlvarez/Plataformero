@@ -1,0 +1,14 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/attacks/attack_data.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"basic"
+display_name = "Ataque básico"
+animation_name = &"attack"
+duration = 0.22
+cooldown = 0.35
+damage = 10
+hitbox_offset = Vector2(34, 0)
+hitbox_size = Vector2(46, 34)

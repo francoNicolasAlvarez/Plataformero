@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect x="18" y="43" width="9" height="11" rx="3" fill="#16324f" transform="rotate(-8 22 43)"/>
+  <rect x="37" y="43" width="9" height="11" rx="3" fill="#16324f" transform="rotate(8 42 43)"/>
+  <rect x="10" y="30" width="7" height="15" rx="3" fill="#f4a261"/>
+  <rect x="45" y="30" width="12" height="7" rx="3" fill="#f4a261"/>
+  <rect x="15" y="25" width="34" height="22" rx="7" fill="#e76f51"/>
+  <rect x="16" y="25" width="32" height="4" rx="2" fill="#2a9d8f"/>
+  <rect x="17" y="7" width="30" height="21" rx="8" fill="#ffd166"/>
+  <rect x="17" y="7" width="30" height="6" rx="3" fill="#8d6e63"/>
+  <rect x="30" y="16" width="4" height="6" rx="2" fill="#16324f"/>
+  <rect x="38" y="16" width="4" height="6" rx="2" fill="#16324f"/>
+  <rect x="36" y="23" width="7" height="2" rx="1" fill="#9c3d2e"/>
+  <rect x="51" y="30" width="7" height="6" rx="2" fill="#8d6e63"/>
+  <polygon points="57,31 63,25 63,28 58,35" fill="#e0e1dd"/>
+  <polygon points="58,29 63,23 63,25 59,31" fill="#b8c4cc"/>
+</svg>
