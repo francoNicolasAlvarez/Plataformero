@@ -1,11 +1,12 @@
 class_name LevelThreeLayout
 extends RefCounted
-## Nivel 3: granja nocturna bajo un cielo azul oscuro. Sin árboles, arbustos,
-## aves ni enemigos a distancia clásicos; walkers rápidos, decoración rural
-## y enemigos ráfaga comunes (antiguo jefe, ya no bloquea el portal).
+## Nivel 3: granja nocturna bajo un cielo azul oscuro. Sin árboles ni
+## arbustos; walkers rápidos, magos, decoración rural y enemigos ráfaga
+## comunes (antiguo jefe, ya no bloquea el portal).
 
 const PLATFORM_SCENE := preload("res://scenes/world/platform.tscn")
 const WALKER_SCENE := preload("res://scenes/enemies/walker_enemy.tscn")
+const RANGED_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const SPREAD_SCENE := preload("res://scenes/enemies/spread_enemy.tscn")
 const HERB_SCENE := preload("res://scenes/pickups/healing_herb.tscn")
 const FALL_ZONE_SCENE := preload("res://scenes/world/fall_zone.tscn")
@@ -195,12 +196,14 @@ static func _build_terrain(world: Node2D) -> void:
 static func _build_enemies(world: Node2D) -> void:
 	# Cambio 2026-11-11: 2150, 4450, 6850 y 9350 caian sobre pozos y los
 	# walkers se precipitaban al vacio nada mas aparecer; se mueven a suelo.
+	# 2026-11-13: densidad de walkers reducida (20 -> 14 en el suelo) para
+	# dejar respirar al jugador sin vaciar la granja.
 	var ground_spots := [
-		1250.0, 1550.0, 1850.0, 2450.0,
-		3550.0, 3850.0, 4150.0, 4000.0,
-		5950.0, 6250.0, 6550.0, 7500.0,
-		8450.0, 8750.0, 9050.0, 9700.0,
-		10750.0, 11050.0, 11350.0, 11650.0,
+		1250.0, 1850.0, 2450.0,
+		3550.0, 4150.0, 4000.0,
+		6250.0, 6550.0, 7500.0,
+		8450.0, 9050.0, 9700.0,
+		10750.0, 11650.0,
 	]
 	for index in ground_spots.size():
 		var walker := _spawn(WALKER_SCENE, world, Vector2(ground_spots[index], GROUND_TOP - 26.0))
@@ -226,6 +229,12 @@ static func _build_enemies(world: Node2D) -> void:
 	# Enemigos ráfaga comunes (antiguo jefe) repartidos entre las islas de tierra.
 	for x in [2500.0, 5500.0, 8100.0, 10400.0]:
 		_spawn(SPREAD_SCENE, world, Vector2(x, GROUND_TOP - 40.0))
+
+	# Magos recuperados (2026-11-13): la granja vuelve a tener enemigos a
+	# distancia clásicos, separados de los walkers y del control central.
+	for x in [3300.0, 6400.0, 8800.0]:
+		var ranged := _spawn(RANGED_SCENE, world, Vector2(x, GROUND_TOP - 28.0))
+		ranged.set("shoot_range", 520.0)
 
 
 static func _build_pickups(world: Node2D) -> void:

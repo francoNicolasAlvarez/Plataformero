@@ -1,7 +1,7 @@
 extends SceneTree
-## Comprueba el nivel 3: granja nocturna, enemigos móviles rápidos, enemigos
-## ráfaga comunes (antiguo jefe) y ausencia de árboles, arbustos, aves y
-## enemigos a distancia clásicos.
+## Comprueba el nivel 3: granja nocturna, enemigos móviles rápidos, magos,
+## enemigos ráfaga comunes (antiguo jefe) y ausencia de árboles, arbustos y
+## aves.
 ## Ejecutar con:
 ## godot --headless --path . --script res://tests/level_three_smoke_test.gd
 
@@ -59,9 +59,13 @@ func _run() -> void:
 		if enemy_script != null and enemy_script.resource_path.ends_with("training_dummy.gd"):
 			static_enemies += 1
 
-	_check(enemies.size() >= 40, "La granja tiene una densidad muy alta de enemigos")
-	_check(walkers + spread_enemies == enemies.size(), "Los enemigos del nivel 3 son walkers y ráfagas")
-	_check(ranged == 0, "El nivel 3 no tiene enemigos a distancia clásicos")
+	_check(enemies.size() >= 40, "La granja mantiene una densidad alta de enemigos")
+	_check(
+		walkers + spread_enemies + ranged == enemies.size(),
+		"Los enemigos del nivel 3 son walkers, magos y ráfagas"
+	)
+	_check(ranged >= 3, "La granja recupera magos como enemigos a distancia")
+	_check(walkers <= 36, "La granja redujo la densidad de walkers")
 	_check(static_enemies == 0, "El nivel 3 no tiene enemigos estáticos")
 	_check(fast_walkers == walkers, "Los walkers de la granja son rápidos")
 	_check(spread_enemies >= 4, "La granja incluye varios enemigos ráfaga comunes")

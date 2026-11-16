@@ -1,8 +1,27 @@
 @tool
 class_name Platform
-extends StaticBody2D
-## Plataforma provisional reutilizable. Permite cambiar tamaño y color desde
-## el Inspector sin editar manualmente la colisión ni el polígono.
+extends AnimatableBody2D
+## Asset modular de plataformas (2026-11-13): reúne los cinco tipos pedidos
+## para los niveles nuevos y sustituye a la plataforma estática anterior.
+## Tipos: STATIC (fija), HORIZONTAL (vaivén izquierda-derecha), CIRCULAR
+## (órbita en sentido horario), SPIKED (fija con pinchos solo en los bordes)
+## y ROTATING (oscila sobre su eje sin superar 30°).
+## El tamaño y el color se editan desde el Inspector; la colisión y el dibujo
+## se regeneran solos. Las plataformas móviles quedan fuera de la regla de
+## espaciado estático (PlatformSpacing.is_moving()).
+
+enum Kind { STATIC, HORIZONTAL, CIRCULAR, SPIKED, ROTATING }
+
+const SPIKE_SCENE := preload("res://scenes/world/spike_trap.tscn")
+const MAX_TILT_RADIANS := PI / 6.0
+const SPIKE_SOURCE_WIDTH := 140.0
+
+@export var kind: Kind = Kind.STATIC:
+	set(value):
+		kind = value
+		if is_inside_tree():
+			sync_to_physics = is_moving()
+		_refresh()
 
 @export var platform_size: Vector2 = Vector2(200.0, 24.0):
 	set(value):
@@ -14,9 +33,44 @@ extends StaticBody2D
 		platform_color = value
 		_refresh()
 
+@export var travel: Vector2 = Vector2(140.0, 0.0)
+@export_range(0.1, 5.0, 0.05) var speed: float = 1.0
+@export_range(0.0, 300.0, 1.0) var circle_radius: float = 0.0
+@export_range(0.0, 5.0, 0.05) var circle_speed: float = 1.0
+@export_range(-6.0, 6.0, 0.05) var rotation_speed: float = 0.0
+@export_range(1, 99, 1) var spike_damage: int = 15
+
+var _origin: Vector2
+var _time: float = 0.0
+var _base_rotation: float = 0.0
+
 
 func _ready() -> void:
+	_origin = position
+	_base_rotation = clampf(rotation, -MAX_TILT_RADIANS, MAX_TILT_RADIANS)
+	rotation = _base_rotation
+	sync_to_physics = is_moving()
 	_refresh()
+
+
+func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+	if not is_moving():
+		return
+	_time += delta
+	match kind:
+		Kind.HORIZONTAL:
+			position = _origin + travel * (0.5 - 0.5 * cos(_time * speed))
+		Kind.CIRCULAR:
+			var angle := _time * circle_speed
+			position = _origin + Vector2(cos(angle), sin(angle)) * circle_radius
+		Kind.ROTATING:
+			rotation = _base_rotation + sin(_time * rotation_speed) * MAX_TILT_RADIANS
+
+
+func is_moving() -> bool:
+	return kind == Kind.HORIZONTAL or kind == Kind.CIRCULAR or kind == Kind.ROTATING
 
 
 func _refresh() -> void:
@@ -72,3 +126,25 @@ func _refresh() -> void:
 			shape = RectangleShape2D.new()
 			collision.shape = shape
 		shape.size = platform_size
+
+	_refresh_spikes()
+
+
+func _refresh_spikes() -> void:
+	var edge_width := minf(platform_size.x * 0.28, 56.0)
+	var spike_y := -platform_size.y * 0.5 - 8.0
+	for side in [-1.0, 1.0]:
+		var spike_name := "SpikeLeft" if side < 0.0 else "SpikeRight"
+		var spike := get_node_or_null(spike_name) as Area2D
+		if spike == null:
+			spike = SPIKE_SCENE.instantiate() as Area2D
+			spike.name = spike_name
+			add_child(spike)
+		spike.position = Vector2(side * (platform_size.x * 0.5 - edge_width * 0.5), spike_y)
+		spike.scale = Vector2(edge_width / SPIKE_SOURCE_WIDTH, 1.0)
+		spike.set("damage", spike_damage)
+		spike.visible = kind == Kind.SPIKED
+		var spike_shape := spike.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if spike_shape != null:
+			spike_shape.set_deferred("disabled", kind != Kind.SPIKED)
+		spike.set_deferred("monitoring", kind == Kind.SPIKED)

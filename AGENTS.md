@@ -14,7 +14,7 @@ Videojuego 2D de plataformas **lineal** hecho con **Godot 4.7 (GL
 Compatibility) y GDScript**. Jugabilidad inspirada en Super Mario Bros. con
 exploración, saltos, enemigos, trampas, controles y un final de juego.
 
-Objetivo del jugador: atravesar los cuatro niveles hasta llegar al final del
+Objetivo del jugador: atravesar los seis niveles hasta llegar al final del
 juego. Cada nivel da tres vidas; al morir se reaparece en el último control
 (bandera) activado y, sin vidas o sin tiempo, el nivel se reinicia. El nivel
 alcanzado queda guardado para continuar la partida.
@@ -61,8 +61,8 @@ scenes/
   ui/control_guide.tscn    # guía de controles con teclas dibujadas (reutilizable)
   ui/pause_overlay.tscn    # pausa con Enter: congela el SceneTree y muestra guía
   ui/game_complete.tscn    # pantalla final con tiempo total y muertes
-  levels/test_level.tscn   # BASE de los 4 niveles (HUD, jugador, portal, cámara)
-  levels/level_one|two|three|four.tscn  # instancias base con level_variant 1/2/3/4
+  levels/test_level.tscn   # BASE de los 6 niveles (HUD, jugador, portal, cámara)
+  levels/level_one|two|three|four|five|six.tscn  # instancias base con level_variant 1-6
   player/player.tscn       # Player + AttackHitbox + Health
   enemies/                 # training_dummy, walker, ranged, spread, projectile
   pickups/                 # healing_herb (monedas eliminadas, ver ítem 24)
@@ -75,11 +75,14 @@ scripts/
              # inventory.gd (inventario real: utilizables/permanentes + Q/E),
              # player_stats.gd,
              # attacks/ (attack_data.gd + attack_hitbox.gd)
-  enemies/   # jerarquía: TrainingDummy -> RangedEnemy -> SpreadEnemy; WalkerEnemy
+  enemies/   # jerarquía: TrainingDummy -> RangedEnemy/SpreadEnemy/WalkerEnemy;
+             # flying_enemy.gd + flying_spawner.gd (voladores ondulantes)
   levels/    # test_level.gd (controlador común) + layouts generados por código:
              # level_one_extension.gd, level_two_layout.gd, level_three_layout.gd,
              # level_four_layout.gd (gran pozo de plataformas móviles),
-             # level_four_route.gd (streaming de 6 plataformas y enemigos a bordo),
+             # level_four_route.gd (plataformas del pozo y enemigos a bordo),
+             # level_five_layout.gd (cielo con 21 plataformas y voladores),
+             # level_six_layout.gd (fortaleza de saltos largos y trampas),
              # platform_spacing.gd (regla de espaciado entre plataformas)
   combat/    # health.gd (vida reutilizable por jugador y enemigos)
   core/      # save_game.gd (nivel guardado + tiempo/muertes, user://save.cfg),
@@ -94,11 +97,11 @@ resources/player/  # player_stats.tres y basic_attack.tres (AttackData)
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (26 en total)
+tests/       # smoke tests headless, uno por sistema (30 en total)
 ```
 
 Decisiones clave:
-- Los 4 niveles son instancias de una misma escena base; cada variante limpia
+- Los 6 niveles son instancias de una misma escena base; cada variante limpia
   el contenido base y genera su mundo por código (`scripts/levels/*_layout.gd`).
 - Los datos sensibles van en `Resource` exportables (`PlayerStats`,
   `AttackData`) para reutilizarlos con futuros personajes/armas.
@@ -109,7 +112,7 @@ Decisiones clave:
   juego; no hay progresión roguelite ni botín permanente. `SaveGame` guarda el
   nivel alcanzado para continuar. Cada nivel da 3 vidas: morir reaparece en el
   último control (bandera) con la vida completa; al quedarse sin vidas o al
-  agotar el tiempo se recarga el nivel. El nivel 4 termina en
+  agotar el tiempo se recarga el nivel. El nivel 6 termina en
   `ui/game_complete.tscn`.
 
 Controles (reconfigurables desde Opciones):
@@ -674,10 +677,55 @@ actualizar esos tests.
       proyectiles en el mundo). Suite: 26/26.
     NOTA: el exe de `dist/` se re-exportó con este cambio.
 
+35. **Magos, densidad del nivel 3 y reinicio al nivel 1 (2026-11-13)**:
+    - **Magos recuperados**: nivel 3 en x=3300/6400/8800 y nivel 4 en
+      x=1200/12200, fuera de las zonas seguras y del control central.
+    - **Nivel 3 más legible**: los walkers de suelo bajan de 20 a 14
+      posiciones (se quitan 1550, 3850, 5950, 8750, 11050 y 11350).
+    - **Game over y tiempo agotado**: `TestLevel._restart_from_first_level()`
+      usa `SaveGame.start_at_level(SaveGame.FIRST_LEVEL)` y
+      `FIRST_LEVEL_PATH`; con vidas restantes se mantiene la reaparición en
+      el control. HUD: "SIN VIDAS - Volviendo al nivel 1..." y
+      "TIEMPO AGOTADO - Volviendo al nivel 1...".
+    - Tests: `survival_smoke_test` 24, `timer_progress_smoke_test` 13,
+      `level_three_smoke_test` 26, `level_four_smoke_test` 58. README
+      actualizado.
+36. **Niveles 5 y 6, plataformas modulares y voladores (2026-11-13)**:
+    - **Asset modular de plataformas**: `scripts/world/platform.gd` pasa a
+      `AnimatableBody2D` con `enum Kind { STATIC, HORIZONTAL, CIRCULAR,
+      SPIKED, ROTATING }`. Vaivén con `travel`/`speed`, órbita horaria con
+      `circle_radius`/`circle_speed`, giro limitado a ±30° y pinchos solo en
+      los bordes (`SpikeLeft`/`SpikeRight`, centro libre). `platform.tscn`
+      cambia su tipo de nodo y conserva el vestido visual. `PlatformSpacing`
+      excluye las plataformas móviles del asset.
+    - **Voladores**: `scripts/enemies/flying_enemy.gd` + escena (criatura
+      alada, 20 PV, daño por contacto, sin gravedad ni colisión con el
+      mundo); `scripts/enemies/flying_spawner.gd` los crea fuera del borde
+      visible, alterna lado y permite altura aleatoria o la del jugador. La
+      cámara se añade al grupo `camera` para localizar el centro de pantalla.
+    - **Nivel 5 "CIELO"**: `level_five.tscn` + `level_five_layout.gd`, 110 s.
+      Islas de inicio/final, 21 plataformas de ruta (paso 480, ancho 190,
+      huecos ~290), los cinco tipos, un control en el índice 9, dos hierbas y
+      un `FlyingSpawner` cada 4 s a altura aleatoria (150-520). Solo hay
+      voladores como enemigos.
+    - **Nivel 6 "FORTALEZA"**: `level_six.tscn` + `level_six_layout.gd`,
+      120 s. 14 plataformas (paso 740, ancho 260, huecos de 480 px que
+      exigen doble salto), pinchos en los bordes, 3 sierras patrullando y 2
+      plataformas giratorias; control en el índice 6 y dos hierbas. Sin
+      enemigos fijos: el reto son las trampas y los saltos.
+    - **Integración**: `level_four.tscn` encadena al 5, el 5 al 6 y el 6 a
+      `game_complete`; `SaveGame.LAST_LEVEL = 6`; el menú ofrece 6 niveles y
+      las instrucciones muestran 110/120 s; `MOODS` añade CIELO y FORTALEZA.
+    - Tests nuevos: `level_five_smoke_test` 34, `level_six_smoke_test` 44,
+      `platform_asset_smoke_test` 15 y `flying_enemy_smoke_test` 9.
+      Actualizados: `level_four_smoke_test` 58, `menu_smoke_test` 35,
+      `platform_spacing_smoke_test` 22 (incluye niveles 5/6). Suite: 30/30.
+    NOTA: el exe de `dist/` se re-exportó con los ítems 35-36.
+
 ## 5. En progreso / estado actual
 
-- Nada a medias. Suite de 26 smoke tests en verde (verificado en esta
-  sesión) tras aplicar los ítems 28-34: modo plataformas lineal con un único
+- Nada a medias. Suite de 30 smoke tests en verde (verificado en esta
+  sesión) tras aplicar los ítems 28-36: modo plataformas lineal con un único
   checkpoint a mitad de cada nivel, tres vidas por nivel, reglas de tiempo de
   reaparición (+10 s / 30 s), inventario real con poción/ración y espacios
   Q/E, selección directa de nivel, soporte de mando, guardado de
@@ -688,7 +736,10 @@ actualizar esos tests.
   reciclado ni desapariciones), con enemigos a bordo, el control central
   despejado y el inicio sin enemigos en la mitad izquierda. Sus trayectorias
   no se solapan y ninguna plataforma se inclina más de 30°.
-  El ejecutable de `dist/` se re-exportó con los ítems 18-34.
+  Los niveles 5 y 6 usan el asset modular de plataformas: el 5 es un cielo
+  de 21 plataformas con voladores temporizados y el 6 una fortaleza de saltos
+  largos con pinchos, sierras y giros. La cadena termina en la pantalla final.
+  El ejecutable de `dist/` se re-exportó con los ítems 18-36.
 
 ## 6. Próximos pasos (roadmap acordado, en orden de prioridad)
 

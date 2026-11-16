@@ -2,7 +2,7 @@
 
 Videojuego 2D de plataformas lineal hecho con **Godot 4.7 (GL Compatibility)** y
 GDScript. La jugabilidad está inspirada en Super Mario Bros.: saltos, enemigos,
-trampas, checkpoints y cuatro niveles con ambientaciones distintas.
+trampas, checkpoints y seis niveles con ambientaciones distintas.
 
 ## Jugar
 
@@ -27,15 +27,19 @@ Godot_v4.7.2-stable_win64_console.exe --path . res://scenes/ui/main_menu.tscn
 
 ## Objetivo
 
-Atraviesa los cuatro niveles hasta llegar al final del juego. Cada nivel da tres
+Atraviesa los seis niveles hasta llegar al final del juego. Cada nivel da tres
 vidas: al morir reapareces en el último control (bandera) activado con la vida
-completa; si te quedas sin vidas o se agota el tiempo, el nivel se reinicia. El
-nivel alcanzado se guarda para continuar la partida.
+completa; si te quedas sin vidas o se agota el tiempo, la partida vuelve al
+nivel 1. El nivel alcanzado se guarda para continuar la partida.
 
 - **Nivel 1:** día, recorrido largo con colinas, pozos y plataformas.
 - **Nivel 2:** atardecer, fosos con plataformas móviles, sierras y pinchos.
-- **Nivel 3:** noche, granja con enemigos rápidos y decoración rural.
+- **Nivel 3:** noche, granja con magos y enemigos rápidos y decoración rural.
 - **Nivel 4:** "El Gran Pozo", un abismo cruzado por plataformas móviles.
+- **Nivel 5:** "Cielo", recorrido aéreo con plataformas separadas y enemigos
+  voladores que cruzan la pantalla ondulando.
+- **Nivel 6:** "Fortaleza", saltos largos que exigen doble salto, pinchos en
+  los bordes de las plataformas y sierras patrullando.
 
 ## Controles
 
@@ -59,6 +63,8 @@ un mapeo fijo.
 - **Ración (E):** añade 5 segundos al cronómetro.
 - **Hierba curativa:** restaura vida al recogerla.
 - **Doble salto:** disponible siempre con una pulsación extra en el aire.
+- **Plataformas:** asset modular con cinco tipos (fija, vaivén horizontal,
+  órbita circular, pinchos en los bordes y giro sobre el eje).
 
 ## Enemigos y trampas
 
@@ -66,6 +72,8 @@ un mapeo fijo.
 - **Walker:** patrulla el suelo y persigue su ruta.
 - **Mago:** lanza bolas de fuego en horizontal.
 - **Arquero:** dispara una flecha rápida.
+- **Volador:** cruza la pantalla con un patrón ondulante; aparece cada pocos
+  segundos a una altura aleatoria.
 - **Sierras y pinchos:** trampas con aviso visual antes de dañar.
 
 ## Desarrollo

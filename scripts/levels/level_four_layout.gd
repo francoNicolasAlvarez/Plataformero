@@ -17,6 +17,7 @@ const PLATFORM_SCENE := preload("res://scenes/world/platform.tscn")
 const FALL_ZONE_SCENE := preload("res://scenes/world/fall_zone.tscn")
 const CHECKPOINT_SCENE := preload("res://scenes/world/checkpoint.tscn")
 const WALKER_SCENE := preload("res://scenes/enemies/walker_enemy.tscn")
+const RANGED_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const SPREAD_SCENE := preload("res://scenes/enemies/spread_enemy.tscn")
 const HERB_SCENE := preload("res://scenes/pickups/healing_herb.tscn")
 
@@ -162,6 +163,12 @@ static func _build_enemies(world: Node2D) -> void:
 		walker.set("patrol_speed", 150.0)
 		walker.set("patrol_distance", 140.0)
 	_spawn(SPREAD_SCENE, world, Vector2(11600.0, GROUND_TOP - 40.0))
+
+	# Magos recuperados (2026-11-13): uno en cada isla firme, fuera de la
+	# zona segura inicial y del control central.
+	for x in [1200.0, 12200.0]:
+		var ranged := _spawn(RANGED_SCENE, world, Vector2(x, GROUND_TOP - 28.0))
+		ranged.set("shoot_range", 480.0)
 
 
 static func _build_pickups(world: Node2D) -> void:

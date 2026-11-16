@@ -10,7 +10,7 @@ extends SceneTree
 ## godot --headless --path . --script res://tests/level_four_smoke_test.gd
 
 const LEVEL_SCENE := preload("res://scenes/levels/level_four.tscn")
-const COMPLETE_SCENE := "res://scenes/ui/game_complete.tscn"
+const NEXT_SCENE := "res://scenes/levels/level_five.tscn"
 const START_RIGHT_EDGE := 1900.0
 const END_LEFT_EDGE := 10100.0
 const GROUND_SURFACE := 640.0
@@ -38,7 +38,7 @@ func _run() -> void:
 
 	_check(level.level_variant == 4, "El nivel 4 usa la variante del gran pozo")
 	_check(level.level_name == "NIVEL 4", "El nivel se identifica como NIVEL 4")
-	_check(level.next_level_path == COMPLETE_SCENE, "El nivel 4 lleva a la pantalla de juego completado")
+	_check(level.next_level_path == NEXT_SCENE, "El nivel 4 continúa hacia el nivel 5")
 	_check(level.time_limit == 90.0, "El nivel 4 tiene 90 segundos")
 	_check(level.get_node_or_null("LevelFourGenerated") != null, "Se generó el contenido del gran pozo")
 	_check(level.get_node("Platforms").get_child_count() == 0, "El nivel 4 limpia las plataformas base")
@@ -251,6 +251,7 @@ func _run() -> void:
 	var walkers_on_air := 0
 	var walkers := 0
 	var spread_enemies := 0
+	var ranged_enemies := 0
 	var platform_guards := get_nodes_in_group("platform_enemies").size()
 	var enemies_at_checkpoint := 0
 	for enemy in get_nodes_in_group("enemies"):
@@ -260,6 +261,8 @@ func _run() -> void:
 				walkers_on_air += 1
 		elif enemy is SpreadEnemy:
 			spread_enemies += 1
+		elif enemy is RangedEnemy:
+			ranged_enemies += 1
 		if (
 			enemy.global_position.y > 600.0
 			and absf(enemy.global_position.x - 6000.0) < 250.0
@@ -270,6 +273,7 @@ func _run() -> void:
 	_check(platform_guards >= 2, "Hay enemigos viajando sobre las plataformas móviles")
 	_check(enemies_at_checkpoint == 0, "No hay enemigos parados en el control central")
 	_check(spread_enemies >= 4, "El gran pozo reparte enemigos de ráfaga por el recorrido")
+	_check(ranged_enemies >= 2, "El gran pozo recupera magos en las islas firmes")
 
 	_check(get_nodes_in_group("coins").is_empty(), "El gran pozo ya no tiene monedas")
 	_check(get_nodes_in_group("healing_pickups").size() >= 2, "El gran pozo incluye curaciones")

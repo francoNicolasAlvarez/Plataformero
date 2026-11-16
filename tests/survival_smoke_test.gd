@@ -66,6 +66,13 @@ func _run() -> void:
 	_check(not game_over.visible, "El mensaje de muerte desaparece al reaparecer")
 	_check(lives_label.text.contains("2"), "Morir consume una de las tres vidas")
 
+	level._lives = 0
+	player._invulnerability_left = 0.0
+	player.take_damage(9999)
+	await _wait_physics(2)
+	_check(game_over.visible, "Sin vidas aparece el mensaje de game over")
+	_check(game_over.text.contains("nivel 1"), "Sin vidas la partida vuelve al nivel 1")
+
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)

@@ -46,7 +46,7 @@ static func collect_platforms(root: Node) -> Array[Platform]:
 
 
 static func _gather_platforms(node: Node, found: Array[Platform]) -> void:
-	if node is Platform:
+	if node is Platform and not node.is_moving():
 		found.append(node)
 	for child in node.get_children():
 		_gather_platforms(child, found)

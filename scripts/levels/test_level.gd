@@ -1,8 +1,9 @@
 extends Node2D
 ## Nivel jugable. Une la vida del jugador con el HUD y controla el portal.
-## Permite construir cuatro variantes: día, atardecer, noche y abismo.
+## Permite construir seis variantes: día, atardecer, noche y abismo.
 ## Desde 2026-11-12 el juego es un plataformas lineal: hay checkpoints,
 ## tres vidas por nivel, fundido entre escenas y una pantalla de final.
+## Sin vidas o sin tiempo la expedición vuelve a empezar en el nivel 1.
 
 @export var level_variant: int = 1
 @export_file("*.tscn") var next_level_path: String = ""
@@ -11,6 +12,7 @@ extends Node2D
 
 const MAX_LIVES := 3
 const RATION_TIME_BONUS := 5.0
+const FIRST_LEVEL_PATH := "res://scenes/levels/level_one.tscn"
 const HEART_FULL := "\u2665"
 const HEART_EMPTY := "\u2661"
 
@@ -56,6 +58,10 @@ func _ready() -> void:
 		_prepare_level_three()
 	elif level_variant == 4:
 		_prepare_level_four()
+	elif level_variant == 5:
+		_prepare_level_five()
+	elif level_variant == 6:
+		_prepare_level_six()
 
 	_apply_run_variation()
 	_decorate_base_hills()
@@ -97,7 +103,7 @@ func _show_level_banner() -> void:
 	var hud := get_node_or_null("HUD")
 	if hud == null:
 		return
-	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO"}
+	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA"}
 	var banner := Label.new()
 	banner.name = "LevelBanner"
 	banner.text = "%s · %s" % [level_name, MOODS.get(level_variant, "")]
@@ -149,6 +155,18 @@ func _prepare_level_four() -> void:
 	# La variante 4 limpia el contenido base y construye el gran pozo.
 	_clear_base_content()
 	LevelFourLayout.build(self)
+
+
+func _prepare_level_five() -> void:
+	# La variante 5 construye el cielo de plataformas y los voladores.
+	_clear_base_content()
+	LevelFiveLayout.build(self)
+
+
+func _prepare_level_six() -> void:
+	# La variante 6 construye la fortaleza de trampas y saltos largos.
+	_clear_base_content()
+	LevelSixLayout.build(self)
 
 
 func _clear_base_content() -> void:
@@ -251,9 +269,9 @@ func _on_player_died() -> void:
 	game_over_label.visible = true
 
 	if _timer_expired:
-		game_over_label.text = "TIEMPO AGOTADO - Reiniciando nivel..."
+		game_over_label.text = "TIEMPO AGOTADO - Volviendo al nivel 1..."
 		await get_tree().create_timer(2.0).timeout
-		await _fade_to_scene("")
+		await _restart_from_first_level()
 		return
 
 	if _lives > 0:
@@ -261,9 +279,16 @@ func _on_player_died() -> void:
 		await get_tree().create_timer(1.2).timeout
 		_respawn_player()
 	else:
-		game_over_label.text = "SIN VIDAS - Reiniciando nivel..."
+		game_over_label.text = "SIN VIDAS - Volviendo al nivel 1..."
 		await get_tree().create_timer(2.2).timeout
-		await _fade_to_scene("")
+		await _restart_from_first_level()
+
+
+func _restart_from_first_level() -> void:
+	## Game over (2026-11-13): sin vidas o sin tiempo la expedición vuelve a
+	## empezar en el nivel 1, reiniciando tiempo y muertes.
+	SaveGame.start_at_level(SaveGame.FIRST_LEVEL)
+	await _fade_to_scene(FIRST_LEVEL_PATH)
 
 
 func _respawn_player() -> void:

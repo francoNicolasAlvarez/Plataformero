@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/camera/horizontal_camera.gd" id="1_camera"]
 
-[node name="HorizontalCamera" type="Camera2D"]
+[node name="HorizontalCamera" type="Camera2D" groups=["camera"]]
 zoom = Vector2(0.62, 0.62)
 limit_smoothed = true
 script = ExtResource("1_camera")

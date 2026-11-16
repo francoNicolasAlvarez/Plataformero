@@ -52,6 +52,7 @@ func _run() -> void:
 	_check(player.health.is_dead, "El jugador muere cuando la cuenta regresiva llega a cero")
 	_check(game_over.visible, "La pantalla de muerte aparece al agotarse el tiempo")
 	_check(game_over.text.contains("TIEMPO AGOTADO"), "El aviso distingue el tiempo agotado de una muerte normal")
+	_check(game_over.text.contains("nivel 1"), "Al agotarse el tiempo la partida vuelve al nivel 1")
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])
