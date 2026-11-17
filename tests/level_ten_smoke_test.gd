@@ -38,6 +38,8 @@ func _run() -> void:
 	var kinds := {}
 	var last_route_x := LevelTenLayout.route_x(LevelTenLayout.ROUTE_COUNT - 1)
 	for platform in _collect_platforms(world):
+		if platform.name.begins_with("TempleSkyStep"):
+			continue
 		if platform.position.x >= LevelTenLayout.ROUTE_START_X - 1.0 and platform.position.x <= last_route_x + 1.0:
 			route.append(platform)
 			kinds[platform.kind] = true
@@ -73,7 +75,20 @@ func _run() -> void:
 	_check(altars == 4, "Hay cuatro altares anchos")
 	var archers := get_nodes_in_group("enemies").filter(func(e: Node) -> bool: return e is SpreadEnemy)
 	var mages := get_nodes_in_group("enemies").filter(func(e: Node) -> bool: return e is RangedEnemy and not e is SpreadEnemy)
-	_check(archers.size() == 2 and mages.size() == 1, "Los altares tienen arqueros y un mago")
+	_check(archers.size() == 6, "Hay %d arqueros: dos en altares y cuatro en plataformas altas" % archers.size())
+	_check(mages.size() == 2, "Hay %d magos sobre la ruta" % mages.size())
+	var sky_steps := _collect_platforms(world).filter(func(p: Platform) -> bool: return p.name.begins_with("TempleSkyStep"))
+	_check(sky_steps.size() == 4, "Hay cuatro plataformas altas")
+	for step in sky_steps:
+		_check(is_equal_approx(step.position.y, LevelTenLayout.SKY_TIER), "La plataforma alta %s está a 150 px" % step.name)
+	var brutes := get_nodes_in_group("enemies").filter(func(e: Node) -> bool: return e is BruteEnemy)
+	var slugs := get_nodes_in_group("enemies").filter(func(e: Node) -> bool: return e is SlugEnemy)
+	_check(brutes.size() == 2 and get_nodes_in_group("rock_piles").size() == 2, "Hay dos brutos, cada uno con su pila de rocas")
+	_check(slugs.size() == 4, "Hay cuatro babosas saltarinas")
+	_check(slugs.filter(func(s: SlugEnemy) -> bool: return s.double_jump).size() == 2, "Dos de las babosas son de doble salto")
+	var rocks := world.get_node_or_null("RockfallSpawner") as RockfallSpawner
+	_check(rocks != null and rocks.interval <= 2.2 / 3.0 + 0.01, "Caen rocas el triple de a menudo")
+	_check(rocks != null and rocks.ahead_direction > 0.0 and rocks.max_x <= LevelTenLayout.END_START_X, "Las rocas caen por delante y no sobre la isla final")
 	_check(get_nodes_in_group("saws").size() == LevelTenLayout.AIR_SAW_INDICES.size(), "Hay sierras suspendidas entre plataformas")
 	var spawner := world.get_node_or_null("FlyingSpawner") as FlyingSpawner
 	_check(spawner != null and is_equal_approx(spawner.spawn_interval, 4.0), "Un murciélago cada 4 s")

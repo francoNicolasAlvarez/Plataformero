@@ -6,11 +6,17 @@ extends RefCounted
 ## plataformas y añade altares anchos con un arquero o un mago, sierras
 ## suspendidas y murciélagos (FlyingSpawner cada 4 s). Un control a mitad de
 ## camino y hierbas en tres altares.
+## 2026-11-17 (más difícil, como el nivel 9): plataformas altas a 150 px sobre
+## los huecos de los altares, más arqueros y magos, rocas que caen por delante
+## del jugador con aviso de 1,5 s (3 veces más frecuentes), dos brutos
+## lanzarrocas con su pila y la babosa saltarina (normal y de doble salto).
 
 const PLATFORM_SCENE := preload("res://scenes/world/platform.tscn")
 const SAW_SCENE := preload("res://scenes/world/saw_trap.tscn")
 const RANGED_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const SPREAD_SCENE := preload("res://scenes/enemies/spread_enemy.tscn")
+const BRUTE_SCENE := preload("res://scenes/enemies/brute_enemy.tscn")
+const SLUG_SCENE := preload("res://scenes/enemies/slug_enemy.tscn")
 const FALL_ZONE_SCENE := preload("res://scenes/world/fall_zone.tscn")
 const CHECKPOINT_SCENE := preload("res://scenes/world/checkpoint.tscn")
 const HERB_SCENE := preload("res://scenes/pickups/healing_herb.tscn")
@@ -33,6 +39,18 @@ const HERB_INDICES := [6, 18, 21]
 const AIR_SAW_INDICES := [5, 11, 17, 22]
 const ALTAR_PHASE := 3
 const ALTAR_PERIOD := 6
+const SKY_TIER := 150.0
+const SKY_SIZE := Vector2(120.0, 24.0)
+const SKY_STEP_INDICES := [3, 9, 15, 21]
+const SKY_STEP_DX := 325.0
+const MAGE_INDICES := [6, 18]
+const BRUTE_ALTAR_NUMBER := 2
+const ROCK_INTERVAL := 2.2 / 3.0
+const ROCKFALL_MIN_X := 1700.0
+const ROCKFALL_MAX_X := 14600.0
+const END_PILE_X := 15200.0
+const END_BRUTE_X := 15340.0
+const END_SLUG_X := [15000.0, 15600.0]
 
 
 static func build(level: Node2D) -> void:
@@ -44,6 +62,8 @@ static func build(level: Node2D) -> void:
 	_build_temple_decor(world)
 	_build_terrain(world)
 	_build_route(world)
+	_build_sky_steps(world)
+	_build_end_island_guards(world)
 	_build_air_saws(world)
 	_build_spawner(world)
 	_place_player(level)
@@ -170,6 +190,8 @@ static func _build_route(world: Node2D) -> void:
 			altar_count += 1
 			if index not in HERB_INDICES:
 				_spawn_altar_enemy(world, platform.position, altar_count)
+		if index in MAGE_INDICES:
+			_mage(world, "TempleRouteMage%d" % index, platform.position + Vector2(0.0, -54.0))
 		if index == CHECKPOINT_INDEX:
 			platform.kind = Platform.Kind.STATIC
 			checkpoint_position = platform.position + Vector2(0.0, -60.0)
@@ -181,14 +203,55 @@ static func _build_route(world: Node2D) -> void:
 
 
 static func _spawn_altar_enemy(world: Node2D, platform_position: Vector2, altar_number: int) -> void:
+	## Altar 1: arquero y babosa; altar 2: bruto con su pila de rocas; altar 3:
+	## arquero y babosa de doble salto.
 	var top := platform_position.y - 12.0
-	if altar_number % 2 == 1:
-		var archer := _spawn(SPREAD_SCENE, world, Vector2(platform_position.x + 60.0, top - 40.0))
-		archer.name = "TempleArcher%d" % altar_number
-	else:
-		var mage := _spawn(RANGED_SCENE, world, Vector2(platform_position.x - 60.0, top - 42.0))
-		mage.name = "TempleMage%d" % altar_number
-		mage.set("shoot_range", 520.0)
+	if altar_number == BRUTE_ALTAR_NUMBER:
+		_brute_post(world, "TempleBrute%d" % altar_number, Vector2(platform_position.x - 70.0, top), Vector2(platform_position.x + 110.0, top - 32.0))
+		return
+	var archer := _spawn(SPREAD_SCENE, world, Vector2(platform_position.x + 60.0, top - 40.0))
+	archer.name = "TempleArcher%d" % altar_number
+	_slug(world, "TempleSlug%d" % altar_number, Vector2(platform_position.x - 100.0, top - 18.0), altar_number == 3)
+
+
+static func _build_sky_steps(world: Node2D) -> void:
+	## Plataformas altas (150 px) sobre el hueco que sigue a cada altar de la
+	## cima, con un arquero en cada una.
+	for index in SKY_STEP_INDICES:
+		var step := _add_platform(world, Vector2(route_x(index) + SKY_STEP_DX, SKY_TIER), SKY_SIZE, Color("#9a7fb3"))
+		step.name = "TempleSkyStep%d" % index
+		var archer := _spawn(SPREAD_SCENE, world, step.position + Vector2(0.0, -52.0))
+		archer.name = "TempleSkyArcher%d" % index
+
+
+static func _build_end_island_guards(world: Node2D) -> void:
+	# Guardián final: un bruto con su pila y dos babosas en la isla del portal.
+	_brute_post(world, "TempleEndBrute", Vector2(END_PILE_X, GROUND_TOP), Vector2(END_BRUTE_X, GROUND_TOP - 32.0))
+	_slug(world, "TempleEndSlug1", Vector2(END_SLUG_X[0], GROUND_TOP - 16.0), false)
+	_slug(world, "TempleEndSlug2", Vector2(END_SLUG_X[1], GROUND_TOP - 16.0), true)
+
+
+static func _brute_post(world: Node2D, node_name: String, pile_position: Vector2, brute_position: Vector2) -> void:
+	var pile := RockPile.new()
+	pile.name = "%sPile" % node_name
+	pile.position = pile_position
+	world.add_child(pile)
+	var brute := _spawn(BRUTE_SCENE, world, brute_position)
+	brute.name = node_name
+
+
+static func _slug(world: Node2D, node_name: String, position: Vector2, double: bool) -> void:
+	var slug := SLUG_SCENE.instantiate() as SlugEnemy
+	slug.name = node_name
+	slug.double_jump = double
+	slug.position = position
+	world.add_child(slug)
+
+
+static func _mage(world: Node2D, node_name: String, position: Vector2) -> void:
+	var mage := _spawn(RANGED_SCENE, world, position)
+	mage.name = node_name
+	mage.set("shoot_range", 520.0)
 
 
 static func _build_air_saws(world: Node2D) -> void:
@@ -223,6 +286,13 @@ static func _build_spawner(world: Node2D) -> void:
 	spawner.max_height = 540.0
 	spawner.side_margin = 40.0
 	world.add_child(spawner)
+
+	var rocks := RockfallSpawner.new()
+	rocks.name = "RockfallSpawner"
+	rocks.interval = ROCK_INTERVAL
+	rocks.min_x = ROCKFALL_MIN_X
+	rocks.max_x = ROCKFALL_MAX_X
+	world.add_child(rocks)
 
 
 static func _build_finish(level: Node2D) -> void:

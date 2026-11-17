@@ -109,7 +109,7 @@ resources/levels/  # level_config.gd y world_config.gd (configuración declarati
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (42 en total)
+tests/       # smoke tests headless, uno por sistema (43 en total)
 ```
 
 Decisiones clave:
@@ -1069,9 +1069,32 @@ actualizar esos tests.
       GDScript; comprobar con `is_instance_valid`. Suite: 42/42.
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
+54. **Babosa saltarina y nivel 10 más difícil (2026-11-17)**:
+    - **Enemigo nuevo `SlugEnemy`** (`scripts/enemies/slug_enemy.gd`,
+      `scenes/enemies/slug_enemy.tscn`, extiende `TrainingDummy`): permanece
+      quieta y salta con tres alturas (velocidades 340/470/600 px/s, nunca la
+      misma dos veces seguidas). Antes de saltar se agacha 0,4 s (aviso
+      legible). Con el jugador a menos de 480 px salta hacia su posición
+      aproximada (error de +-50 px, 75 % de las veces); si no, salta en el
+      sitio. Un rayo comprueba que haya suelo donde aterrizaría y, si no lo hay,
+      salta en el sitio (no se lanza a un foso). Variante `double_jump`
+      (naranja): dos saltos seguidos antes de detenerse. Señal
+      `jumped(jump_speed, horizontal_speed)`. Estados: IDLE, WINDUP, AIR,
+      LANDING.
+    - **Nivel 10 con cambios como los del 9**: cuatro plataformas altas a 150 px
+      (`TempleSkyStep*`, con un arquero cada una), 6 arqueros y 2 magos más sobre
+      la ruta, `RockfallSpawner` (por delante, cada 0,73 s, solo entre x 1700 y
+      14600), dos brutos con su pila (uno en el altar 2 y otro de guardián en la
+      isla final) y cuatro babosas (altar 1 normal, altar 3 y una de las dos de
+      la isla final de doble salto).
+    - Tests: `slug_enemy_smoke_test` nuevo (18, tarda ~1 min) y
+      `level_ten_smoke_test` 41. Trampa: las lambdas de GDScript capturan los
+      números por valor; los contadores de los tests van en arrays. Suite: 43/43.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
-- Suite de 42 smoke tests en verde (verificado en esta sesión) tras aplicar
+- Suite de 43 smoke tests en verde (verificado en esta sesión) tras aplicar
   los ítems 28-48: modo plataformas lineal con un único checkpoint a mitad de
   cada nivel, tres vidas por nivel, cronómetro contrarreloj que sigue corriendo
   al morir y no regala tiempo, medallas guardadas por nivel, selector de 40
