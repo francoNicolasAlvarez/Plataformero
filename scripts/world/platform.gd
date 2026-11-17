@@ -7,12 +7,14 @@ extends AnimatableBody2D
 ## (órbita en sentido horario), SPIKED (fija con pinchos solo en los bordes)
 ## y ROTATING (oscila sobre su eje sin superar 30°).
 ## El tamaño y el color se editan desde el Inspector; la colisión y el dibujo
-## se regeneran solos. Las plataformas móviles quedan fuera de la regla de
-## espaciado estático (PlatformSpacing.is_moving()).
+## se regeneran solos (contorno negro añadido el 2026-11-16). Las
+## plataformas móviles quedan fuera de la regla de espaciado estático
+## (PlatformSpacing.is_moving()).
 
 enum Kind { STATIC, HORIZONTAL, CIRCULAR, SPIKED, ROTATING }
 
 const SPIKE_SCENE := preload("res://scenes/world/spike_trap.tscn")
+const PLATFORM_TEXTURE := preload("res://scripts/world/platform_texture.gd")
 const MAX_TILT_RADIANS := PI / 6.0
 const SPIKE_SOURCE_WIDTH := 140.0
 
@@ -119,6 +121,31 @@ func _refresh() -> void:
 		Vector2(-half.x, half.y),
 	])
 	bottom.color = Color(base_dark.r, base_dark.g, base_dark.b, 0.65)
+
+	# Textura procedural sutil (2026-11-16): vetas y motas bajo los remates.
+	PLATFORM_TEXTURE.apply(self, platform_size, platform_color)
+
+	# Black outline (2026-11-16): separates the platform from the background
+	# and from other basic geometric shapes.
+	var outline := get_node_or_null("Outline") as Line2D
+	if outline == null:
+		outline = Line2D.new()
+		outline.name = "Outline"
+		add_child(outline)
+	outline.width = 3.0
+	outline.default_color = Color(0.0, 0.0, 0.0, 1.0)
+	outline.closed = true
+	outline.joint_mode = Line2D.LINE_JOINT_ROUND
+	outline.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	outline.end_cap_mode = Line2D.LINE_CAP_ROUND
+	outline.antialiased = true
+	outline.points = PackedVector2Array([
+		Vector2(-half.x, -half.y),
+		Vector2(half.x, -half.y),
+		Vector2(half.x, half.y),
+		Vector2(-half.x, half.y),
+	])
+	move_child(outline, -1)
 
 	if collision != null:
 		var shape := collision.shape as RectangleShape2D

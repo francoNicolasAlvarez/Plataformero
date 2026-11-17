@@ -27,6 +27,6 @@ extends Resource
 @export_range(0.0, 0.5, 0.01) var jump_buffer_time: float = 0.12
 
 @export_group("Combate")
-@export_range(0.0, 5.0, 0.05) var invulnerability_time: float = 0.5
+@export_range(0.0, 5.0, 0.05) var invulnerability_time: float = 1.0
 @export_range(0.0, 1000.0, 10.0) var knockback_force: float = 260.0
 @export_range(0.0, 1000.0, 10.0) var knockback_up_force: float = 220.0

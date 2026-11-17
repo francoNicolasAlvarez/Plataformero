@@ -109,6 +109,12 @@ static func _get_sound(sound_name: String) -> AudioStreamWAV:
 			stream = _sweep(260.0, 120.0, 0.09, 0.55, true)
 		"shoot":
 			stream = _sweep(520.0, 180.0, 0.14, 0.35, true)
+		"magic":
+			stream = _sequence([660.0, 990.0, 1320.0], 0.06, 0.35)
+		"arrow":
+			stream = _sweep(1100.0, 260.0, 0.1, 0.28)
+		"sentry":
+			stream = _sweep(180.0, 55.0, 0.24, 0.6, true)
 		"hit":
 			stream = _sweep(150.0, 70.0, 0.12, 0.7, true)
 		"death":

@@ -261,6 +261,7 @@ func _on_player_died() -> void:
 	if _completed:
 		return
 
+	FlyingSpawner.clear_flying_enemies(get_tree())
 	_account_time()
 	SaveGame.register_death()
 	_lives = maxi(0, _lives - 1)

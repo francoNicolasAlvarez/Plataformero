@@ -1,13 +1,13 @@
 class_name RangedEnemy
 extends TrainingDummy
-## Enemigo a distancia: mago azul con bastón que lanza bolas de fuego.
+## Enemigo a distancia: mago azul con baston que lanza orbes de energia azul.
 ## Reutiliza vida, daño por contacto y muerte del enemigo base, y añade
 ## gravedad y disparos cuando detecta al jugador.
 ## Cambio 2026-11-11: ya no apunta al jugador; los proyectiles vuelan siempre
 ## en horizontal, hacia el lado en el que esté el jugador (se esquiva
 ## saltando o cambiando de altura).
-## Cambio 2026-11-11 (visuales): cada disparo lanza 3 bolas de fuego en un
-## abanico horizontal de ±10°.
+## Cambio 2026-11-16 (visuales/sonido): cada disparo lanza 3 orbes de
+## energia azul en un abanico horizontal de +-10 grados, con sonido propio.
 
 const PROJECTILE_SCENE := preload("res://scenes/enemies/enemy_projectile.tscn")
 
@@ -117,4 +117,4 @@ func _shoot(direction: float) -> void:
 		projectile.speed = projectile_speed
 		projectile.velocity = shot_velocity
 		projectile.rotation = shot_velocity.angle()
-	Sfx.play("shoot", -13.0)
+	Sfx.play("magic", -13.0)

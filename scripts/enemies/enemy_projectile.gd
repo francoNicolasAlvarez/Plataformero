@@ -2,8 +2,8 @@ class_name EnemyProjectile
 extends Area2D
 ## Proyectil enemigo. Viaja en horizontal, daña al jugador una vez y
 ## desaparece al impactar o al agotar su tiempo de vida.
-## Rediseño 2026-11-11: dos estilos visuales — FIRE (bola de fuego con
-## estela de llamas y estallido al impactar, lanzada por el mago azul, 3 por
+## Rediseno 2026-11-11: dos estilos visuales - FIRE (orbe de energia azul con
+## estela magica y estallido azul al impactar, lanzado por el mago, 3 por
 ## disparo) y BOLT (flecha del arquero, una por disparo, algo más rápida y
 ## sin estela; mantiene la rotación fija que le dio el disparador).
 
@@ -83,7 +83,7 @@ func _on_body_entered(body: Node2D) -> void:
 		# La bola de fuego estalla; la flecha se clava sin ruido.
 		var impact_parent := get_parent() as Node2D
 		if impact_parent != null:
-			Fx.make_burst(impact_parent, position, Color(1.0, 0.55, 0.2, 0.9))
+			Fx.make_burst(impact_parent, position, Color(0.35, 0.8, 1.0, 0.9))
 	queue_free()
 
 

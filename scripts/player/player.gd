@@ -242,7 +242,7 @@ func take_damage(amount: int, source: Node = null) -> void:
 	if _is_dead or _invulnerability_left > 0.0 or amount <= 0:
 		return
 
-	# Cualquier golpe normal consume uno de los dos impactos permitidos.
+	# Cualquier golpe normal consume uno de los tres impactos permitidos.
 	# Los valores enormes (pozos/cronómetro) siguen siendo letales al instante.
 	var applied_damage := health.max_health if amount >= 9999 else 1
 	health.take_damage(applied_damage, source)

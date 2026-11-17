@@ -123,7 +123,7 @@ polygon = PackedVector2Array(0, -30, 10, -22, 24, -12, 34, 0, 24, 12, 10, 22, 0,
 
 [node name="Health" type="Node" parent="."]
 script = ExtResource("14_health")
-max_health = 2
+max_health = 3
 
 [node name="AttackHitbox" type="Area2D" parent="."]
 collision_layer = 8

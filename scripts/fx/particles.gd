@@ -138,15 +138,15 @@ static func _fade(color: Color, min_alpha: float = 0.0) -> Gradient:
 
 
 static func _fire_ramp() -> Gradient:
-	## Amarillo -> naranja -> rojo transparente (llama de la bola de fuego).
+	## Cian -> azul -> azul profundo transparente (energia del mago).
 	## Se asignan offsets/colors completos porque remove_point no permite
 	## vaciar el degradado (siempre queda 1 punto como mínimo).
 	var ramp := Gradient.new()
 	ramp.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
 	ramp.colors = PackedColorArray([
-		Color(1.0, 0.88, 0.54, 0.95),
-		Color(1.0, 0.48, 0.18, 0.8),
-		Color(0.78, 0.12, 0.05, 0.0),
+		Color(0.82, 0.96, 1.0, 0.95),
+		Color(0.33, 0.78, 1.0, 0.8),
+		Color(0.09, 0.32, 0.83, 0.0),
 	])
 	return ramp
 

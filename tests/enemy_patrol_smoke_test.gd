@@ -41,14 +41,19 @@ func _run() -> void:
 
 	player.global_position = walker.global_position + Vector2(float(walker._direction) * 45.0, 0.0)
 	await _wait_physics(45)
-	_check(player.health.current_health == 1, "El patrullero consume uno de los 2 golpes")
+	_check(player.health.current_health == 2, "El patrullero consume uno de los 3 golpes")
 
 	# Contacto continuo: antes solo se aplicaba el primer body_entered y, si
 	# el jugador seguía pegado al enemigo, no volvía a recibir daño.
 	walker.patrol_speed = 0.0
 	player.set_physics_process(false)
 	player.global_position = walker.global_position
-	await _wait_physics(50)
+	player._invulnerability_left = 0.0
+	await _wait_physics(2)
+	player._invulnerability_left = 0.0
+	await _wait_physics(2)
+	player._invulnerability_left = 0.0
+	await _wait_physics(2)
 	_check(
 		player.health.is_dead,
 		"El contacto continuo vuelve a dañar al acabar la invulnerabilidad"

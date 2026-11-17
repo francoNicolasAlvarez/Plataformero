@@ -51,8 +51,8 @@ func _run() -> void:
 			"El proyectil vuela casi horizontal sin apuntar al jugador"
 		)
 		_check(high_shot.velocity.x < 0.0, "El proyectil sale hacia el lado donde está el jugador")
-		_check(high_shot.style == EnemyProjectile.Style.FIRE, "El mago dispara bolas de fuego")
-		_check(high_shot.get_node_or_null("FlameTrail") is CPUParticles2D, "La bola de fuego lleva estela de llamas")
+		_check(high_shot.style == EnemyProjectile.Style.FIRE, "El mago dispara orbes de energia azul")
+		_check(high_shot.get_node_or_null("FlameTrail") is CPUParticles2D, "El orbe lleva estela de energia")
 	_clear_projectiles(level)
 	perch.free()
 
@@ -66,7 +66,7 @@ func _run() -> void:
 	ranged.set_process(false)
 
 	await _wait_physics(70)
-	_check(player.health.current_health == 1, "Los proyectiles consumen uno de los 2 golpes")
+	_check(player.health.current_health == 2, "Los proyectiles consumen uno de los 3 golpes")
 
 	# Cada disparo del mago es una ráfaga de 3 bolas de fuego en abanico.
 	var mage_speed: float = ranged.projectile_speed
@@ -88,9 +88,9 @@ func _run() -> void:
 			volley_up = true
 		if shot.velocity.y > 5.0:
 			volley_down = true
-	_check(volley_fire, "Toda la ráfaga del mago es de fuego")
+	_check(volley_fire, "Toda la ráfaga del mago es de energia")
 	_check(volley_side, "La ráfaga entera va hacia el lado del jugador")
-	_check(volley_up and volley_down, "El abanico de bolas abre en varias alturas")
+	_check(volley_up and volley_down, "El abanico de orbes abre en varias alturas")
 	_clear_projectiles(level)
 
 	ranged.take_damage(ranged.health.max_health)
@@ -116,6 +116,18 @@ func _run() -> void:
 	spread.take_damage(spread.health.max_health)
 	await _wait_physics(30)
 	_check(not is_instance_valid(spread) or spread.is_queued_for_deletion(), "El enemigo ráfaga puede morir")
+
+	var magic_sound := Sfx._get_sound("magic")
+	var arrow_sound := Sfx._get_sound("arrow")
+	var sentry_sound := Sfx._get_sound("sentry")
+	_check(
+		magic_sound != null and arrow_sound != null and sentry_sound != null,
+		"Hay sonidos para magia, flechas y centinela"
+	)
+	_check(
+		magic_sound != arrow_sound and magic_sound != sentry_sound and arrow_sound != sentry_sound,
+		"Cada proyectil usa un sonido distinto"
+	)
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])

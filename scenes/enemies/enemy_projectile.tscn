@@ -14,7 +14,7 @@ script = ExtResource("1_projectile")
 
 [node name="Glow" type="Sprite2D" parent="."]
 scale = Vector2(1.6, 1.6)
-modulate = Color(1, 0.45, 0.15, 0.32)
+modulate = Color(0.25, 0.6, 1, 0.32)
 texture = ExtResource("2_fire")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

@@ -21,4 +21,4 @@ func _shoot(direction: float) -> void:
 	projectile.rotation = 0.0 if direction > 0.0 else PI
 	projectile.use_bolt_style()
 
-	Sfx.play("shoot", -8.0)
+	Sfx.play("arrow", -8.0)

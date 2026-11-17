@@ -64,7 +64,9 @@ func _run() -> void:
 	_check(_count_platforms(level) >= 40, "El nivel 2 añade muchas más plataformas")
 	_check(moving.size() >= 4, "Hay plataformas móviles sobre los fosos")
 	_check(saws.size() >= 8, "Hay sierras móviles repartidas por el nivel")
-	_check(spikes.size() >= 8, "Hay pinchos en fosos y suelo")
+	var loose_spikes := _loose_spikes(spikes)
+	_check(loose_spikes.size() == 5, "Hay cinco pinchos sueltos, todos sobre suelo firme")
+	_check(_all_spikes_supported(level, loose_spikes), "Ningún pincho suelto está colocado sobre el aire")
 	_check(level.get_node_or_null("LevelTwoGenerated/FallZone") != null, "Existe zona de caída mortal")
 	_check(portal.monitoring, "El portal del nivel 2 está activo desde el inicio")
 	_check(get_nodes_in_group("checkpoints").size() == 1, "El nivel 2 tiene un único control a mitad del recorrido")
@@ -79,16 +81,41 @@ func _run() -> void:
 	var saw := saws[0] as Area2D
 	saw._on_body_entered(player)
 	await _wait_physics(4)
-	_check(player.health.current_health == 1, "Las sierras consumen uno de los 2 golpes")
+	_check(player.health.current_health == 2, "Las sierras consumen uno de los 3 golpes")
 
 	player.global_position = Vector2(6600.0, 790.0)
-	await _wait_physics(30)
+	await _wait_physics(70)
 	_check(player.health.current_health == 0, "La zona de caída elimina al jugador")
 	_check(level.get_node("HUD/GameOver").visible, "La zona de caída muestra la pantalla de muerte")
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)
+
+
+func _loose_spikes(spikes: Array[Node]) -> Array[Node]:
+	## Los pinchos hijos de una plataforma pertenecen al asset modular; solo
+	## los sueltos deben validarse contra el suelo.
+	var loose: Array[Node] = []
+	for spike in spikes:
+		if not spike.get_parent() is Platform:
+			loose.append(spike)
+	return loose
+
+
+func _all_spikes_supported(level: Node, spikes: Array[Node]) -> bool:
+	## Cada pincho suelto debe apoyar sobre una plataforma estática.
+	var platforms := PlatformSpacing.collect_platforms(level)
+	for spike in spikes:
+		var probe: Vector2 = (spike as Node2D).global_position + Vector2(0.0, 10.0)
+		var supported := false
+		for platform in platforms:
+			if PlatformSpacing.platform_rect(platform).has_point(probe):
+				supported = true
+				break
+		if not supported:
+			return false
+	return true
 
 
 func _count_named(node: Node, prefix: String) -> int:

@@ -29,30 +29,36 @@ func _run() -> void:
 	walker.set_physics_process(false)
 	await _wait_physics(20)
 
-	_check(player.health.max_health == 2, "El jugador tiene solo 2 golpes de vida")
-	_check(player.health.current_health == 2, "El jugador empieza con los 2 golpes")
+	_check(player.health.max_health == 3, "El jugador tiene 3 golpes de vida")
+	_check(player.health.current_health == 3, "El jugador empieza con los 3 golpes")
 	_check(level.get_node_or_null("HUD/PlayerHealth") == null, "La barra de vida fue eliminada del HUD")
 	_check(timer_label.visible and timer_label.text.begins_with("TIEMPO:"), "El HUD muestra la cuenta regresiva")
 	_check(not game_over.visible, "La pantalla de muerte empieza oculta")
-	_check(health_icons.text == "\u2665\u2665", "El HUD dibuja un corazón por golpe disponible")
+	_check(health_icons.text == "\u2665\u2665\u2665", "El HUD dibuja un corazón por golpe disponible")
 	_check(lives_label.text.contains("3"), "El HUD muestra las tres vidas del nivel")
 
 	player.global_position = walker.global_position + Vector2(-30.0, 0.0)
 	await _wait_physics(2)
 
-	_check(player.health.current_health == 1, "El primer golpe deja al jugador a un impacto de morir")
-	_check(health_icons.text == "\u2665\u2661", "El HUD pierde un corazón al recibir daño")
+	_check(player.health.current_health == 2, "El primer golpe deja dos golpes disponibles")
+	_check(health_icons.text == "\u2665\u2665\u2661", "El HUD pierde un corazón al recibir daño")
 	_check(damage_flash.modulate.a > 0.5, "El daño produce un destello rojo en pantalla")
 	_check(player.velocity.y < 0.0, "El daño aplica un retroceso vertical")
 	_check(absf(player.velocity.x) > 100.0, "El daño empuja al jugador en horizontal")
 
 	player.take_damage(20, walker)
-	_check(player.health.current_health == 1, "La invulnerabilidad evita daño repetido")
+	_check(player.health.current_health == 2, "La invulnerabilidad evita daño repetido")
 
-	await _wait_physics(36)
+	await _wait_physics(70)
 	player.take_damage(20, walker)
 	await _wait_physics(2)
-	_check(player.health.is_dead, "El segundo golpe elimina al jugador")
+	_check(player.health.current_health == 1, "El segundo golpe deja un solo golpe disponible")
+	_check(not player.health.is_dead, "El jugador sigue vivo tras el segundo golpe")
+
+	await _wait_physics(70)
+	player.take_damage(20, walker)
+	await _wait_physics(2)
+	_check(player.health.is_dead, "El tercer golpe elimina al jugador")
 	_check(game_over.visible, "Aparece el mensaje de muerte")
 	_check(player.visual.animation == &"death", "El jugador reproduce la animación de muerte")
 
@@ -62,7 +68,7 @@ func _run() -> void:
 
 	await _wait_physics(40)
 	_check(not player.health.is_dead, "El jugador reaparece tras unos segundos")
-	_check(player.health.current_health == 2, "Reaparecer restaura los dos golpes de vida")
+	_check(player.health.current_health == 3, "Reaparecer restaura los tres golpes de vida")
 	_check(not game_over.visible, "El mensaje de muerte desaparece al reaparecer")
 	_check(lives_label.text.contains("2"), "Morir consume una de las tres vidas")
 

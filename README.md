@@ -30,16 +30,19 @@ Godot_v4.7.2-stable_win64_console.exe --path . res://scenes/ui/main_menu.tscn
 Atraviesa los seis niveles hasta llegar al final del juego. Cada nivel da tres
 vidas: al morir reapareces en el último control (bandera) activado con la vida
 completa; si te quedas sin vidas o se agota el tiempo, la partida vuelve al
-nivel 1. El nivel alcanzado se guarda para continuar la partida.
+nivel 1. El nivel alcanzado se guarda para continuar la partida. El jugador
+aguanta tres golpes y, tras recibir daño, es invulnerable durante 1 segundo.
 
 - **Nivel 1:** día, recorrido largo con colinas, pozos y plataformas.
 - **Nivel 2:** atardecer, fosos con plataformas móviles, sierras y pinchos.
 - **Nivel 3:** noche, granja con magos y enemigos rápidos y decoración rural.
 - **Nivel 4:** "El Gran Pozo", un abismo cruzado por plataformas móviles.
-- **Nivel 5:** "Cielo", recorrido aéreo con plataformas separadas y enemigos
-  voladores que cruzan la pantalla ondulando.
-- **Nivel 6:** "Fortaleza", saltos largos que exigen doble salto, pinchos en
-  los bordes de las plataformas y sierras patrullando.
+- **Nivel 5:** "Cielo", recorrido aéreo de 28 plataformas con enemigos
+  voladores que cruzan la pantalla ondulando y sierras suspendidas sobre los
+  huecos.
+- **Nivel 6:** "Fortaleza", 20 plataformas con saltos largos que exigen doble
+  salto, pinchos en los bordes, sierras de suelo y suspendidas, y un centinela
+  superior que dispara proyectiles apuntados cada 2 segundos.
 
 ## Controles
 
@@ -57,6 +60,10 @@ nivel 1. El nivel alcanzado se guarda para continuar la partida.
 Los controles de teclado se pueden reasignar desde **Opciones**. El mando usa
 un mapeo fijo.
 
+Durante la partida, **Enter** abre el menú de pausa: continuar, consultar la
+guía de controles, ajustar brillo/volumen/teclas, volver al menú principal o
+salir del juego.
+
 ## Objetos
 
 - **Poción (Q):** cura un golpe de vida.
@@ -64,17 +71,26 @@ un mapeo fijo.
 - **Hierba curativa:** restaura vida al recogerla.
 - **Doble salto:** disponible siempre con una pulsación extra en el aire.
 - **Plataformas:** asset modular con cinco tipos (fija, vaivén horizontal,
-  órbita circular, pinchos en los bordes y giro sobre el eje).
+  órbita circular, pinchos en los bordes y giro sobre el eje). Llevan vetas y
+  motas procedurales sutiles que se adaptan a su tamaño y color.
+- **Contornos:** plataformas, pinchos, sierras, controles y portal llevan un
+  contorno negro para separarlos del fondo.
 
 ## Enemigos y trampas
 
 - **Dummy de entrenamiento:** enemigo básico de contacto.
 - **Walker:** patrulla el suelo y persigue su ruta.
-- **Mago:** lanza bolas de fuego en horizontal.
+- **Mago:** lanza 3 orbes de energia azul en horizontal, con sonido propio.
 - **Arquero:** dispara una flecha rápida.
 - **Volador:** cruza la pantalla con un patrón ondulante; aparece cada pocos
-  segundos a una altura aleatoria.
-- **Sierras y pinchos:** trampas con aviso visual antes de dañar.
+  segundos a una altura aleatoria y desaparece al salir por el borde visible
+  en su dirección.
+- **Centinela:** amenaza del nivel 6; se mantiene en la esquina superior
+  derecha, oscila y dispara 5 proyectiles en cono cada 2 segundos.
+- **Sierras y pinchos:** trampas con aviso visual antes de dañar. Las sierras
+  muestran una guía de su recorrido; las suspendidas cruzan el hueco entre
+  plataformas. Los pinchos sueltos solo aparecen sobre suelo firme; las
+  plataformas con pinchos los llevan en sus bordes.
 
 ## Desarrollo
 

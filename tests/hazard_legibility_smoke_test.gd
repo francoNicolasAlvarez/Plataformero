@@ -20,9 +20,12 @@ func _run() -> void:
 	await _wait_physics(8)
 
 	var saws := get_nodes_in_group("saws")
-	var spikes := get_nodes_in_group("spikes")
+	var loose_spikes: Array[Node] = []
+	for spike in get_nodes_in_group("spikes"):
+		if not spike.get_parent() is Platform:
+			loose_spikes.append(spike)
 	_check(saws.size() >= 8, "El nivel 2 tiene sierras que avisan")
-	_check(spikes.size() >= 8, "El nivel 2 tiene pinchos legibles")
+	_check(loose_spikes.size() >= 5, "El nivel 2 tiene pinchos legibles sobre el suelo")
 
 	if not saws.is_empty():
 		var saw: Area2D = saws[0]
@@ -40,8 +43,8 @@ func _run() -> void:
 		_check(visual.modulate.a > 0.99, "El aviso de la sierra termina")
 		_check(saw.position.distance_to(start_position) > 1.0, "La sierra se mueve tras el aviso")
 
-	if not spikes.is_empty():
-		var spike: Area2D = spikes[0]
+	if not loose_spikes.is_empty():
+		var spike: Area2D = loose_spikes[0]
 		var visual: Polygon2D = spike.get_node("Visual")
 		var alpha_a: float = visual.modulate.a
 		await _wait_physics(12)

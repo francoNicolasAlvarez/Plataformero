@@ -22,13 +22,43 @@ polygon = PackedVector2Array(-40, 0, -24, -8, 0, -11, 24, -8, 40, 0, 24, 8, 0, 1
 color = Color(0.160784, 0.878431, 1, 0.95)
 polygon = PackedVector2Array(-38, 55, -48, 18, -36, -44, 0, -62, 36, -44, 48, 18, 38, 55, 0, 64)
 
+[node name="Outline" type="Line2D" parent="Visual/Outer"]
+width = 3.5
+default_color = Color(0, 0, 0, 1)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+closed = true
+antialiased = true
+points = PackedVector2Array(-38, 55, -48, 18, -36, -44, 0, -62, 36, -44, 48, 18, 38, 55, 0, 64)
+
 [node name="Middle" type="Polygon2D" parent="Visual"]
 color = Color(0.0745098, 0.172549, 0.286275, 1)
 polygon = PackedVector2Array(-28, 48, -36, 17, -27, -36, 0, -50, 27, -36, 36, 17, 28, 48, 0, 55)
 
+[node name="Outline" type="Line2D" parent="Visual/Middle"]
+width = 2.5
+default_color = Color(0, 0, 0, 1)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+closed = true
+antialiased = true
+points = PackedVector2Array(-28, 48, -36, 17, -27, -36, 0, -50, 27, -36, 36, 17, 28, 48, 0, 55)
+
 [node name="Core" type="Polygon2D" parent="Visual"]
 color = Color(0.560784, 0.945098, 1, 0.9)
 polygon = PackedVector2Array(-12, 42, -16, 17, -12, -30, 0, -40, 12, -30, 16, 17, 12, 42, 0, 47)
+
+[node name="Outline" type="Line2D" parent="Visual/Core"]
+width = 2.0
+default_color = Color(0, 0, 0, 1)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+closed = true
+antialiased = true
+points = PackedVector2Array(-12, 42, -16, 17, -12, -30, 0, -40, 12, -30, 16, 17, 12, 42, 0, 47)
 
 [node name="LineLeft" type="Polygon2D" parent="Visual"]
 color = Color(0.960784, 1, 1, 0.75)

@@ -151,7 +151,6 @@ static func _build_terrain(world: Node2D) -> void:
 		var moving := _spawn(MOVING_PLATFORM_SCENE, world, Vector2(pit_x - 110.0, 556.0))
 		moving.set("travel", Vector2(220.0, 0.0))
 		moving.set("speed", 0.9)
-		_spawn(SPIKE_SCENE, world, Vector2(pit_x, 710.0))
 
 	for pit_x in [3010.0, 5510.0, 7910.0, 10310.0]:
 		var fall_zone := _spawn(FALL_ZONE_SCENE, world, Vector2(pit_x, 780.0))
@@ -163,7 +162,9 @@ static func _build_terrain(world: Node2D) -> void:
 		saw.set("move_range", 120.0)
 		saw.set("move_speed", 1.5 + float(int(x) % 3) * 0.15)
 
-	var spike_positions := [1750.0, 3300.0, 5450.0, 8050.0, 10500.0]
+	# Los pinchos sueltos solo van sobre suelo firme (2026-11-16). 5450 caía
+	# dentro de un pozo; se mueve a la isla de tierra que empieza en 5620.
+	var spike_positions := [1750.0, 3300.0, 5800.0, 8050.0, 10500.0]
 	for x in spike_positions:
 		_spawn(SPIKE_SCENE, world, Vector2(x, GROUND_TOP - 8.0))
 

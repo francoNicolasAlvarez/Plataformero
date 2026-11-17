@@ -110,14 +110,14 @@ func _test_stand_on_sombrero() -> void:
 	await _wait_physics(45)
 
 	_check(player.is_on_floor(), "El jugador se queda de pie sobre el sombrero")
-	_check(player.health.current_health == 2, "Pararse sobre el sombrero no daña al jugador")
+	_check(player.health.current_health == 3, "Pararse sobre el sombrero no daña al jugador")
 
 	# El contacto lateral sigue doliendo: el sombrero no vuelve al enemigo inofensivo.
 	player.health.heal(2)
 	player.global_position = walker.global_position + Vector2(25.0, 0.0)
 	player.velocity = Vector2.ZERO
 	await _wait_physics(6)
-	_check(player.health.current_health == 1, "El contacto lateral con el walker sigue dañando")
+	_check(player.health.current_health == 2, "El contacto lateral con el walker sigue dañando")
 	level.queue_free()
 
 

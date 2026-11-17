@@ -9,7 +9,7 @@ size = Vector2(44, 30)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_damage"]
 resource_local_to_scene = true
-size = Vector2(42, 28)
+size = Vector2(46, 32)
 
 [node name="FlyingEnemy" type="CharacterBody2D" groups=["enemies"]]
 collision_layer = 4

@@ -28,8 +28,8 @@ func _run() -> void:
 	player.global_position = first_herb.global_position
 	await _wait_physics(8)
 	_check(
-		is_instance_valid(first_herb) and player.health.current_health == 2,
-		"La curación no se gasta con los 2 golpes llenos"
+		is_instance_valid(first_herb) and player.health.current_health == 3,
+		"La curación no se gasta con los 3 golpes llenos"
 	)
 
 	player.global_position += Vector2(60.0, 0.0)
@@ -38,16 +38,16 @@ func _run() -> void:
 	await _wait_physics(2)
 	player.global_position = first_herb.global_position
 	await _wait_physics(8)
-	_check(player.health.current_health == 2, "La curación recupera el golpe perdido")
+	_check(player.health.current_health == 3, "La curación recupera el golpe perdido")
 	_check(not is_instance_valid(first_herb), "La curación desaparece al usarse")
 
 	var second_herb: HealingHerb = get_nodes_in_group("healing_pickups")[0]
-	await _wait_physics(36)
+	await _wait_physics(70)
 	player.take_damage(20)
 	await _wait_physics(2)
 	player.global_position = second_herb.global_position
 	await _wait_physics(8)
-	_check(player.health.current_health == 2, "La segunda curación vuelve a llenar los 2 golpes")
+	_check(player.health.current_health == 3, "La segunda curación vuelve a llenar los 3 golpes")
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])

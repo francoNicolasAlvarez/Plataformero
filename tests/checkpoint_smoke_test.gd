@@ -32,23 +32,23 @@ func _run() -> void:
 
 	player.take_damage(20)
 	await _wait_physics(2)
-	_check(player.health.current_health == 1, "El jugador recibe daño antes del control")
+	_check(player.health.current_health == 2, "El jugador recibe daño antes del control")
 
 	player.global_position = checkpoint.global_position
 	await _wait_physics(10)
 	_check(checkpoint.is_active, "Pisar la bandera activa el control")
-	_check(player.health.current_health == 2, "El control cura toda la vida")
+	_check(player.health.current_health == 3, "El control cura toda la vida")
 	var rest_banner: Label = level.get_node_or_null("HUD/CheckpointBanner")
 	_check(rest_banner != null and rest_banner.text.contains("DESCANSO"),
 		"El control muestra un aviso de descanso")
 
-	await _wait_physics(40)
+	await _wait_physics(70)
 	level._time_left = 12.0
 	player.take_damage(9999)
 	await _wait_until_alive(player)
 
 	_check(not player.health.is_dead, "Tras morir el jugador reaparece")
-	_check(player.health.current_health == 2, "Reaparece con la vida completa")
+	_check(player.health.current_health == 3, "Reaparece con la vida completa")
 	_check(lives_label.text.contains("2"), "La muerte consume una vida")
 	_check(
 		absf(player.global_position.x - checkpoint.global_position.x) < 80.0,
@@ -59,7 +59,7 @@ func _run() -> void:
 		"Con 20 s o menos al morir, reaparecer deja 30 s de cuenta regresiva"
 	)
 
-	await _wait_physics(40)
+	await _wait_physics(70)
 	level._time_left = 45.0
 	player.take_damage(9999)
 	await _wait_until_alive(player)

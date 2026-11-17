@@ -5,27 +5,30 @@ extends RefCounted
 ## vaivén horizontal, órbitas circulares, pinchos en los bordes y giro sobre
 ## el eje. El único enemigo es el volador: FlyingSpawner crea uno cada 4 s a
 ## una altura aleatoria y el enemigo cruza la pantalla ondulando.
+## 2026-11-16: recorrido ampliado y sierras suspendidas sobre los huecos.
 
 const PLATFORM_SCENE := preload("res://scenes/world/platform.tscn")
+const SAW_SCENE := preload("res://scenes/world/saw_trap.tscn")
 const FALL_ZONE_SCENE := preload("res://scenes/world/fall_zone.tscn")
 const CHECKPOINT_SCENE := preload("res://scenes/world/checkpoint.tscn")
 const HERB_SCENE := preload("res://scenes/pickups/healing_herb.tscn")
 const CLOUD_SCENE := preload("res://scenes/decor/cloud.tscn")
-const BIRD_SCENE := preload("res://scenes/decor/bird.tscn")
 const SUN_SCENE := preload("res://scenes/decor/sun.tscn")
 
-const LEVEL_WIDTH := 13600.0
+const LEVEL_WIDTH := 17000.0
 const GROUND_Y := 680.0
 const GROUND_TOP := 640.0
 const START_CENTER := 600.0
-const END_CENTER := 12500.0
+const END_CENTER := 15800.0
 const PLAYER_START := Vector2(70.0, 600.0)
 const ROUTE_START_X := 1500.0
 const ROUTE_STEP := 480.0
-const ROUTE_COUNT := 21
+const ROUTE_COUNT := 28
 const PLATFORM_SIZE := Vector2(190.0, 24.0)
 const ROUTE_Y := [550.0, 450.0, 350.0]
-const CHECKPOINT_INDEX := 9
+const CHECKPOINT_INDEX := 13
+const HERB_INDICES := [5, 18, 24]
+const AIR_SAW_INDICES := [4, 10, 17, 23]
 
 
 static func build(level: Node2D) -> void:
@@ -37,6 +40,7 @@ static func build(level: Node2D) -> void:
 	_build_terrain(world)
 	_place_player(level)
 	_build_route(world)
+	_build_air_saws(world)
 	_build_spawner(world)
 	_build_finish(level)
 
@@ -80,7 +84,7 @@ static func _build_sky(world: Node2D) -> void:
 	hill_parallax.name = "HillParallax"
 	hill_parallax.scroll_scale = Vector2(0.3, 1.0)
 	world.add_child(hill_parallax)
-	for i in 8:
+	for i in 12:
 		var hill := Polygon2D.new()
 		hill.color = [Color("#6aa9c9"), Color("#4d8eb5"), Color("#39779f")][i % 3]
 		hill.position = Vector2(380.0 + float(i) * 880.0, 640.0)
@@ -96,25 +100,19 @@ static func _build_sky(world: Node2D) -> void:
 	cloud_parallax.name = "CloudParallax"
 	cloud_parallax.scroll_scale = Vector2(0.55, 1.0)
 	world.add_child(cloud_parallax)
-	for i in 11:
+	for i in 16:
 		var cloud := _spawn(CLOUD_SCENE, cloud_parallax, Vector2(
 			280.0 + float(i) * 420.0,
 			80.0 + float(i % 4) * 74.0
 		))
 		cloud.scale = Vector2.ONE * (0.8 + float(i % 3) * 0.18)
 
-	for i in 5:
-		var bird := _spawn(BIRD_SCENE, world, Vector2(
-			900.0 + float(i) * 1600.0,
-			140.0 + float(i % 3) * 65.0
-		))
-		bird.scale = Vector2.ONE * (0.7 + float(i % 2) * 0.2)
-
 	# Islas flotantes decorativas: rellenan el vacío sin colisión.
 	for rock in [
 		Vector2(2400.0, 250.0), Vector2(4100.0, 310.0),
 		Vector2(6900.0, 220.0), Vector2(8800.0, 300.0),
-		Vector2(10900.0, 260.0),
+		Vector2(10900.0, 260.0), Vector2(12800.0, 280.0),
+		Vector2(14500.0, 240.0), Vector2(15800.0, 320.0),
 	]:
 		var chunk := Polygon2D.new()
 		chunk.color = Color("#2c6a8e", 0.9)
@@ -140,8 +138,11 @@ static func _build_terrain(world: Node2D) -> void:
 		Vector2(2200.0, 80.0),
 		Color("#4b6f8f")
 	)
-	var fall_zone := _spawn(FALL_ZONE_SCENE, world, Vector2(6800.0, 780.0))
+	# La zona de caída cubre TODO el ancho del nivel: cualquier hueco mata.
+	var fall_zone := _spawn(FALL_ZONE_SCENE, world, Vector2(LEVEL_WIDTH * 0.5, 780.0))
 	fall_zone.name = "FallZoneSky"
+	var fall_shape := fall_zone.get_node("CollisionShape2D").shape as RectangleShape2D
+	fall_shape.size = Vector2(LEVEL_WIDTH + 800.0, 120.0)
 
 
 static func _build_route(world: Node2D) -> void:
@@ -170,38 +171,67 @@ static func _build_route(world: Node2D) -> void:
 		if index == CHECKPOINT_INDEX:
 			platform.kind = Platform.Kind.STATIC
 			checkpoint_position = platform.position + Vector2(0.0, -60.0)
-		elif index == 5 or index == 15:
+		elif index in HERB_INDICES:
 			_spawn(HERB_SCENE, world, platform.position + Vector2(0.0, -34.0))
 
 	if checkpoint_position != Vector2.ZERO:
 		_spawn(CHECKPOINT_SCENE, world, checkpoint_position)
 
 
+## Sierras suspendidas (2026-11-16): patrullan el hueco entre dos plataformas.
+## El recorrido completo mide el doble del ancho de una plataforma normal.
+static func _build_air_saws(world: Node2D) -> void:
+	for index in AIR_SAW_INDICES:
+		var left_x := ROUTE_START_X + float(index) * ROUTE_STEP
+		var right_x := ROUTE_START_X + float(index + 1) * ROUTE_STEP
+		var left_y: float = ROUTE_Y[index % ROUTE_Y.size()]
+		var right_y: float = ROUTE_Y[(index + 1) % ROUTE_Y.size()]
+		var y := minf(left_y, right_y) - 80.0 - float(index % 2) * 10.0
+		_spawn_saw(
+			world,
+			Vector2((left_x + right_x) * 0.5, y),
+			PLATFORM_SIZE.x,
+			1.15
+		)
+
+
+static func _spawn_saw(world: Node2D, center: Vector2, move_range: float, speed: float) -> Node2D:
+	var saw := SAW_SCENE.instantiate()
+	saw.position = center
+	saw.set("move_range", move_range)
+	saw.set("move_speed", speed)
+	saw.set("warmup_time", 0.6)
+	world.add_child(saw)
+	return saw
+
+
 static func _kind_for(index: int) -> Platform.Kind:
 	return [
 		Platform.Kind.STATIC,
 		Platform.Kind.HORIZONTAL,
-		Platform.Kind.CIRCULAR,
 		Platform.Kind.SPIKED,
+		Platform.Kind.CIRCULAR,
 		Platform.Kind.ROTATING,
-	][index % 5]
+		Platform.Kind.SPIKED,
+	][index % 6]
 
 
 static func _build_spawner(world: Node2D) -> void:
 	var spawner := FlyingSpawner.new()
 	spawner.name = "FlyingSpawner"
-	spawner.spawn_interval = 4.0
-	spawner.initial_delay = 2.0
+	spawner.spawn_interval = 3.0
+	spawner.initial_delay = 1.5
 	spawner.height_mode = FlyingSpawner.HeightMode.RANDOM
-	spawner.min_height = 150.0
-	spawner.max_height = 520.0
+	spawner.min_height = 110.0
+	spawner.max_height = 560.0
+	spawner.side_margin = 40.0
 	world.add_child(spawner)
 
 
 static func _build_finish(level: Node2D) -> void:
 	var portal := level.get_node_or_null("ExitPortal")
 	if portal != null:
-		portal.position = Vector2(13200.0, 580.0)
+		portal.position = Vector2(16400.0, 580.0)
 
 	var camera := level.get_node_or_null("Camera") as Camera2D
 	if camera != null:

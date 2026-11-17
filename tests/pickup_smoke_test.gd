@@ -47,7 +47,7 @@ func _run() -> void:
 	player.global_position = herb.global_position
 	await _wait_physics(8)
 
-	_check(player.health.current_health == 2, "La hierba curativa recupera el golpe perdido")
+	_check(player.health.current_health == 3, "La hierba curativa recupera el golpe perdido")
 	_check(not is_instance_valid(herb), "La hierba desaparece al recogerse")
 
 	print("")

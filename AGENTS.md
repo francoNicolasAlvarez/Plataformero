@@ -76,13 +76,16 @@ scripts/
              # player_stats.gd,
              # attacks/ (attack_data.gd + attack_hitbox.gd)
   enemies/   # jerarquía: TrainingDummy -> RangedEnemy/SpreadEnemy/WalkerEnemy;
-             # flying_enemy.gd + flying_spawner.gd (voladores ondulantes)
+             # flying_enemy.gd + flying_spawner.gd (voladores ondulantes),
+             # sky_sentry.gd (centinela superior que dispara cada 2 s)
   levels/    # test_level.gd (controlador común) + layouts generados por código:
              # level_one_extension.gd, level_two_layout.gd, level_three_layout.gd,
              # level_four_layout.gd (gran pozo de plataformas móviles),
              # level_four_route.gd (plataformas del pozo y enemigos a bordo),
-             # level_five_layout.gd (cielo con 21 plataformas y voladores),
-             # level_six_layout.gd (fortaleza de saltos largos y trampas),
+             # level_five_layout.gd (cielo con 28 plataformas, voladores y
+             # sierras suspendidas),
+             # level_six_layout.gd (fortaleza de 20 plataformas, trampas y
+             # centinela superior),
              # platform_spacing.gd (regla de espaciado entre plataformas)
   combat/    # health.gd (vida reutilizable por jugador y enemigos)
   core/      # save_game.gd (nivel guardado + tiempo/muertes, user://save.cfg),
@@ -97,7 +100,7 @@ resources/player/  # player_stats.tres y basic_attack.tres (AttackData)
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (30 en total)
+tests/       # smoke tests headless, uno por sistema (31 en total)
 ```
 
 Decisiones clave:
@@ -106,8 +109,9 @@ Decisiones clave:
 - Los datos sensibles van en `Resource` exportables (`PlayerStats`,
   `AttackData`) para reutilizarlos con futuros personajes/armas.
 - Comunicación entre sistemas mediante señales de Godot.
-- El jugador muere con 2 golpes (cualquier daño normal consume 1 golpe;
-  los valores >= 9999 son letales instantáneos: pozos y cronómetro).
+- El jugador muere con 3 golpes (cualquier daño normal consume 1 golpe;
+  los valores >= 9999 son letales instantáneos: pozos y cronómetro). La
+  invulnerabilidad tras recibir daño dura 1 s.
 - **Modo plataformas lineal (2026-11-12)**: el objetivo es llegar al final del
   juego; no hay progresión roguelite ni botín permanente. `SaveGame` guarda el
   nivel alcanzado para continuar. Cada nivel da 3 vidas: morir reaparece en el
@@ -721,25 +725,170 @@ actualizar esos tests.
       Actualizados: `level_four_smoke_test` 58, `menu_smoke_test` 35,
       `platform_spacing_smoke_test` 22 (incluye niveles 5/6). Suite: 30/30.
     NOTA: el exe de `dist/` se re-exportó con los ítems 35-36.
+37. **Menú de pausa completo, pinchos sobre suelo y vuelo duplicado
+    (2026-11-16)**:
+    - **Pausa con menú**: `scenes/ui/pause_overlay.tscn` pasa de una guía
+      simple a tres paneles (`MenuPanel`, `GuidePanel`, `SettingsPanel`).
+      El menú ofrece CONTINUAR, GUÍA, CONFIGURACIÓN, VOLVER AL MENÚ PRINCIPAL
+      y SALIR. La guía reutiliza `ControlGuide` en una columna (12 keycaps);
+      Configuración replica brillo, volumen, rebinding y restaurar controles
+      del menú principal. `scripts/ui/pause_overlay.gd` conserva la pausa con
+      Enter y sigue bloqueada al morir/completar; volver al menú reanuda el
+      árbol y usa `SceneFade`, y Salir cierra el juego.
+    - **Brillo en pausa**: se aplica al `CanvasModulate` del nivel mediante
+      `GameSettings.apply_brightness()`, no a una capa nueva.
+    - **Pinchos solo en suelo**: en `level_two_layout.gd` se eliminan los
+      cuatro pinchos del fondo de los fosos y el de x=5450 se mueve a x=5800
+      (isla de tierra 5620-7000). Los pinchos de borde de las plataformas
+      `Platform.Kind.SPIKED` siguen permitidos. Tests: `level_two` 29 y
+      `hazard_legibility` 7 validan que no haya pinchos sueltos en el aire.
+    - **Vuelo más amplio y rápido**: `FlyingEnemy.wave_amplitude` pasa de
+      42 a 84 y `wave_frequency` de 2.2 a 4.4 (+100 % de recorrido vertical y
+      de velocidad de oscilación). `flying_enemy_smoke_test` 11 comprueba los
+      valores base.
+    - **Tests**: `pause_smoke_test` 38 (menú, guía, configuración, paneles que
+      caben en pantalla, cancelación de rebinding, reanudar y bloqueo tras
+      morir),
+      `level_two_smoke_test` 29, `flying_enemy_smoke_test` 11 y
+      `hazard_legibility_smoke_test` 7. Suite completa: 30/30.
+    NOTA: el exe de `dist/` se re-exportó con los ítems 18-37.
+38. **Contornos negros en formas geométricas básicas (2026-11-16)**:
+    - **Objetivo**: mejorar la legibilidad de las trampas y estructuras
+      dibujadas con polígonos planos. Se añadió un contorno negro cerrado
+      (`Line2D`, 2-3.5 px, unión y extremos redondeados) a las plataformas,
+      plataformas móviles, pinchos, sierras, controles (base, mástil y
+      bandera) y portal (borde exterior, anillo medio y núcleo).
+    - **Plataformas dinámicas**: `platform.gd` crea/actualiza `Outline` en
+      `_refresh()` con los mismos límites que `platform_size`; así el
+      contorno sigue el tamaño y queda por encima del vestido visual.
+    - **Animaciones intactas**: los contornos son hijos de los polígonos en
+      controles, portal y sierras, por lo que acompañan al recoloreo, al
+      pulso del portal y al giro de la sierra. El pincho mantiene su pulso
+      de `Visual` y el contorno queda fijo.
+    - **Tests**: `visual_polish_smoke_test` pasa a 55 comprobaciones
+      (existencia, cierre y color negro de 11 contornos, además del ajuste
+      dinámico del contorno de plataforma). Suite completa: 30/30.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se
+    pida.
+39. **Murciélagos al borde visible y resistencia del jugador (2026-11-16)**:
+    - **Despawn por pantalla**: `FlyingEnemy` elimina `lifetime` y usa
+      `despawn_margin` (48 px) + `_visible_world_rect()` (Camera2D actual,
+      zoom y `get_screen_center_position()`). Desaparece al cruzar el borde
+      visible en su dirección, no por tiempo ni distancia.
+    - **Tres golpes**: `scenes/player/player.tscn` sube
+      `Health.max_health` a 3; el HUD dibuja tres corazones de forma
+      dinámica (`test_level.gd`).
+    - **Invulnerabilidad 1 s**: `PlayerStats.invulnerability_time` pasa de
+      0.5 a 1.0 tanto en el recurso como en el valor por defecto.
+    - Tests: `flying_enemy_smoke_test` 12 (borde derecho e izquierdo con
+      Camera2D), `survival_smoke_test` 26 (tres golpes y HUD),
+      `checkpoint` 13, `healing` 5, `inventory` 43, `pickup` 7,
+      `enemy_patrol` 8, `enemy_ranged` 23, `enemy_visual` 29 y `level_two`
+      29 ajustados a las nuevas esperas de 1 s. Suite: 30/30.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se
+    pida.
+40. **Texturas procedurales de plataformas (2026-11-16)**:
+    - **Helper reutilizable**: `scripts/world/platform_texture.gd`
+      (`class_name PlatformTexture`) crea/actualiza `TextureDetail` con vetas
+      horizontales y motas deterministas de baja opacidad. Usa semilla basada
+      en tamaño/color, no necesita assets y se inserta debajo de los remates y
+      del contorno.
+    - **Cobertura**: `Platform._refresh()` aplica la textura a las plataformas
+      estáticas, móviles, circulares, giratorias y con pinchos de los seis
+      niveles; `MovingPlatform._ready()` hace lo mismo con su tamaño y color
+      del nivel 4.
+    - Tests: `visual_polish_smoke_test` pasa a 62 comprobaciones (textura en
+      plataforma fija y móvil, opacidad sutil, adaptación al ancho y orden
+      bajo el contorno). Suite completa: 30/30.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se
+    pida.
+41. **Niveles 5 y 6 ampliados, sierras aéreas y centinela (2026-11-16)**:
+    - **Nivel 5**: recorrido de 28 plataformas (antes 21), ancho 17000 px,
+      portal en 16400, control en el índice 13, hierbas en 5/18/24 y cuatro
+      sierras suspendidas en los índices 4/10/17/23. El tipo de plataforma
+      alterna seis variantes (con más pinchos) y el fondo crece a 12 colinas,
+      16 nubes, 7 aves y rocas flotantes adicionales.
+    - **Nivel 6**: recorrido de 20 plataformas (antes 14), ancho 18000 px,
+      portal en 17400, control en el índice 10 y hierbas en 5/13/19. Suma
+      cinco sierras de suelo (1/5/9/14/18) y cinco suspendidas
+      (2/6/10/14/17), además del centinela superior.
+    - **Sierras**: `saw_trap.gd` dibuja una rueda de 12 dientes (radios 27/18)
+      y un `PathGuide` (`Line2D`, `top_level`) con el recorrido completo.
+      `move_range` sigue siendo la mitad del trayecto; las suspendidas usan
+      `PLATFORM_SIZE.x`, así su recorrido mide el doble del ancho de una
+      plataforma normal.
+    - **Centinela**: `SkySentry` + escena, grupo `sky_sentries`, se mantiene en
+      el centro del borde superior de la cámara, oscila ligeramente y dispara
+      cada 2 s un proyectil apuntado a 260 px/s. No tiene vida ni colisión.
+      Aparece en el nivel 6.
+    - Tests: `level_five_smoke_test` 39, `level_six_smoke_test` 55 y
+      `sky_sentry_smoke_test` 9. Suite completa: 31/31.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se
+    pida.
+
+
+42. **Ajustes del centinela, voladores, pozos y mago azul (2026-11-16)**:
+    - **Centinela**: `SkySentry` dispara 5 proyectiles en un cono de 70°
+      equidistante y apuntado al jugador (antes 10); se ancla en la esquina
+      superior derecha de la cámara (`right_margin` 120, `top_margin` 80) y
+      su visual crece a escala 1.75.
+    - **Voladores del nivel 5**: `FlyingSpawner` lanza uno cada 3 s (antes 4)
+      con retardo inicial 1.5 s, altura aleatoria 110-560, lado y margen
+      aleatorios; los murciélagos entran en el grupo `flying_enemies` y
+      `TestLevel._on_player_died()` los limpia con
+      `FlyingSpawner.clear_flying_enemies()`.
+    - **Contacto fiable**: se ampliaron las `DamageArea` de flying (46x32),
+      ranged (40x50) y spread (40x40) para que el daño por contacto se note
+      con los cuerpos más pequeños.
+    - **Nivel 5**: se eliminaron las aves decorativas del layout.
+    - **Nivel 6**: la capa de montañas (`HillParallax`) gana un suelo que
+      llega al borde inferior (y 650-720) y el suelo inicial baja hasta 720;
+      se añadió `GiantCreatureParallax` (0.05, z -28) con la silueta negra
+      de una criatura gigante, haz de luz azul y ojo en forma de luna
+      creciente (el haz se recorta en y=640, sin salir de pantalla).
+    - **Pozos mortales**: la `FallZone` de los niveles 5 y 6 medía 14000 px
+      centrada en x=6800 y dejaba sin protección los últimos huecos (hasta
+      x≈16000); ahora se centra en el nivel y su forma cubre todo el ancho
+      (`LEVEL_WIDTH + 800`, alto 120). Tests de regresión añadidos.
+    - **Mago azul y sonidos**: `fireball.svg` pasa a paleta azul/cian (orbe
+      de energía), la estela y el estallido al impactar también son azules y
+      el `Glow` se tiñe de azul. Nuevos sonidos procedurales en `sfx.gd`:
+      `magic` (orbe del mago), `arrow` (flecha del arquero) y `sentry`
+      (descarga del centinela); cada enemigo usa el suyo.
+    - Tests: `sky_sentry` 16, `flying_enemy` 14, `level_five` 41,
+      `level_six` 58 y `enemy_ranged` 25 (incluye comprobación de sonidos
+      distintos). Suite completa: 31/31.
+    NOTA: el exe de `dist/` se re-exportó con los ítems 18-42.
 
 ## 5. En progreso / estado actual
 
-- Nada a medias. Suite de 30 smoke tests en verde (verificado en esta
-  sesión) tras aplicar los ítems 28-36: modo plataformas lineal con un único
-  checkpoint a mitad de cada nivel, tres vidas por nivel, reglas de tiempo de
-  reaparición (+10 s / 30 s), inventario real con poción/ración y espacios
-  Q/E, selección directa de nivel, soporte de mando, guardado de
-  nivel/tiempo/muertes, pantalla de juego completado, fundidos de imagen y
-  música, aviso de descanso en controles y trampas legibles, y agentes
-  opencode por área.
+- Suite de 31 smoke tests en verde (verificado en esta sesión) tras aplicar
+  los ítems 28-42: modo plataformas lineal con un único checkpoint a mitad de
+  cada nivel, tres vidas por nivel, reglas de tiempo de reaparición (+10 s /
+  30 s), inventario real con poción/ración y espacios Q/E, selección directa
+  de nivel, soporte de mando, guardado de nivel/tiempo/muertes, pantalla de
+  juego completado, fundidos de imagen y música, aviso de descanso en
+  controles, trampas legibles, menú de pausa completo con guía y
+  configuración, contornos negros en formas geométricas básicas, agentes
+  opencode por área, murciélagos que desaparecen al salir del borde visible,
+  tres golpes de vida e invulnerabilidad de 1 s.
+  Las plataformas de todos los niveles llevan una textura procedural sutil
+  (vetas y motas) que se adapta a su tamaño y color.
   El nivel 4 tiene las 17 plataformas de la ruta activas a la vez (sin
   reciclado ni desapariciones), con enemigos a bordo, el control central
   despejado y el inicio sin enemigos en la mitad izquierda. Sus trayectorias
   no se solapan y ninguna plataforma se inclina más de 30°.
   Los niveles 5 y 6 usan el asset modular de plataformas: el 5 es un cielo
-  de 21 plataformas con voladores temporizados y el 6 una fortaleza de saltos
-  largos con pinchos, sierras y giros. La cadena termina en la pantalla final.
-  El ejecutable de `dist/` se re-exportó con los ítems 18-36.
+  de 28 plataformas con voladores cada 3 s (recorrido ondulante duplicado),
+  cuatro sierras suspendidas y sin aves decorativas; el 6 es una fortaleza
+  de 20 plataformas con pinchos, diez sierras (cinco de suelo y cinco
+  suspendidas), giros, la criatura gigante de fondo y un centinela en la
+  esquina superior derecha que dispara 5 proyectiles cada 2 s. Los pozos de
+  ambos niveles están cubiertos por una única FallZone a todo el ancho.
+  El mago lanza orbes de energía azules con estela y sonido propios; el
+  arquero y el centinela tienen efectos de sonido distintos. La cadena
+  termina en la pantalla final. El ejecutable de `dist/` se re-exportó con
+  los ítems 18-42.
 
 ## 6. Próximos pasos (roadmap acordado, en orden de prioridad)
 

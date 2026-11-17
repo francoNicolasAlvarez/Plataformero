@@ -35,10 +35,14 @@ func _run() -> void:
 
 	var platforms := _collect_platforms(level.get_node("LevelSixGenerated"))
 	var route: Array[Platform] = []
+	var route_end_x := LevelSixLayout.ROUTE_START_X + float(LevelSixLayout.ROUTE_COUNT - 1) * LevelSixLayout.ROUTE_STEP
 	var spiked := 0
 	var rotating: Platform = null
 	for platform in platforms:
-		if platform.position.x > 1000.0 and platform.position.x < 11400.0:
+		if (
+			platform.position.x >= LevelSixLayout.ROUTE_START_X - 1.0
+			and platform.position.x <= route_end_x + 1.0
+		):
 			route.append(platform)
 		if platform.kind == Platform.Kind.SPIKED:
 			spiked += 1
@@ -47,7 +51,10 @@ func _run() -> void:
 	route.sort_custom(func(a: Platform, b: Platform) -> bool:
 		return a.position.x < b.position.x
 	)
-	_check(route.size() == LevelSixLayout.ROUTE_COUNT, "La ruta del nivel 6 tiene 14 plataformas")
+	_check(
+		route.size() == LevelSixLayout.ROUTE_COUNT,
+		"La ruta del nivel 6 tiene %d plataformas" % LevelSixLayout.ROUTE_COUNT
+	)
 	_check(spiked >= 5, "El nivel 6 tiene varias plataformas con pinchos")
 	_check(rotating != null, "El nivel 6 incluye plataformas giratorias")
 	_check(PlatformSpacing.collect_violations(level).is_empty(), "Las plataformas respetan el espaciado mínimo")
@@ -79,7 +86,29 @@ func _run() -> void:
 			_check(left.visible and right.visible, "Los pinchos de borde son visibles")
 
 	var saws := get_nodes_in_group("saws")
-	_check(saws.size() == LevelSixLayout.SAW_INDICES.size(), "El nivel 6 tiene una sierra por plataforma elegida")
+	var expected_saws := LevelSixLayout.SAW_INDICES.size() + LevelSixLayout.AIR_SAW_INDICES.size()
+	_check(saws.size() == expected_saws, "El nivel 6 tiene %d sierras entre suelo y aire" % expected_saws)
+	var air_saws: Array[Node] = []
+	var guided_saws := 0
+	for saw in saws:
+		var guide := saw.get_node_or_null("PathGuide") as Line2D
+		if guide != null and guide.points.size() == 2:
+			guided_saws += 1
+		if float(saw.get("move_range")) >= LevelSixLayout.PLATFORM_SIZE.x - 1.0:
+			air_saws.append(saw)
+	_check(guided_saws == saws.size(), "Cada sierra muestra la guía de su trayecto")
+	_check(
+		air_saws.size() == LevelSixLayout.AIR_SAW_INDICES.size(),
+		"Hay %d sierras suspendidas en el aire" % LevelSixLayout.AIR_SAW_INDICES.size()
+	)
+	if not air_saws.is_empty():
+		var air_saw := air_saws[0] as Node2D
+		var air_guide := air_saw.get_node("PathGuide") as Line2D
+		_check(air_saw.global_position.y < 400.0, "La sierra suspendida está en el aire")
+		_check(
+			is_equal_approx(absf(air_guide.points[1].x - air_guide.points[0].x), LevelSixLayout.PLATFORM_SIZE.x * 2.0),
+			"El trayecto de la sierra mide el doble que una plataforma"
+		)
 	var saw_start := Vector2.ZERO
 	if saws.size() > 0:
 		var saw := saws[0] as Node2D
@@ -96,10 +125,32 @@ func _run() -> void:
 
 	_check(get_nodes_in_group("checkpoints").size() == 1, "El nivel 6 tiene un único control")
 	_check(get_nodes_in_group("healing_pickups").size() >= 2, "El nivel 6 incluye hierbas curativas")
-	_check(get_nodes_in_group("enemies").is_empty(), "El nivel 6 se centra en las trampas, sin enemigos fijos")
+	var sentry := level.get_node_or_null("LevelSixGenerated/SkySentry") as SkySentry
+	_check(sentry != null, "El nivel 6 tiene un centinela superior")
+	if sentry != null:
+		_check(sentry.is_in_group("enemies"), "El centinela cuenta como enemigo")
+		_check(is_equal_approx(sentry.shoot_interval, 2.0), "El centinela dispara cada 2 segundos")
+		var center := camera.get_screen_center_position()
+		var half_width := root.get_visible_rect().size.x * 0.5 / maxf(camera.zoom.x, 0.01)
+		var expected_x := center.x + half_width - sentry.right_margin
+		_check(
+			absf(sentry.global_position.x - expected_x) < 2.0,
+			"El centinela se mantiene en la esquina superior derecha"
+		)
+		_check(sentry.global_position.y < 120.0, "El centinela está en el borde superior")
+	_check(level.get_node_or_null("LevelSixGenerated/GiantCreatureParallax/GiantCreature") != null, "El nivel 6 muestra una criatura gigante lejana")
 	_check(get_nodes_in_group("coins").is_empty(), "El nivel 6 no tiene monedas")
-	_check(portal.global_position.x > 13000.0, "El portal está en la isla final del nivel 6")
+	_check(portal.global_position.x > 17000.0, "El portal está en la isla final del nivel 6")
 	_check(camera.limit_right == int(LevelSixLayout.LEVEL_WIDTH), "La cámara cubre todo el nivel 6")
+
+	var fall_zone := level.get_node_or_null("LevelSixGenerated/FallZoneFortress") as Area2D
+	_check(fall_zone != null, "El nivel 6 tiene zona de caida")
+	if fall_zone != null:
+		var fall_shape := fall_zone.get_node("CollisionShape2D").shape as RectangleShape2D
+		_check(
+			fall_shape.size.x >= LevelSixLayout.LEVEL_WIDTH,
+			"La zona de caida cubre todo el ancho del nivel 6"
+		)
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])
