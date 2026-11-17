@@ -43,7 +43,7 @@ func _physics_process(delta: float) -> void:
 		_check_contact_damage()
 		return
 	if not is_on_floor():
-		velocity.y += gravity * delta
+		velocity.y += gravity * _gravity_sign * delta
 	else:
 		velocity.y = 0.0
 
@@ -112,7 +112,7 @@ func _shoot(direction: float) -> void:
 		var shot_velocity := aim.rotated(start_angle + step * float(i)) * projectile_speed
 		var projectile := PROJECTILE_SCENE.instantiate()
 		_projectile_parent().add_child(projectile)
-		projectile.global_position = global_position + Vector2(direction * 30.0, -14.0)
+		projectile.global_position = global_position + Vector2(direction * 30.0, -14.0 * _gravity_sign)
 		projectile.direction = direction
 		projectile.speed = projectile_speed
 		projectile.velocity = shot_velocity

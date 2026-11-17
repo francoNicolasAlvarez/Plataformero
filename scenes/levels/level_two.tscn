@@ -6,4 +6,4 @@
 level_variant = 2
 next_level_path = "res://scenes/levels/level_three.tscn"
 level_name = "NIVEL 2"
-time_limit = 80.0
+time_limit = 70.0

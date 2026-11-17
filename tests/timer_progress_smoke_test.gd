@@ -26,7 +26,7 @@ func _run() -> void:
 
 	await _wait_process(5)
 
-	_check(level.time_limit == 100.0, "El nivel define un límite de tiempo")
+	_check(level.time_limit == 70.0, "El nivel define un límite de tiempo")
 	_check(timer_label.text.begins_with("TIEMPO:"), "El HUD muestra la cuenta regresiva")
 	_check(is_equal_approx(progress.value, 0.0), "La barra de progreso empieza vacía")
 	_check(progress_label.text.begins_with("PROGRESO DE NIVEL"), "El marcador de porcentaje es visible con borde y letras negras")

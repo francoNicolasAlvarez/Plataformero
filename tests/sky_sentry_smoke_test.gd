@@ -49,7 +49,7 @@ func _run() -> void:
 	_check(sentry.global_position.y < 150.0, "El centinela está pegado al borde superior")
 
 	camera.position.x = 1000.0
-	await _wait_physics(3)
+	await _wait_physics(12)
 	center = camera.get_screen_center_position()
 	expected_x = center.x + half_width - sentry.right_margin
 	_check(
@@ -57,6 +57,8 @@ func _run() -> void:
 		"El centinela se mueve con la cámara manteniéndose en la esquina derecha"
 	)
 
+	sentry.bob_amplitude = 0.0
+	await _wait_physics(2)
 	sentry.call("_shoot_at_player")
 	await _wait_physics(2)
 	var projectiles: Array[EnemyProjectile] = []
@@ -72,6 +74,21 @@ func _run() -> void:
 			_check(
 				is_equal_approx(projectile.velocity.length(), sentry.projectile_speed),
 				"Cada proyectil usa la velocidad del centinela"
+			)
+			_check(projectile.is_sentry_style(), "El ataque del centinela usa el estilo rojo")
+			_check(
+				String(projectile.sprite.texture.resource_path).ends_with("sentry_bolt.svg"),
+				"El proyectil del centinela usa la textura roja"
+			)
+		_check(
+			projectiles[0].impact_color.r > 0.9 and projectiles[0].impact_color.g < 0.5,
+			"El estallido del centinela es rojo"
+		)
+		var trail := projectiles[0].get_node_or_null("FlameTrail") as CPUParticles2D
+		if trail != null and trail.color_ramp != null:
+			_check(
+				trail.color_ramp.colors[1].r > 0.9 and trail.color_ramp.colors[1].g < 0.5,
+				"La estela del centinela es roja"
 			)
 		angles.sort()
 		var center_index := 2

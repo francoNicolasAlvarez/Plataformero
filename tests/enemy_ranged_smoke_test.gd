@@ -52,6 +52,7 @@ func _run() -> void:
 		)
 		_check(high_shot.velocity.x < 0.0, "El proyectil sale hacia el lado donde está el jugador")
 		_check(high_shot.style == EnemyProjectile.Style.FIRE, "El mago dispara orbes de energia azul")
+		_check(not high_shot.is_sentry_style(), "El mago no usa el estilo rojo del centinela")
 		_check(high_shot.get_node_or_null("FlameTrail") is CPUParticles2D, "El orbe lleva estela de energia")
 	_clear_projectiles(level)
 	perch.free()

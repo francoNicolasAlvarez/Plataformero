@@ -10,6 +10,7 @@ const LEVEL_PATHS := [
 	"res://scenes/levels/level_four.tscn",
 	"res://scenes/levels/level_five.tscn",
 	"res://scenes/levels/level_six.tscn",
+	"res://scenes/levels/level_seven.tscn",
 ]
 
 @onready var brightness_slider: HSlider = $OptionsPanel/PanelMargin/VBox/BrightnessRow/BrightnessSlider

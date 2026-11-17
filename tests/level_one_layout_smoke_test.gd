@@ -52,7 +52,7 @@ func _run() -> void:
 	_check(coins.is_empty(), "El nivel 1 ya no tiene monedas")
 	_check(_count_named(extension, "FallZone") >= 12, "El nivel 1 añade muchos pozos mortales")
 	_check(_count_platforms(extension) >= 100, "El nivel 1 tiene muchas más plataformas")
-	_check(level.time_limit == 100.0, "El nivel 1 tiene una cuenta regresiva de 100 segundos")
+	_check(level.time_limit == 70.0, "El nivel 1 tiene una cuenta regresiva de 70 segundos")
 	_check(suns.size() >= 1, "El nivel 1 incluye un sol de fondo")
 	_check(birds.size() >= 10, "El nivel 1 incluye aves posadas en los árboles")
 	_check(rabbits.is_empty(), "El conejo anterior ya no aparece en el nivel")

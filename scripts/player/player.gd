@@ -29,6 +29,7 @@ const ANIM_DEATH := &"death"
 @export_range(1, 999, 1) var potion_heal_amount: int = 30
 @export_range(1, 999, 1) var weapon_range: int = BASE_WEAPON_RANGE
 @export_range(0.5, 20.0, 0.1) var range_pixels_per_point: float = 2.3
+@export var inverted_gravity: bool = false
 
 @onready var visual: AnimatedSprite2D = $Visual/AnimatedSprite2D
 @onready var visual_root: Node2D = $Visual
@@ -50,6 +51,7 @@ var _death_tween: Tween
 var _squash_tween: Tween
 var _dust: CPUParticles2D
 var _fall_speed: float = 0.0
+var _gravity_sign: float = 1.0
 var _invulnerability_left: float = 0.0
 var _is_dead: bool = false
 var inventory: Inventory = Inventory.new()
@@ -64,6 +66,8 @@ func _ready() -> void:
 	if basic_attack == null:
 		basic_attack = AttackData.new()
 
+	configure_gravity()
+
 	health.died.connect(_on_health_died)
 	inventory.reset_starting_items(starting_potions, starting_rations)
 	inventory.changed.connect(_on_inventory_changed)
@@ -71,7 +75,17 @@ func _ready() -> void:
 	visual.flip_h = _facing < 0
 	_play_animation(ANIM_IDLE)
 	landed.connect(_on_landed_fx)
-	_dust = Fx.make_dust(self, Vector2(0.0, 22.0))
+	_dust = Fx.make_dust(self, Vector2(0.0, -22.0 if inverted_gravity else 22.0))
+
+func configure_gravity() -> void:
+	_gravity_sign = -1.0 if inverted_gravity else 1.0
+	up_direction = Vector2.DOWN if inverted_gravity else Vector2.UP
+	visual.scale.y = -1.0 if inverted_gravity else 1.0
+	var shadow := get_node_or_null("Shadow") as Polygon2D
+	if shadow != null:
+		shadow.position.y = -24.0 if inverted_gravity else 24.0
+	if _dust != null:
+		_dust.position = Vector2(0.0, -22.0 if inverted_gravity else 22.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -138,7 +152,7 @@ func _update_jump_windows(delta: float) -> void:
 	# Soltar el botón durante el ascenso recorta la altura del salto.
 	if Input.is_action_just_released("jump"):
 		_jump_hold_left = 0.0
-		if velocity.y < 0.0:
+		if velocity.y * _gravity_sign < 0.0:
 			velocity.y *= stats.jump_cut_multiplier
 
 
@@ -169,26 +183,27 @@ func _handle_horizontal_movement(delta: float) -> void:
 
 func _apply_gravity(delta: float) -> void:
 	if is_on_floor():
-		velocity.y = maxf(velocity.y, 0.0)
+		velocity.y = _gravity_sign * maxf(velocity.y * _gravity_sign, 0.0)
 		return
 
-	# Caída rápida (2026-11-12): mantener Abajo/S hunde al jugador al
-	# instante e interrumpe la carga del salto.
 	var fast_falling := Input.is_action_pressed("move_down")
+	var falling_speed := velocity.y * _gravity_sign
 
-	if not fast_falling and velocity.y < 0.0 and _jump_hold_left > 0.0 \
+	if not fast_falling and falling_speed < 0.0 and _jump_hold_left > 0.0 \
 			and Input.is_action_pressed("jump"):
-		velocity.y -= stats.jump_hold_acceleration * delta
+		velocity.y -= _gravity_sign * stats.jump_hold_acceleration * delta
 		_jump_hold_left = maxf(0.0, _jump_hold_left - delta)
+		falling_speed = velocity.y * _gravity_sign
 
 	var current_gravity := stats.gravity
-	if velocity.y > 0.0:
+	if falling_speed > 0.0:
 		current_gravity *= stats.fall_gravity_multiplier
 
-	velocity.y = minf(velocity.y + current_gravity * delta, stats.max_fall_speed)
+	falling_speed = minf(falling_speed + current_gravity * delta, stats.max_fall_speed)
+	velocity.y = _gravity_sign * falling_speed
 
 	if fast_falling:
-		velocity.y = maxf(velocity.y, stats.fast_fall_speed)
+		velocity.y = _gravity_sign * maxf(falling_speed, stats.fast_fall_speed)
 		_jump_hold_left = 0.0
 
 
@@ -210,7 +225,7 @@ func _handle_jump() -> void:
 
 func _jump() -> void:
 	# v = sqrt(2 * g * h) permite configurar la altura en lugar de la velocidad.
-	velocity.y = -sqrt(2.0 * stats.gravity * stats.jump_height)
+	velocity.y = -_gravity_sign * sqrt(2.0 * stats.gravity * stats.jump_height)
 	_jump_buffer_left = 0.0
 	_jump_hold_left = stats.jump_hold_time
 	_squash(Vector2(0.84, 1.18), 0.14)
@@ -263,7 +278,7 @@ func _apply_knockback(source: Node) -> void:
 			direction = -_facing
 
 	velocity.x = float(direction) * stats.knockback_force
-	velocity.y = -stats.knockback_up_force
+	velocity.y = -_gravity_sign * stats.knockback_up_force
 
 
 func _handle_items() -> void:
@@ -324,10 +339,10 @@ func _on_health_died() -> void:
 	_death_tween.tween_property(
 		visual,
 		"rotation",
-		-PI * 0.42 * float(_facing),
+		-PI * 0.42 * float(_facing) * _gravity_sign,
 		0.45
 	).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_death_tween.tween_property(visual, "position", Vector2(0.0, 20.0), 0.45)
+	_death_tween.tween_property(visual, "position", Vector2(0.0, 20.0 * _gravity_sign), 0.45)
 	_death_tween.tween_property(
 		visual,
 		"modulate",
@@ -445,7 +460,7 @@ func _update_animation() -> void:
 	var next_animation := ANIM_IDLE
 
 	if not is_on_floor():
-		next_animation = ANIM_JUMP if velocity.y < 0.0 else ANIM_FALL
+		next_animation = ANIM_JUMP if velocity.y * _gravity_sign < 0.0 else ANIM_FALL
 	elif absf(velocity.x) > 8.0:
 		next_animation = ANIM_RUN if _is_running else ANIM_WALK
 

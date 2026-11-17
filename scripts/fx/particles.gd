@@ -96,6 +96,25 @@ static func make_fire_trail(parent: Node2D, offset: Vector2 = Vector2.ZERO) -> C
 	## Estela de llamas continua alrededor de una bola de fuego en vuelo.
 	## Es omnidireccional (spread 180 con gravedad hacia arriba) para que el
 	## giro del proyectil no afecte al resultado: las llamas suben siempre.
+	return _make_trail(parent, offset, _fire_ramp())
+
+
+static func make_sentry_trail(parent: Node2D, offset: Vector2 = Vector2.ZERO) -> CPUParticles2D:
+	## Estela roja de las descargas del centinela del nivel 6.
+	return _make_trail(parent, offset, _sentry_ramp())
+
+
+static func apply_fire_trail(trail: CPUParticles2D) -> void:
+	if trail != null:
+		trail.color_ramp = _fire_ramp()
+
+
+static func apply_sentry_trail(trail: CPUParticles2D) -> void:
+	if trail != null:
+		trail.color_ramp = _sentry_ramp()
+
+
+static func _make_trail(parent: Node2D, offset: Vector2, ramp: Gradient) -> CPUParticles2D:
 	var flame := _make(parent, offset)
 	flame.name = "FlameTrail"
 	flame.amount = 10
@@ -108,7 +127,7 @@ static func make_fire_trail(parent: Node2D, offset: Vector2 = Vector2.ZERO) -> C
 	flame.initial_velocity_max = 26.0
 	flame.scale_amount_min = 0.5
 	flame.scale_amount_max = 1.4
-	flame.color_ramp = _fire_ramp()
+	flame.color_ramp = ramp
 	return flame
 
 
@@ -147,6 +166,18 @@ static func _fire_ramp() -> Gradient:
 		Color(0.82, 0.96, 1.0, 0.95),
 		Color(0.33, 0.78, 1.0, 0.8),
 		Color(0.09, 0.32, 0.83, 0.0),
+	])
+	return ramp
+
+
+static func _sentry_ramp() -> Gradient:
+	## Blanco -> rojo -> rojo oscuro transparente (descarga del centinela).
+	var ramp := Gradient.new()
+	ramp.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
+	ramp.colors = PackedColorArray([
+		Color(1.0, 0.92, 0.7, 0.95),
+		Color(1.0, 0.32, 0.12, 0.8),
+		Color(0.55, 0.03, 0.02, 0.0),
 	])
 	return ramp
 

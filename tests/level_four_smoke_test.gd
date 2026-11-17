@@ -39,7 +39,7 @@ func _run() -> void:
 	_check(level.level_variant == 4, "El nivel 4 usa la variante del gran pozo")
 	_check(level.level_name == "NIVEL 4", "El nivel se identifica como NIVEL 4")
 	_check(level.next_level_path == NEXT_SCENE, "El nivel 4 continúa hacia el nivel 5")
-	_check(level.time_limit == 90.0, "El nivel 4 tiene 90 segundos")
+	_check(level.time_limit == 70.0, "El nivel 4 tiene 70 segundos")
 	_check(level.get_node_or_null("LevelFourGenerated") != null, "Se generó el contenido del gran pozo")
 	_check(level.get_node("Platforms").get_child_count() == 0, "El nivel 4 limpia las plataformas base")
 	_check(not level.get_node("Background").visible, "El fondo diurno queda oculto")

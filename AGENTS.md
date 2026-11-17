@@ -14,7 +14,7 @@ Videojuego 2D de plataformas **lineal** hecho con **Godot 4.7 (GL
 Compatibility) y GDScript**. Jugabilidad inspirada en Super Mario Bros. con
 exploración, saltos, enemigos, trampas, controles y un final de juego.
 
-Objetivo del jugador: atravesar los seis niveles hasta llegar al final del
+Objetivo del jugador: atravesar los siete niveles hasta llegar al final del
 juego. Cada nivel da tres vidas; al morir se reaparece en el último control
 (bandera) activado y, sin vidas o sin tiempo, el nivel se reinicia. El nivel
 alcanzado queda guardado para continuar la partida.
@@ -62,7 +62,7 @@ scenes/
   ui/pause_overlay.tscn    # pausa con Enter: congela el SceneTree y muestra guía
   ui/game_complete.tscn    # pantalla final con tiempo total y muertes
   levels/test_level.tscn   # BASE de los 6 niveles (HUD, jugador, portal, cámara)
-  levels/level_one|two|three|four|five|six.tscn  # instancias base con level_variant 1-6
+  levels/level_one|two|three|four|five|six|seven.tscn  # instancias base con level_variant 1-6
   player/player.tscn       # Player + AttackHitbox + Health
   enemies/                 # training_dummy, walker, ranged, spread, projectile
   pickups/                 # healing_herb (monedas eliminadas, ver ítem 24)
@@ -77,6 +77,7 @@ scripts/
              # attacks/ (attack_data.gd + attack_hitbox.gd)
   enemies/   # jerarquía: TrainingDummy -> RangedEnemy/SpreadEnemy/WalkerEnemy;
              # flying_enemy.gd + flying_spawner.gd (voladores ondulantes),
+             # enemy_visual_variant.gd (sombrero triangular y ojos del nivel 7),
              # sky_sentry.gd (centinela superior que dispara cada 2 s)
   levels/    # test_level.gd (controlador común) + layouts generados por código:
              # level_one_extension.gd, level_two_layout.gd, level_three_layout.gd,
@@ -86,6 +87,7 @@ scripts/
              # sierras suspendidas),
              # level_six_layout.gd (fortaleza de 20 plataformas, trampas y
              # centinela superior),
+             # level_seven_layout.gd (nivel 7 invertido, espejo del nivel 1),
              # platform_spacing.gd (regla de espaciado entre plataformas)
   combat/    # health.gd (vida reutilizable por jugador y enemigos)
   core/      # save_game.gd (nivel guardado + tiempo/muertes, user://save.cfg),
@@ -104,7 +106,7 @@ tests/       # smoke tests headless, uno por sistema (31 en total)
 ```
 
 Decisiones clave:
-- Los 6 niveles son instancias de una misma escena base; cada variante limpia
+- Los 7 niveles son instancias de una misma escena base; cada variante limpia
   el contenido base y genera su mundo por código (`scripts/levels/*_layout.gd`).
 - Los datos sensibles van en `Resource` exportables (`PlayerStats`,
   `AttackData`) para reutilizarlos con futuros personajes/armas.
@@ -860,10 +862,33 @@ actualizar esos tests.
       distintos). Suite completa: 31/31.
     NOTA: el exe de `dist/` se re-exportó con los ítems 18-42.
 
+43. **Ataque rojo del centinela del nivel 6 (2026-11-16)**:
+    - **Textura propia**: `assets/enemies/sentry_bolt.svg` (orbe rojo/naranja) se reserva para el centinela; el mago conserva el orbe azul del ítem 42.
+    - **`EnemyProjectile`**: nuevos `use_sentry_style()` / `is_sentry_style()` (idempotentes) y `impact_color`. El centinela usa textura, `Glow`, estela y estallido rojos; el mago sigue azul y el arquero no lleva estela.
+    - **`Fx`**: `make_sentry_trail()`, `apply_sentry_trail()` y `_sentry_ramp()` (blanco → rojo → rojo transparente); `make_fire_trail()` mantiene el degradado azul y ambos comparten `_make_trail()`.
+    - **Disparo**: `SkySentry._shoot_at_player()` aplica el estilo rojo a los 5 proyectiles del cono.
+    - Tests: `sky_sentry_smoke_test` 28 (estilo, textura, estela e impacto rojos) y `enemy_ranged_smoke_test` 26 (el mago no usa el estilo rojo). Suite completa: 31/31. El test del centinela deja de ser intermitente (sin bob y más espera al mover la cámara).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+44. **Todos los niveles a 70 segundos (2026-11-16)**:
+    - `TestLevel.time_limit` por defecto pasa de 100 a 70 y las seis escenas (`level_one` a `level_six`) fijan `time_limit = 70.0`, antes 100/80/75/90/110/120.
+    - El HUD base muestra `TIEMPO: 70` y el texto de TIEMPO de Instrucciones queda unificado: "Los seis niveles tienen 70 segundos."
+    - Tests ajustados: `level_one_layout`, `level_four`, `level_five`, `level_six`, `timer_progress` y `menu` (comprueba que las instrucciones digan 70). La ración sigue sumando 5 s y el reaparecer +10/30 s sigue sin superar el nuevo límite.
+    - Suite completa: 31/31.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+45. **Nivel 7 invertido "INVERSO" (2026-11-16)**:
+    - **Gravedad invertida reutilizable**: `Player` gana `inverted_gravity` y `configure_gravity()` (llamada también desde el layout porque el `_ready()` del jugador ya pasó cuando se construye el nivel). Invierte `up_direction`, gravedad, salto, caída rápida, animación, polvo y sombra. `TrainingDummy` (base de walker/ranged/spread) añade el mismo flag y voltea sombra, `HeadShape` y área de daño; los dos scripts con movimiento aplican el signo a la gravedad y el walker invierte su rayo de suelo.
+    - **`EnemyVisualVariant`**: helper estático idempotente (`scripts/enemies/enemy_visual_variant.gd`) que oculta sombreros originales (`SombreroDome*`, `WizardHat`, `ArcherHood`), añade `Visual/Level7Hat` (triángulo amarillo con contorno negro) y reescribe ojos a almendras inclinadas (comisura externa más alta), ocultando cejas del mago. Solo lo llama el nivel 7, así que los niveles 1-6 no cambian.
+    - **`LevelSevenLayout`**: réplica vertical del nivel 1 (`y' = 720 - y`): techo continuo, 12 secciones con pozos, seis plataformas por sección, mismos tiers, área inicial, herencias visuales y base del nivel 1, enemigos y hierbas; el reciclado de alturas respeta la regla de espaciado. Un control en x=11500 a y=128, portal en (21850,140), `FallZoneInverted` a todo el ancho por encima del techo y cámara 0..22400.
+    - **Integración**: `level_six.tscn` encadena al nuevo `level_seven.tscn`, que termina en `game_complete.tscn`. `SaveGame.LAST_LEVEL = 7`, menú con selector 1-7, instrucciones actualizadas y quinto tema procedural en `Sfx._build_music()`.
+    - Tests: `level_seven_smoke_test` nuevo (414 comprobaciones: gravedad, apoyo en techo, salto hacia abajo, techo/portal/control/zona mortal, 39 enemigos con triángulo y ojos, etc.), `menu_smoke_test` 35 (selector de 7), `level_six_smoke_test` 58 (nueva cadena), `platform_spacing_smoke_test` 24 (incluye nivel 7) y `jump_control_smoke_test` 11 (regresión de impulso mantenido). Suite completa: 32/32.
+    NOTA: el exe de `dist/` se re-exportó con los ítems 18-45.
+
 ## 5. En progreso / estado actual
 
-- Suite de 31 smoke tests en verde (verificado en esta sesión) tras aplicar
-  los ítems 28-42: modo plataformas lineal con un único checkpoint a mitad de
+- Suite de 32 smoke tests en verde (verificado en esta sesión) tras aplicar
+  los ítems 28-45: modo plataformas lineal con un único checkpoint a mitad de
   cada nivel, tres vidas por nivel, reglas de tiempo de reaparición (+10 s /
   30 s), inventario real con poción/ración y espacios Q/E, selección directa
   de nivel, soporte de mando, guardado de nivel/tiempo/muertes, pantalla de
@@ -886,9 +911,13 @@ actualizar esos tests.
   esquina superior derecha que dispara 5 proyectiles cada 2 s. Los pozos de
   ambos niveles están cubiertos por una única FallZone a todo el ancho.
   El mago lanza orbes de energía azules con estela y sonido propios; el
-  arquero y el centinela tienen efectos de sonido distintos. La cadena
-  termina en la pantalla final. El ejecutable de `dist/` se re-exportó con
-  los ítems 18-42.
+  arquero y el centinela tienen efectos de sonido distintos. El ataque del
+  centinela del nivel 6 es rojo (orbe, estela y estallido). La cadena
+  termina en la pantalla final. Los seis niveles tienen un límite de 70 s.
+  El nivel 7 es un reflejo vertical del nivel 1 con gravedad invertida;
+  todos sus enemigos usan los tipos conocidos con sombrero triangular
+  amarillo y ojos almendrados. El ejecutable de `dist/` incluye los ítems
+  18-45.
 
 ## 6. Próximos pasos (roadmap acordado, en orden de prioridad)
 

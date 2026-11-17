@@ -6,7 +6,7 @@ extends SceneTree
 ## godot --headless --path . --script res://tests/level_six_smoke_test.gd
 
 const LEVEL_SCENE := preload("res://scenes/levels/level_six.tscn")
-const COMPLETE_SCENE := "res://scenes/ui/game_complete.tscn"
+const NEXT_SCENE := "res://scenes/levels/level_seven.tscn"
 
 var _failures: int = 0
 var _checks: int = 0
@@ -27,8 +27,8 @@ func _run() -> void:
 
 	_check(level.level_variant == 6, "El nivel 6 usa la variante FORTALEZA")
 	_check(level.level_name == "NIVEL 6", "El nivel se identifica como NIVEL 6")
-	_check(level.next_level_path == COMPLETE_SCENE, "El nivel 6 lleva a la pantalla final")
-	_check(level.time_limit == 120.0, "El nivel 6 tiene 120 segundos")
+	_check(level.next_level_path == NEXT_SCENE, "El nivel 6 lleva al nivel 7")
+	_check(level.time_limit == 70.0, "El nivel 6 tiene 70 segundos")
 	_check(level.get_node_or_null("LevelSixGenerated") != null, "Se generó la fortaleza del nivel 6")
 	_check(level.get_node("Platforms").get_child_count() == 0, "El nivel 6 limpia las plataformas base")
 	_check(player.global_position.x <= 100.0, "El jugador empieza en el extremo izquierdo")

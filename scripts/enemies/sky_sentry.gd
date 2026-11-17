@@ -73,6 +73,7 @@ func _shoot_at_player() -> void:
 		var direction := Vector2(cos(angle), sin(angle))
 		var projectile := PROJECTILE_SCENE.instantiate() as EnemyProjectile
 		parent.add_child(projectile)
+		projectile.use_sentry_style()
 		projectile.global_position = origin
 		projectile.direction = 1.0 if direction.x >= 0.0 else -1.0
 		projectile.speed = projectile_speed

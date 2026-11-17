@@ -4,6 +4,7 @@ extends CharacterBody2D
 ## aplica daño, actualiza la vida y elimina al enemigo al llegar a cero.
 
 @export_range(0, 999, 1) var contact_damage: int = 20
+@export var inverted_gravity: bool = false
 
 @onready var health: Health = $Health
 @onready var visual: Node2D = $Visual
@@ -13,10 +14,25 @@ extends CharacterBody2D
 
 var _hit_tween: Tween
 var _bob_time: float = 0.0
+var _gravity_sign: float = 1.0
+var _visual_base_y: float = -6.0
 var _is_dead: bool = false
 
 
 func _ready() -> void:
+	_gravity_sign = -1.0 if inverted_gravity else 1.0
+	if inverted_gravity:
+		up_direction = Vector2.DOWN
+		visual.scale.y = -1.0
+		_visual_base_y = 6.0
+		var shadow := get_node_or_null("Shadow") as Polygon2D
+		if shadow != null:
+			shadow.position.y = -24.0
+		var head := get_node_or_null("HeadShape") as CollisionShape2D
+		if head != null:
+			head.position.y = -head.position.y
+		damage_shape.position.y = -damage_shape.position.y
+
 	health.died.connect(_on_died)
 	damage_area.body_entered.connect(_on_damage_area_body_entered)
 
@@ -31,7 +47,7 @@ func _process(delta: float) -> void:
 
 	# Pequeño movimiento de respiración para que el objetivo se vea vivo.
 	_bob_time += delta
-	visual.position.y = sin(_bob_time * 3.0) * 1.5
+	visual.position.y = _visual_base_y + sin(_bob_time * 3.0) * 1.5
 
 
 ## La hitbox del jugador llama a este método automáticamente.

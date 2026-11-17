@@ -10,7 +10,7 @@ extends RefCounted
 
 const SAVE_PATH := "user://save.cfg"
 const FIRST_LEVEL := 1
-const LAST_LEVEL := 6
+const LAST_LEVEL := 7
 
 static var level: int = FIRST_LEVEL
 static var total_time: float = 0.0

@@ -8,7 +8,7 @@ extends Node2D
 @export var level_variant: int = 1
 @export_file("*.tscn") var next_level_path: String = ""
 @export var level_name: String = "NIVEL 1"
-@export var time_limit: float = 100.0
+@export var time_limit: float = 70.0
 
 const MAX_LIVES := 3
 const RATION_TIME_BONUS := 5.0
@@ -62,6 +62,8 @@ func _ready() -> void:
 		_prepare_level_five()
 	elif level_variant == 6:
 		_prepare_level_six()
+	elif level_variant == 7:
+		_prepare_level_seven()
 
 	_apply_run_variation()
 	_decorate_base_hills()
@@ -103,7 +105,7 @@ func _show_level_banner() -> void:
 	var hud := get_node_or_null("HUD")
 	if hud == null:
 		return
-	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA"}
+	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO"}
 	var banner := Label.new()
 	banner.name = "LevelBanner"
 	banner.text = "%s · %s" % [level_name, MOODS.get(level_variant, "")]
@@ -167,6 +169,11 @@ func _prepare_level_six() -> void:
 	# La variante 6 construye la fortaleza de trampas y saltos largos.
 	_clear_base_content()
 	LevelSixLayout.build(self)
+
+
+func _prepare_level_seven() -> void:
+	_clear_base_content()
+	LevelSevenLayout.build(self)
 
 
 func _clear_base_content() -> void:

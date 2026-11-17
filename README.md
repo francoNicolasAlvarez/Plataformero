@@ -43,6 +43,9 @@ aguanta tres golpes y, tras recibir daño, es invulnerable durante 1 segundo.
 - **Nivel 6:** "Fortaleza", 20 plataformas con saltos largos que exigen doble
   salto, pinchos en los bordes, sierras de suelo y suspendidas, y un centinela
   superior que dispara proyectiles apuntados cada 2 segundos.
+- **Nivel 7:** "Inverso", la disposición del nivel 1 reflejada boca arriba:
+  el jugador camina por el techo con gravedad invertida y los enemigos llevan
+  sombrero triangular amarillo y ojos almendrados.
 
 ## Controles
 
@@ -86,7 +89,9 @@ salir del juego.
   segundos a una altura aleatoria y desaparece al salir por el borde visible
   en su dirección.
 - **Centinela:** amenaza del nivel 6; se mantiene en la esquina superior
-  derecha, oscila y dispara 5 proyectiles en cono cada 2 segundos.
+  derecha, oscila y dispara 5 proyectiles rojos en cono cada 2 segundos.
+- **Enemigos del nivel 7:** usan los mismos tipos de siempre, pero con
+  gravedad invertida, sombrero triangular amarillo y ojos almendrados.
 - **Sierras y pinchos:** trampas con aviso visual antes de dañar. Las sierras
   muestran una guía de su recorrido; las suspendidas cruzan el hueco entre
   plataformas. Los pinchos sueltos solo aparecen sobre suelo firme; las

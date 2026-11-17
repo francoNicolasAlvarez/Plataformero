@@ -59,11 +59,11 @@ func _run() -> void:
 			arrow_kept = true
 	_check(arrow_kept, "Las flechas siguen moviendo al jugador tras aplicar los ajustes")
 	_check(
-		total_label.text.contains("NIVEL") and total_label.text.contains("DE 6"),
+		total_label.text.contains("NIVEL") and total_label.text.contains("DE 7"),
 		"El menú muestra el nivel guardado sobre el total"
 	)
 	var level_row: HBoxContainer = menu.get_node_or_null("MainPanel/PanelMargin/VBox/LevelSelect")
-	_check(level_row != null and level_row.get_child_count() == 7, "El menú ofrece selección directa de los 6 niveles")
+	_check(level_row != null and level_row.get_child_count() == 8, "El menú ofrece selección directa de los 7 niveles")
 	SaveGame.start_at_level(3)
 	_check(SaveGame.level == 3, "La selección de nivel guarda el nivel elegido")
 	_check(not SaveGame.completed and SaveGame.total_time == 0.0 and SaveGame.deaths == 0,
@@ -91,7 +91,7 @@ func _run() -> void:
 		"Las instrucciones listan los objetos del nivel sin monedas"
 	)
 	_check(objects.text.contains("voladores"), "Las instrucciones mencionan a los enemigos voladores")
-	_check(time_text.text.contains("100") and time_text.text.contains("75"), "Las instrucciones explican la restricción de tiempo")
+	_check(time_text.text.contains("70"), "Las instrucciones explican la restricción de tiempo")
 	_check(items.text.contains("Poción") and items.text.contains("Tab"), "Las instrucciones explican los items")
 	_check(
 		items.text.contains("Q") and items.text.contains("E"),
