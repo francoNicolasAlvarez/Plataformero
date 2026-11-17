@@ -109,7 +109,7 @@ resources/levels/  # level_config.gd y world_config.gd (configuración declarati
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (43 en total)
+tests/       # smoke tests headless, uno por sistema (49 en total)
 ```
 
 Decisiones clave:
@@ -1092,9 +1092,90 @@ actualizar esos tests.
       números por valor; los contadores de los tests van en arrays. Suite: 43/43.
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
+55. **Tres enemigos nuevos, viento y nivel 11 "VIENTO" (2026-11-17)**:
+    - **`SpearmanEnemy`** (lancero de patrulla): patrulla su plataforma sin
+      caerse (rayo al suelo), y al detectar al jugador (280 px, +-90 px de
+      altura) se detiene 0,5 s en postura de preparación (lanza hacia atrás,
+      cuerpo amarillento), da una estocada horizontal de 0,14 s con hitbox de
+      120 px a media altura (se salta) y queda 0,9 s recuperándose. Variante
+      `narrow`: casi no patrulla (30 px) y su lanza llega a 150 px.
+    - **`OrbEnemy`** (orbe perseguidor): suspendido (sin gravedad, motion
+      FLOATING); dentro de 380 px persigue en línea recta con aceleración
+      progresiva (50 -> 320 px/s); al chocar con una plataforma queda aturdido
+      0,8 s (apagado) y se reactiva empezando despacio; si el jugador se aleja
+      (x1,5) vuelve a quedar suspendido. Variante `axis = VERTICAL`: solo se
+      mueve en vertical y reacciona cuando el jugador pasa por su columna.
+    - **`BlastJumperEnemy`** (saltador explosivo, `shock_wave.gd`): quieto hasta
+      detectar al jugador (420 px); se comprime y parpadea en rojo 0,7 s, salta
+      rápido (parábola de ~0,72 s hacia la posición del jugador, acotada y sin
+      saltar al vacío) y al aterrizar crea una `ShockWave` a ras de suelo
+      (150 px en 0,4 s) que daña una vez si el jugador tiene los pies a ras de
+      suelo dentro del radio; se esquiva saltando. Reposo 2,5 s. Variante
+      `long_jump` (morada): alcance 540 px, onda de 190 px, preparación de 1,1 s
+      y reposo de 3 s.
+    - **Viento**: `scripts/world/wind_field.gd` (`WindField`) con tramos
+      `{from, to, speed}` y ráfagas (40-100 %, periodo 7 s) que escribe
+      `Player.wind_speed` cada frame de física; `player.gd` lo suma antes de
+      `move_and_slide()` (en el suelo pesa `WIND_GROUND_FACTOR = 0,35`) y lo
+      resta después, sin acumularse. Dibuja rayas de viento y la etiqueta
+      "VIENTO »»»/«««" en una capa propia.
+    - **Nivel 11 "VIENTO"** (3-1, `level_eleven.tscn` + `level_eleven_layout.gd`,
+      17000 px, 70 s): 34 plataformas (paso 400, huecos de 180 px, cuatro
+      alturas), cinco fortines anchos (checkpoint en el 17), los cinco tipos de
+      plataforma, cuatro sierras suspendidas, tres tramos de viento (en contra
+      -115, a favor +110, en contra -130), 4 arqueros y 4 magos, 3 lanceros (2
+      estrechos), 3 orbes (1 vertical), 2 saltadores (1 de salto largo) y tres
+      hierbas. Cadena 10 -> 11 -> pantalla final; `LevelRegistry` con el nivel
+      11; música propia (índice 8). Superar el mundo 3 solo exige este nivel por
+      ahora.
+    - Tests: `spearman_enemy_smoke_test` (17), `orb_enemy_smoke_test` (15),
+      `blast_jumper_smoke_test` (19), `wind_smoke_test` (12) y
+      `level_eleven_smoke_test` (38) nuevos; actualizados `level_registry`,
+      `level_results`, `level_ten`, `menu_ui` y `platform_spacing` (incluye el
+      nivel 11). Trampas: `ShockWave` fija `ground_y` en su primer frame de
+      física (la posición se asigna tras `add_child`); un nodo liberado es igual
+      a `null` en GDScript. Suite: 48/48.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+56. **Niveles 12-15, mundo 3 "DESIERTO" (2026-11-17)**: completan el mundo 3
+    (3-2 a 3-5); ya hay 15 niveles jugables de 70 s. Cadena 11 -> 12 -> 13 -> 14
+    -> 15 -> pantalla final; `LevelRegistry` con los nombres DUNAS, OASIS, CAÑÓN
+    y TORMENTA; música propia por nivel (índices 9-12 en `Sfx._build_music`).
+    Superar el mundo 3 (pasada seguida) exige ahora los cinco niveles 11-15.
+    - **`scripts/levels/desert_kit.gd` (`DesertKit`)**: utilidades compartidas
+      (cielo con capas lejanas "dunes"/"pyramids"/"mesas", palmeras, suelo,
+      plataformas del asset modular, enemigos, trampas, viento, rocas,
+      murciélagos y centinela). Los niveles 12-15 solo describen su diseño; los
+      generadores de los niveles 1-11 no se tocaron.
+    - **Nivel 12 DUNAS** (16600 px): diez tramos de suelo con fosos de 300 px,
+      escalones y puente sobre cada foso (fijo/vaivén/circular), viento en tres
+      tramos (+100, -125, +110), 7 lanceros (2 estrechos), 5 saltadores (2 de
+      salto largo), 2 orbes (1 vertical), arqueros, magos y sierras. Control en
+      la sección 5.
+    - **Nivel 13 OASIS** (15400 px): lago de 32 plataformas casi todas móviles,
+      seis islas anchas (arqueros, magos, control, hierbas y dos brutos con
+      pila), murciélagos cada 4,5 s, tres orbes, tres sierras suspendidas y
+      viento suave (<= 75 px/s).
+    - **Nivel 14 CAÑÓN** (16000 px): zigzag de 34 plataformas en cinco alturas
+      (de 550 a 150 px), cinco repisas anchas (2 saltadores, 1 bruto con pila,
+      control y hierbas), rocas por delante x3, centinela, viento fuerte, 3
+      lanceros estrechos, arqueros, magos, 3 orbes y 3 sierras.
+    - **Nivel 15 TORMENTA** (17000 px, final del mundo): cuatro tramos con fosos
+      (lanceros, babosa, saltadores, orbe, bruto), ruta de 18 plataformas con
+      viento, rocas, murciélagos y centinela, y una isla final custodiada por un
+      bruto con pila, una babosa de doble salto, un saltador de salto largo y dos
+      lanceros. Las alturas de la ruta (548/440/332) coinciden con las de los
+      escalones para cumplir la regla de espaciado.
+    - Tests: `desert_levels_smoke_test` nuevo (117 comprobaciones de los cuatro
+      niveles); actualizados `level_registry`, `level_results`, `level_eleven`,
+      `menu_ui` y `platform_spacing`. `level_six_smoke_test` puede fallar de
+      forma intermitente si hay otros procesos de Godot en paralelo.
+      Suite: 49/49.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
-- Suite de 43 smoke tests en verde (verificado en esta sesión) tras aplicar
+- Suite de 49 smoke tests en verde (verificado en esta sesión) tras aplicar
   los ítems 28-48: modo plataformas lineal con un único checkpoint a mitad de
   cada nivel, tres vidas por nivel, cronómetro contrarreloj que sigue corriendo
   al morir y no regala tiempo, medallas guardadas por nivel, selector de 40

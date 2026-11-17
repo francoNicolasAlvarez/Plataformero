@@ -201,10 +201,10 @@ static func _build_music(level_index: int = 1) -> AudioStreamWAV:
 
 	# Niveles 1-8 conservan sus temas (7 y 8 comparten el último); 9 y 10 tienen
 	# uno propio (2026-11-17).
-	var index := clampi(level_index - 1, 0, 5) if level_index <= 8 else mini(level_index - 3, 7)
-	var roots := [110.0, 98.0, 82.41, 73.42, 65.41, 92.5, 87.31, 77.78]
-	var beat_lengths := [1.0, 0.82, 1.12, 1.25, 0.95, 0.88, 1.05, 0.78]
-	var arp_rates := [4.0, 4.5, 3.5, 3.0, 5.0, 4.2, 3.8, 5.0]
+	var index := clampi(level_index - 1, 0, 5) if level_index <= 8 else mini(level_index - 3, 12)
+	var roots := [110.0, 98.0, 82.41, 73.42, 65.41, 92.5, 87.31, 77.78, 103.83, 116.54, 69.3, 61.74, 82.41]
+	var beat_lengths := [1.0, 0.82, 1.12, 1.25, 0.95, 0.88, 1.05, 0.78, 0.7, 1.1, 0.9, 1.3, 0.65]
+	var arp_rates := [4.0, 4.5, 3.5, 3.0, 5.0, 4.2, 3.8, 5.0, 5.5, 3.6, 4.4, 3.2, 6.0]
 	var root: float = roots[index]
 	var beat_length: float = beat_lengths[index]
 	var arp_rate: float = arp_rates[index]

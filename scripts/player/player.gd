@@ -33,6 +33,10 @@ const ANIM_DEATH := &"death"
 @export_range(0.5, 20.0, 0.1) var range_pixels_per_point: float = 2.3
 @export var inverted_gravity: bool = false
 @export var inverted_controls: bool = false
+## Viento (2026-11-17): velocidad horizontal que le suma un WindField (px/s, el signo
+## es la dirección). En el suelo empuja menos; no se acumula en `velocity`.
+const WIND_GROUND_FACTOR := 0.35
+var wind_speed: float = 0.0
 
 @onready var visual: AnimatedSprite2D = $Visual/AnimatedSprite2D
 @onready var visual_root: Node2D = $Visual
@@ -120,7 +124,11 @@ func _physics_process(delta: float) -> void:
 	# Velocidad de caída justo antes del impacto: alimenta el squash y el
 	# polvo al aterrizar.
 	_fall_speed = velocity.y
+	var wind_push := wind_speed * (WIND_GROUND_FACTOR if is_on_floor() else 1.0)
+	velocity.x += wind_push
 	move_and_slide()
+	if not is_on_wall():
+		velocity.x -= wind_push
 
 	# La señal permite añadir después partículas, sonido o sacudida de cámara.
 	if not was_on_floor and is_on_floor():

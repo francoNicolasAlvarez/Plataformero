@@ -27,7 +27,7 @@ func _run() -> void:
 
 	_check(level.level_variant == 10, "El nivel 10 usa la variante TEMPLO")
 	_check(level.level_name == "NIVEL 10", "El nivel se identifica como NIVEL 10")
-	_check(level.next_level_path == "res://scenes/ui/game_complete.tscn", "El nivel 10 lleva a la pantalla final")
+	_check(level.next_level_path == "res://scenes/levels/level_eleven.tscn", "El nivel 10 lleva al nivel 11")
 	_check(level.time_limit == 70.0, "El nivel 10 tiene 70 segundos")
 	_check(world != null, "Se generó el escenario del nivel 10")
 	_check(level.get_node("Platforms").get_child_count() == 0, "El nivel 10 limpia las plataformas base")

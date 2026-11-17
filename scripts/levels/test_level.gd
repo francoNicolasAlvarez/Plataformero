@@ -78,6 +78,16 @@ func _ready() -> void:
 		_prepare_level_nine()
 	elif level_variant == 10:
 		_prepare_level_ten()
+	elif level_variant == 11:
+		_prepare_level_eleven()
+	elif level_variant == 12:
+		_prepare_level_twelve()
+	elif level_variant == 13:
+		_prepare_level_thirteen()
+	elif level_variant == 14:
+		_prepare_level_fourteen()
+	elif level_variant == 15:
+		_prepare_level_fifteen()
 
 	_apply_run_variation()
 	_decorate_base_hills()
@@ -122,7 +132,7 @@ func _show_level_banner() -> void:
 	var hud := get_node_or_null("HUD")
 	if hud == null:
 		return
-	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO"}
+	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO", 11: "VIENTO", 12: "DUNAS", 13: "OASIS", 14: "CAÑÓN", 15: "TORMENTA"}
 	var banner := Label.new()
 	banner.name = "LevelBanner"
 	banner.text = "%s · %s" % [level_name, MOODS.get(level_variant, "")]
@@ -215,6 +225,31 @@ func _prepare_level_nine() -> void:
 func _prepare_level_ten() -> void:
 	_clear_base_content()
 	LevelTenLayout.build(self)
+
+
+func _prepare_level_eleven() -> void:
+	_clear_base_content()
+	LevelElevenLayout.build(self)
+
+
+func _prepare_level_twelve() -> void:
+	_clear_base_content()
+	LevelTwelveLayout.build(self)
+
+
+func _prepare_level_thirteen() -> void:
+	_clear_base_content()
+	LevelThirteenLayout.build(self)
+
+
+func _prepare_level_fourteen() -> void:
+	_clear_base_content()
+	LevelFourteenLayout.build(self)
+
+
+func _prepare_level_fifteen() -> void:
+	_clear_base_content()
+	LevelFifteenLayout.build(self)
 
 
 func _clear_base_content() -> void:
