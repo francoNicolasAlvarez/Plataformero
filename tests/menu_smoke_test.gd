@@ -59,11 +59,11 @@ func _run() -> void:
 			arrow_kept = true
 	_check(arrow_kept, "Las flechas siguen moviendo al jugador tras aplicar los ajustes")
 	_check(
-		total_label.text.contains("NIVEL") and total_label.text.contains("DE 7"),
+		total_label.text.contains("NIVEL") and total_label.text.contains("DE 8"),
 		"El menú muestra el nivel guardado sobre el total"
 	)
 	var level_row: HBoxContainer = menu.get_node_or_null("MainPanel/PanelMargin/VBox/LevelSelect")
-	_check(level_row != null and level_row.get_child_count() == 8, "El menú ofrece selección directa de los 7 niveles")
+	_check(level_row != null and level_row.get_child_count() == 9, "El menú ofrece selección directa de los 8 niveles")
 	SaveGame.start_at_level(3)
 	_check(SaveGame.level == 3, "La selección de nivel guarda el nivel elegido")
 	_check(not SaveGame.completed and SaveGame.total_time == 0.0 and SaveGame.deaths == 0,

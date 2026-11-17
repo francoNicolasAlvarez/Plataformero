@@ -14,7 +14,7 @@ Videojuego 2D de plataformas **lineal** hecho con **Godot 4.7 (GL
 Compatibility) y GDScript**. Jugabilidad inspirada en Super Mario Bros. con
 exploración, saltos, enemigos, trampas, controles y un final de juego.
 
-Objetivo del jugador: atravesar los siete niveles hasta llegar al final del
+Objetivo del jugador: atravesar los ocho niveles hasta llegar al final del
 juego. Cada nivel da tres vidas; al morir se reaparece en el último control
 (bandera) activado y, sin vidas o sin tiempo, el nivel se reinicia. El nivel
 alcanzado queda guardado para continuar la partida.
@@ -61,8 +61,8 @@ scenes/
   ui/control_guide.tscn    # guía de controles con teclas dibujadas (reutilizable)
   ui/pause_overlay.tscn    # pausa con Enter: congela el SceneTree y muestra guía
   ui/game_complete.tscn    # pantalla final con tiempo total y muertes
-  levels/test_level.tscn   # BASE de los 6 niveles (HUD, jugador, portal, cámara)
-  levels/level_one|two|three|four|five|six|seven.tscn  # instancias base con level_variant 1-6
+  levels/test_level.tscn   # BASE de los 8 niveles (HUD, jugador, portal, cámara)
+  levels/level_one|two|three|four|five|six|seven|eight.tscn  # variantes 1-8
   player/player.tscn       # Player + AttackHitbox + Health
   enemies/                 # training_dummy, walker, ranged, spread, projectile
   pickups/                 # healing_herb (monedas eliminadas, ver ítem 24)
@@ -71,7 +71,7 @@ scenes/
   camera/horizontal_camera.tscn
   decor/                   # árboles, arbustos, nubes, aves, sol (sin colisión)
 scripts/
-  player/    # player.gd (movimiento, salto/doble salto, caída rápida, pociones),
+  player/    # player.gd (movimiento, salto/doble salto, caída rápida, gravedad invertida y controles espejo, pociones),
              # inventory.gd (inventario real: utilizables/permanentes + Q/E),
              # player_stats.gd,
              # attacks/ (attack_data.gd + attack_hitbox.gd)
@@ -88,6 +88,7 @@ scripts/
              # level_six_layout.gd (fortaleza de 20 plataformas, trampas y
              # centinela superior),
              # level_seven_layout.gd (nivel 7 invertido, espejo del nivel 1),
+             # level_eight_layout.gd (nivel 8: espejo del nivel 2),
              # platform_spacing.gd (regla de espaciado entre plataformas)
   combat/    # health.gd (vida reutilizable por jugador y enemigos)
   core/      # save_game.gd (nivel guardado + tiempo/muertes, user://save.cfg),
@@ -102,11 +103,11 @@ resources/player/  # player_stats.tres y basic_attack.tres (AttackData)
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (31 en total)
+tests/       # smoke tests headless, uno por sistema (33 en total)
 ```
 
 Decisiones clave:
-- Los 7 niveles son instancias de una misma escena base; cada variante limpia
+- Los 8 niveles son instancias de una misma escena base; cada variante limpia
   el contenido base y genera su mundo por código (`scripts/levels/*_layout.gd`).
 - Los datos sensibles van en `Resource` exportables (`PlayerStats`,
   `AttackData`) para reutilizarlos con futuros personajes/armas.
@@ -118,7 +119,7 @@ Decisiones clave:
   juego; no hay progresión roguelite ni botín permanente. `SaveGame` guarda el
   nivel alcanzado para continuar. Cada nivel da 3 vidas: morir reaparece en el
   último control (bandera) con la vida completa; al quedarse sin vidas o al
-  agotar el tiempo se recarga el nivel. El nivel 6 termina en
+  agotar el tiempo se recarga el nivel. El nivel 8 termina en
   `ui/game_complete.tscn`.
 
 Controles (reconfigurables desde Opciones):
@@ -885,10 +886,18 @@ actualizar esos tests.
     - Tests: `level_seven_smoke_test` nuevo (414 comprobaciones: gravedad, apoyo en techo, salto hacia abajo, techo/portal/control/zona mortal, 39 enemigos con triángulo y ojos, etc.), `menu_smoke_test` 35 (selector de 7), `level_six_smoke_test` 58 (nueva cadena), `platform_spacing_smoke_test` 24 (incluye nivel 7) y `jump_control_smoke_test` 11 (regresión de impulso mantenido). Suite completa: 32/32.
     NOTA: el exe de `dist/` se re-exportó con los ítems 18-45.
 
+46. **Nivel 8 espejo del nivel 2 y controles invertidos (2026-11-16)**:
+    - **`LevelTwoLayout.build(level, mirror_width)`**: el generador del nivel 2 acepta un ancho de espejo opcional (por defecto `-1`, sin cambios). Todas las posiciones se transforman con `x' = ancho - x` mediante `_mx()`/`_mv()`, incluidas colinas, nubes, árboles, suelo, pasos, sierras, pinchos, plataformas móviles, enemigos, hierbas, control y portal. El `travel.x` de las plataformas móviles también cambia de signo.
+    - **`LevelEightLayout`**: nivel 8 de 13400 px que reutiliza el layout del nivel 2 con espejo, renombra el mundo a `LevelEightGenerated`, coloca al jugador en `(12780, 600)` (espejo del spawn original) y fuerza `camera.snap_to_target()` tras moverlo. Portal en `(450, 580)`, recorrido hacia la izquierda y un control en `x=6700`.
+    - **Controles invertidos**: `Player.inverted_controls` y `configure_controls()` invierten solo el eje horizontal (D/flecha derecha mueven a la izquierda; A/flecha izquierda a la derecha). Al pasar por las acciones del Input Map, el mando queda invertido igual. El sprite inicial mira a la izquierda. No afecta a salto, caída rápida ni objetos.
+    - **Integración**: `level_seven.tscn` encadena al nuevo `level_eight.tscn`, que termina en `game_complete.tscn`. `SaveGame.LAST_LEVEL = 8`, menú con selector 1-8, instrucciones actualizadas y sexto tema procedural en `Sfx._build_music()`.
+    - Tests: `level_eight_smoke_test` nuevo (71 comprobaciones: spawn a la derecha, portal a la izquierda, suelo/plataformas móviles/sierras/pinchos/enemigos/hierbas reflejados, control central y dirección real del movimiento), `level_two_smoke_test` 29 (regresión sin espejo), `level_seven_smoke_test` 414 (nueva cadena), `menu_smoke_test` 35 y `platform_spacing_smoke_test` 26. Suite completa: 33/33.
+    NOTA: el exe de `dist/` se re-exportó con los ítems 18-46.
+
 ## 5. En progreso / estado actual
 
-- Suite de 32 smoke tests en verde (verificado en esta sesión) tras aplicar
-  los ítems 28-45: modo plataformas lineal con un único checkpoint a mitad de
+- Suite de 33 smoke tests en verde (verificado en esta sesión) tras aplicar
+  los ítems 28-46: modo plataformas lineal con un único checkpoint a mitad de
   cada nivel, tres vidas por nivel, reglas de tiempo de reaparición (+10 s /
   30 s), inventario real con poción/ración y espacios Q/E, selección directa
   de nivel, soporte de mando, guardado de nivel/tiempo/muertes, pantalla de
@@ -916,8 +925,9 @@ actualizar esos tests.
   termina en la pantalla final. Los seis niveles tienen un límite de 70 s.
   El nivel 7 es un reflejo vertical del nivel 1 con gravedad invertida;
   todos sus enemigos usan los tipos conocidos con sombrero triangular
-  amarillo y ojos almendrados. El ejecutable de `dist/` incluye los ítems
-  18-45.
+  amarillo y ojos almendrados. El nivel 8 reutiliza el nivel 2 como espejo
+  horizontal con controles invertidos y recorrido de derecha a izquierda.
+  El ejecutable de `dist/` incluye los ítems 18-46.
 
 ## 6. Próximos pasos (roadmap acordado, en orden de prioridad)
 

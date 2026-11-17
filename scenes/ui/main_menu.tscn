@@ -253,7 +253,7 @@ text = "Hierba curativa: recupera un punto de vida.
 Control (bandera): guarda el punto de reaparición y recupera toda la vida.
 Portal de salida: completa el nivel y pasa al siguiente.
 Plataformas móviles, sierras y pinchos: obstáculos; los pinchos y los pozos cuestan un golpe.
-Enemigos: no puedes atacarlos, esquívalos saltando. El mago lanza 3 bolas de fuego, el arquero una flecha rápida y los voladores cruzan la pantalla ondulando. En el nivel 7 el mundo está invertido y los enemigos llevan sombrero triangular amarillo."
+Enemigos: no puedes atacarlos, esquívalos saltando. El mago lanza 3 bolas de fuego, el arquero una flecha rápida y los voladores cruzan la pantalla ondulando. En el nivel 7 el mundo está invertido y los enemigos llevan sombrero triangular amarillo. En el nivel 8 el recorrido del nivel 2 va en espejo y los controles horizontales están invertidos."
 autowrap_mode = 3
 
 [node name="TimeTitle" type="Label" parent="InstructionsPanel/PanelMargin/VBox/Scroll/Content"]
@@ -267,7 +267,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(700, 0)
 theme_override_colors/font_color = Color(0.87, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "Los siete niveles tienen 70 segundos. Si el cronómetro llega a 0, mueres. Bajo 10 s el tiempo se muestra en rojo."
+text = "Los ocho niveles tienen 70 segundos. Si el cronómetro llega a 0, mueres. Bajo 10 s el tiempo se muestra en rojo."
 autowrap_mode = 3
 
 [node name="ItemsTitle" type="Label" parent="InstructionsPanel/PanelMargin/VBox/Scroll/Content"]

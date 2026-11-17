@@ -188,10 +188,10 @@ static func _build_music(level_index: int = 1) -> AudioStreamWAV:
 	var data := PackedByteArray()
 	data.resize(frames * 2)
 
-	var index := clampi(level_index - 1, 0, 4)
-	var roots := [110.0, 98.0, 82.41, 73.42, 65.41]
-	var beat_lengths := [1.0, 0.82, 1.12, 1.25, 0.95]
-	var arp_rates := [4.0, 4.5, 3.5, 3.0, 5.0]
+	var index := clampi(level_index - 1, 0, 5)
+	var roots := [110.0, 98.0, 82.41, 73.42, 65.41, 92.5]
+	var beat_lengths := [1.0, 0.82, 1.12, 1.25, 0.95, 0.88]
+	var arp_rates := [4.0, 4.5, 3.5, 3.0, 5.0, 4.2]
 	var root: float = roots[index]
 	var beat_length: float = beat_lengths[index]
 	var arp_rate: float = arp_rates[index]

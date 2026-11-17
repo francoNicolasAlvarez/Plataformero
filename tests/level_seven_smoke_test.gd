@@ -1,7 +1,7 @@
 extends SceneTree
 
 const LEVEL_SCENE := preload("res://scenes/levels/level_seven.tscn")
-const COMPLETE_SCENE := "res://scenes/ui/game_complete.tscn"
+const NEXT_SCENE := "res://scenes/levels/level_eight.tscn"
 const HAT_PATHS := ["SombreroDome", "SombreroDomeShade", "SombreroBrimLine", "WizardHat", "ArcherHood"]
 
 var _checks: int = 0
@@ -25,7 +25,7 @@ func _run() -> void:
 	_check(level.level_variant == 7, "El nivel 7 usa la variante INVERSO")
 	_check(level.level_name == "NIVEL 7", "El nivel se identifica como NIVEL 7")
 	_check(level.time_limit == 70.0, "El nivel 7 tiene 70 segundos")
-	_check(level.next_level_path == COMPLETE_SCENE, "El nivel 7 lleva a la pantalla final")
+	_check(level.next_level_path == NEXT_SCENE, "El nivel 7 lleva al nivel 8")
 	_check(generated != null, "Se generó el mundo invertido del nivel 7")
 	_check(level.get_node("Platforms").get_child_count() == 0, "El nivel 7 limpia las plataformas base")
 

@@ -4,6 +4,6 @@
 
 [node name="LevelSeven" instance=ExtResource("1_base")]
 level_variant = 7
-next_level_path = "res://scenes/ui/game_complete.tscn"
+next_level_path = "res://scenes/levels/level_eight.tscn"
 level_name = "NIVEL 7"
 time_limit = 70.0

@@ -1,6 +1,7 @@
 extends Node2D
 ## Nivel jugable. Une la vida del jugador con el HUD y controla el portal.
-## Permite construir seis variantes: día, atardecer, noche y abismo.
+## Permite construir ocho variantes: día, atardecer, noche, abismo, cielo,
+## fortaleza, inversa y espejo.
 ## Desde 2026-11-12 el juego es un plataformas lineal: hay checkpoints,
 ## tres vidas por nivel, fundido entre escenas y una pantalla de final.
 ## Sin vidas o sin tiempo la expedición vuelve a empezar en el nivel 1.
@@ -64,6 +65,8 @@ func _ready() -> void:
 		_prepare_level_six()
 	elif level_variant == 7:
 		_prepare_level_seven()
+	elif level_variant == 8:
+		_prepare_level_eight()
 
 	_apply_run_variation()
 	_decorate_base_hills()
@@ -105,7 +108,7 @@ func _show_level_banner() -> void:
 	var hud := get_node_or_null("HUD")
 	if hud == null:
 		return
-	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO"}
+	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO"}
 	var banner := Label.new()
 	banner.name = "LevelBanner"
 	banner.text = "%s · %s" % [level_name, MOODS.get(level_variant, "")]
@@ -174,6 +177,11 @@ func _prepare_level_six() -> void:
 func _prepare_level_seven() -> void:
 	_clear_base_content()
 	LevelSevenLayout.build(self)
+
+
+func _prepare_level_eight() -> void:
+	_clear_base_content()
+	LevelEightLayout.build(self)
 
 
 func _clear_base_content() -> void:

@@ -30,6 +30,7 @@ const ANIM_DEATH := &"death"
 @export_range(1, 999, 1) var weapon_range: int = BASE_WEAPON_RANGE
 @export_range(0.5, 20.0, 0.1) var range_pixels_per_point: float = 2.3
 @export var inverted_gravity: bool = false
+@export var inverted_controls: bool = false
 
 @onready var visual: AnimatedSprite2D = $Visual/AnimatedSprite2D
 @onready var visual_root: Node2D = $Visual
@@ -67,6 +68,7 @@ func _ready() -> void:
 		basic_attack = AttackData.new()
 
 	configure_gravity()
+	configure_controls()
 
 	health.died.connect(_on_health_died)
 	inventory.reset_starting_items(starting_potions, starting_rations)
@@ -86,6 +88,13 @@ func configure_gravity() -> void:
 		shadow.position.y = -24.0 if inverted_gravity else 24.0
 	if _dust != null:
 		_dust.position = Vector2(0.0, -22.0 if inverted_gravity else 22.0)
+
+func configure_controls() -> void:
+	## Nivel 8 (2026-11-16): invierte solo el eje horizontal, de modo que D y
+	## flecha derecha mueven hacia la izquierda. El mando pasa por las mismas
+	## acciones, así que también queda invertido.
+	_facing = -1 if inverted_controls else 1
+	visual.flip_h = inverted_controls
 
 
 func _physics_process(delta: float) -> void:
@@ -158,6 +167,8 @@ func _update_jump_windows(delta: float) -> void:
 
 func _handle_horizontal_movement(delta: float) -> void:
 	var direction := Input.get_axis("move_left", "move_right")
+	if inverted_controls:
+		direction = -direction
 	_is_running = Input.is_action_pressed("run") and not is_zero_approx(direction)
 
 	if not is_zero_approx(direction):

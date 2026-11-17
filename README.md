@@ -46,6 +46,9 @@ aguanta tres golpes y, tras recibir daño, es invulnerable durante 1 segundo.
 - **Nivel 7:** "Inverso", la disposición del nivel 1 reflejada boca arriba:
   el jugador camina por el techo con gravedad invertida y los enemigos llevan
   sombrero triangular amarillo y ojos almendrados.
+- **Nivel 8:** "Espejo", el nivel 2 reflejado horizontalmente: se empieza a la
+  derecha, se avanza hacia la izquierda y los controles horizontales están
+  invertidos.
 
 ## Controles
 
@@ -61,7 +64,8 @@ aguanta tres golpes y, tras recibir daño, es invulnerable durante 1 segundo.
 | Pausa | Enter | Start |
 
 Los controles de teclado se pueden reasignar desde **Opciones**. El mando usa
-un mapeo fijo.
+un mapeo fijo. En el nivel 8, D/flecha derecha mueven hacia la izquierda y
+A/flecha izquierda hacia la derecha (el mando también queda invertido).
 
 Durante la partida, **Enter** abre el menú de pausa: continuar, consultar la
 guía de controles, ajustar brillo/volumen/teclas, volver al menú principal o
