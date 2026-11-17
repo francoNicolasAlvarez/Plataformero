@@ -73,9 +73,14 @@ func _run() -> void:
 	level._unhandled_input(toggle)
 	_check(not inventory_panel.visible, "Tab vuelve a cerrar el inventario")
 
-	level._time_left = 50.0
+	level._timer.set_remaining(50.0)
+	var remaining_before_ration: float = level._timer.remaining
 	_check(player.use_quick_slot(1), "E usa la ración equipada")
-	_check(level._time_left >= 54.0 and level._time_left <= 55.5, "La ración añade 5 segundos al nivel")
+	_check(
+		absf(level._timer.remaining - remaining_before_ration) < 0.2,
+		"La ración no altera el cronómetro de la medalla"
+	)
+	_check(player.is_speed_boosted(), "La ración activa un impulso temporal de velocidad")
 	_check(inventory.count("ration") == 0, "La ración se consume al usarla")
 	_check(inventory.slot_item(1).is_empty(), "El espacio E queda vacío tras la ración")
 

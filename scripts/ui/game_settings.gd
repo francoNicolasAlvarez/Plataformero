@@ -4,6 +4,8 @@ extends RefCounted
 ## disco ni audio para no interferir con las pruebas.
 
 const CONFIG_PATH := "user://settings.cfg"
+const BUS_MUSIC := "Music"
+const BUS_SFX := "SFX"
 const MIN_BRIGHTNESS := 0.55
 const MAX_BRIGHTNESS := 1.35
 const CONTROLS := ["move_left", "move_right", "move_down", "jump", "run", "item_1", "item_2", "inventory", "pause"]
@@ -39,6 +41,9 @@ const EXTRA_KEYS := {
 
 static var brightness: float = 1.0
 static var master_volume: float = 0.8
+static var music_volume: float = 1.0
+static var sfx_volume: float = 1.0
+static var fullscreen: bool = false
 static var bindings: Dictionary = {}
 static var _loaded: bool = false
 
@@ -66,11 +71,16 @@ static func ensure_loaded() -> void:
 		0.0,
 		1.0
 	)
+	music_volume = clampf(float(config.get_value("audio", "music_volume", music_volume)), 0.0, 1.0)
+	sfx_volume = clampf(float(config.get_value("audio", "sfx_volume", sfx_volume)), 0.0, 1.0)
+	fullscreen = bool(config.get_value("video", "fullscreen", fullscreen))
 	for action in CONTROLS:
 		var keycode := int(config.get_value("controls", action, bindings[action]))
 		if keycode > 0:
 			bindings[action] = keycode
 	_apply_bindings()
+	if fullscreen:
+		apply_display()
 
 
 static func save() -> void:
@@ -79,6 +89,9 @@ static func save() -> void:
 	var config := ConfigFile.new()
 	config.set_value("video", "brightness", brightness)
 	config.set_value("audio", "master_volume", master_volume)
+	config.set_value("audio", "music_volume", music_volume)
+	config.set_value("audio", "sfx_volume", sfx_volume)
+	config.set_value("video", "fullscreen", fullscreen)
 	for action in CONTROLS:
 		config.set_value("controls", action, int(bindings[action]))
 	config.save(CONFIG_PATH)
@@ -95,6 +108,44 @@ static func set_master_volume(value: float) -> void:
 	save()
 
 
+static func set_music_volume(value: float) -> void:
+	music_volume = clampf(value, 0.0, 1.0)
+	apply_audio()
+	save()
+
+
+static func set_sfx_volume(value: float) -> void:
+	sfx_volume = clampf(value, 0.0, 1.0)
+	apply_audio()
+	save()
+
+
+static func set_fullscreen(enabled: bool) -> void:
+	fullscreen = enabled
+	apply_display()
+	save()
+
+
+static func apply_display() -> void:
+	if _is_headless():
+		return
+	var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+	DisplayServer.window_set_mode(mode)
+
+
+static func ensure_audio_buses() -> void:
+	## Crea los buses Music y SFX (cuelgan de Master) si todavía no existen.
+	if _is_headless():
+		return
+	for bus_name in [BUS_MUSIC, BUS_SFX]:
+		if AudioServer.get_bus_index(bus_name) >= 0:
+			continue
+		AudioServer.add_bus()
+		var index := AudioServer.bus_count - 1
+		AudioServer.set_bus_name(index, bus_name)
+		AudioServer.set_bus_send(index, "Master")
+
+
 static func apply_brightness(canvas: CanvasModulate) -> void:
 	if canvas == null:
 		return
@@ -109,6 +160,17 @@ static func apply_audio() -> void:
 		return
 	AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(master_volume, 0.0001)))
 	AudioServer.set_bus_mute(bus, master_volume <= 0.001)
+	ensure_audio_buses()
+	_apply_bus_volume(BUS_MUSIC, music_volume)
+	_apply_bus_volume(BUS_SFX, sfx_volume)
+
+
+static func _apply_bus_volume(bus_name: String, volume: float) -> void:
+	var index := AudioServer.get_bus_index(bus_name)
+	if index < 0:
+		return
+	AudioServer.set_bus_volume_db(index, linear_to_db(maxf(volume, 0.0001)))
+	AudioServer.set_bus_mute(index, volume <= 0.001)
 
 
 static func get_keycode(action: String) -> int:

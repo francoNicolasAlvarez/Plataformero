@@ -19,7 +19,7 @@ const ITEMS := {
 	"ration": {
 		"name": "Ración",
 		"category": Category.USABLE,
-		"description": "Añade 5 s al cronómetro del nivel.",
+		"description": "Aumenta la velocidad durante 5 s (no altera el reloj).",
 	},
 	"double_jump": {
 		"name": "Doble salto",

@@ -14,6 +14,8 @@ const LEVEL_FIVE := preload("res://scenes/levels/level_five.tscn")
 const LEVEL_SIX := preload("res://scenes/levels/level_six.tscn")
 const LEVEL_SEVEN := preload("res://scenes/levels/level_seven.tscn")
 const LEVEL_EIGHT := preload("res://scenes/levels/level_eight.tscn")
+const LEVEL_NINE := preload("res://scenes/levels/level_nine.tscn")
+const LEVEL_TEN := preload("res://scenes/levels/level_ten.tscn")
 
 var _failures: int = 0
 var _checks: int = 0
@@ -34,6 +36,8 @@ func _run() -> void:
 	await _check_level(LEVEL_SIX.instantiate(), "Nivel 6", 12)
 	await _check_level(LEVEL_SEVEN.instantiate(), "Nivel 7", 100)
 	await _check_level(LEVEL_EIGHT.instantiate(), "Nivel 8", 40)
+	await _check_level(LEVEL_NINE.instantiate(), "Nivel 9", 40)
+	await _check_level(LEVEL_TEN.instantiate(), "Nivel 10", 10)
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])

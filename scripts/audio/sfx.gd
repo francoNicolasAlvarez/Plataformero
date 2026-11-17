@@ -24,6 +24,7 @@ static func play(sound_name: String, volume_db: float = -7.0) -> void:
 	var player := AudioStreamPlayer.new()
 	player.stream = _get_sound(sound_name)
 	player.volume_db = volume_db
+	player.bus = _bus_or_master(GameSettings.BUS_SFX)
 	tree.root.add_child(player)
 	player.finished.connect(player.queue_free)
 	player.play()
@@ -55,12 +56,20 @@ static func start_music(level_index: int = 1, fade_in: float = 0.7) -> void:
 	_music_stopping = false
 	_music_level = level_index
 	_music_player = AudioStreamPlayer.new()
+	_music_player.bus = _bus_or_master(GameSettings.BUS_MUSIC)
 	_music_player.stream = _build_music(level_index)
 	_music_player.volume_db = MUSIC_SILENT_DB
 	# Diferido: start_music() se llama desde _ready(), cuando el árbol aún está
 	# ocupado creando hijos y add_child() inmediato fallaría.
 	_music_player.ready.connect(_on_music_ready)
 	tree.root.add_child.call_deferred(_music_player)
+
+
+static func _bus_or_master(bus_name: String) -> String:
+	## Los buses se crean en GameSettings.apply_audio(); si aún no existen el
+	## sonido sale por Master para no perderlo.
+	GameSettings.ensure_audio_buses()
+	return bus_name if AudioServer.get_bus_index(bus_name) >= 0 else "Master"
 
 
 static func _on_music_ready() -> void:
@@ -129,6 +138,8 @@ static func _get_sound(sound_name: String) -> AudioStreamWAV:
 			stream = _sequence([523.0, 659.0, 784.0, 1046.0], 0.1, 0.5)
 		"ui":
 			stream = _sweep(660.0, 660.0, 0.04, 0.9)
+		"ui_confirm":
+			stream = _sequence([660.0, 880.0], 0.05, 0.5)
 		_:
 			stream = _sweep(440.0, 440.0, 0.08, 0.8)
 
@@ -188,10 +199,12 @@ static func _build_music(level_index: int = 1) -> AudioStreamWAV:
 	var data := PackedByteArray()
 	data.resize(frames * 2)
 
-	var index := clampi(level_index - 1, 0, 5)
-	var roots := [110.0, 98.0, 82.41, 73.42, 65.41, 92.5]
-	var beat_lengths := [1.0, 0.82, 1.12, 1.25, 0.95, 0.88]
-	var arp_rates := [4.0, 4.5, 3.5, 3.0, 5.0, 4.2]
+	# Niveles 1-8 conservan sus temas (7 y 8 comparten el último); 9 y 10 tienen
+	# uno propio (2026-11-17).
+	var index := clampi(level_index - 1, 0, 5) if level_index <= 8 else mini(level_index - 3, 7)
+	var roots := [110.0, 98.0, 82.41, 73.42, 65.41, 92.5, 87.31, 77.78]
+	var beat_lengths := [1.0, 0.82, 1.12, 1.25, 0.95, 0.88, 1.05, 0.78]
+	var arp_rates := [4.0, 4.5, 3.5, 3.0, 5.0, 4.2, 3.8, 5.0]
 	var root: float = roots[index]
 	var beat_length: float = beat_lengths[index]
 	var arp_rate: float = arp_rates[index]

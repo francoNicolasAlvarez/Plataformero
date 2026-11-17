@@ -4,7 +4,7 @@ extends SceneTree
 ## plataformas/trampas/enemigos y dirección real del movimiento.
 
 const LEVEL_SCENE := preload("res://scenes/levels/level_eight.tscn")
-const COMPLETE_SCENE := "res://scenes/ui/game_complete.tscn"
+const COMPLETE_SCENE := "res://scenes/levels/level_nine.tscn"
 
 var _checks: int = 0
 var _failures: int = 0
@@ -27,7 +27,7 @@ func _run() -> void:
 	_check(level.level_variant == 8, "El nivel 8 usa la variante ESPEJO")
 	_check(level.level_name == "NIVEL 8", "El nivel se identifica como NIVEL 8")
 	_check(level.time_limit == 70.0, "El nivel 8 tiene 70 segundos")
-	_check(level.next_level_path == COMPLETE_SCENE, "El nivel 8 lleva a la pantalla final")
+	_check(level.next_level_path == COMPLETE_SCENE, "El nivel 8 lleva al nivel 9")
 	_check(generated != null, "Se generó el mundo espejo del nivel 2")
 	_check(level.get_node("Platforms").get_child_count() == 0, "El nivel 8 limpia las plataformas base")
 

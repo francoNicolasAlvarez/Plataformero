@@ -43,7 +43,7 @@ func _run() -> void:
 		"El control muestra un aviso de descanso")
 
 	await _wait_physics(70)
-	level._time_left = 12.0
+	level._timer.set_remaining(12.0)
 	player.take_damage(9999)
 	await _wait_until_alive(player)
 
@@ -55,17 +55,17 @@ func _run() -> void:
 		"Reaparece en el último control activado"
 	)
 	_check(
-		level._time_left >= 29.0 and level._time_left <= 30.0,
-		"Con 20 s o menos al morir, reaparecer deja 30 s de cuenta regresiva"
+		level._timer.remaining <= 12.0 and level._timer.remaining >= 10.0,
+		"Reaparecer no regala tiempo aunque quedaran menos de 20 s"
 	)
 
 	await _wait_physics(70)
-	level._time_left = 45.0
+	level._timer.set_remaining(45.0)
 	player.take_damage(9999)
 	await _wait_until_alive(player)
 	_check(
-		level._time_left >= 54.0 and level._time_left <= 55.0,
-		"Reaparecer con más de 20 s solo recupera 10 s de tiempo"
+		level._timer.remaining <= 45.0 and level._timer.remaining >= 42.0,
+		"Reaparecer con más de 20 s tampoco regala tiempo"
 	)
 
 	print("")

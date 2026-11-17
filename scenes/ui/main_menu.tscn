@@ -91,16 +91,12 @@ text = "*    .      *        .    *"
 
 [node name="MainPanel" type="PanelContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
+anchors_preset = 4
 anchor_top = 0.5
-anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -300.0
-offset_right = 280.0
-offset_bottom = 300.0
-grow_horizontal = 2
+offset_left = 56.0
+offset_right = 576.0
+grow_horizontal = 1
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
@@ -118,7 +114,7 @@ theme_override_constants/separation = 10
 [node name="Title" type="Label" parent="MainPanel/PanelMargin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.541176, 0.909804, 1, 1)
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 44
 text = "GRANJA DE ALTURA"
 horizontal_alignment = 1
 
@@ -140,7 +136,25 @@ theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_button_hover")
-text = "JUGAR"
+text = "INICIO"
+
+[node name="SelectLevelButton" type="Button" parent="MainPanel/PanelMargin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_hover")
+text = "SELECCIÓN DE NIVEL"
+
+[node name="InstructionsButton" type="Button" parent="MainPanel/PanelMargin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_hover")
+text = "CÓMO JUGAR"
 
 [node name="OptionsButton" type="Button" parent="MainPanel/PanelMargin/VBox"]
 custom_minimum_size = Vector2(0, 44)
@@ -151,15 +165,6 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_button_hover")
 text = "OPCIONES"
 
-[node name="InstructionsButton" type="Button" parent="MainPanel/PanelMargin/VBox"]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
-theme_override_styles/focus = SubResource("StyleBoxFlat_button_hover")
-text = "INSTRUCCIONES"
-
 [node name="QuitButton" type="Button" parent="MainPanel/PanelMargin/VBox"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -167,13 +172,13 @@ theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_button_hover")
-text = "SALIR"
+text = "CERRAR JUEGO"
 
 [node name="TotalLabel" type="Label" parent="MainPanel/PanelMargin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.827451, 0.247059, 1)
 theme_override_font_sizes/font_size = 14
-text = "NIVEL 1 DE 6"
+text = "NIVEL 1 DE 40 · MUNDO 1 DE 8"
 horizontal_alignment = 1
 
 [node name="InstructionsPanel" type="PanelContainer" parent="."]
@@ -235,7 +240,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(700, 0)
 theme_override_colors/font_color = Color(0.87, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "Llega al portal de cada nivel y completa los seis. Al morir reapareces en el último control (bandera) con una vida menos."
+text = "Completa todos los niveles en el menor tiempo posible: llega al portal de cada uno esquivando enemigos y obstáculos. Al morir reapareces en el último control (bandera) con una vida menos."
 autowrap_mode = 3
 
 [node name="ObjectsTitle" type="Label" parent="InstructionsPanel/PanelMargin/VBox/Scroll/Content"]
@@ -267,7 +272,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(700, 0)
 theme_override_colors/font_color = Color(0.87, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "Los ocho niveles tienen 70 segundos. Si el cronómetro llega a 0, mueres. Bajo 10 s el tiempo se muestra en rojo."
+text = "Todos los niveles jugables tienen 70 segundos; la hoja de ruta prevé 40. El reloj sigue corriendo al morir y no regala tiempo. Termina antes de 35 s para oro, 50 s para plata y 70 s para bronce. Bajo 10 s el tiempo se muestra en rojo."
 autowrap_mode = 3
 
 [node name="ItemsTitle" type="Label" parent="InstructionsPanel/PanelMargin/VBox/Scroll/Content"]
@@ -282,9 +287,9 @@ custom_minimum_size = Vector2(700, 0)
 theme_override_colors/font_color = Color(0.87, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "Poción (Q): recupera un punto de vida. Empiezas con 2.
-Ración (E): añade 5 segundos al cronómetro. Empiezas con 1.
+Ración (E): aumenta la velocidad 5 s sin alterar el reloj. Empiezas con 1.
 Objetos rápidos: Q usa el espacio 1 y E el espacio 2; el inventario muestra ambos.
-Vidas: tienes 3 por nivel; al morir reapareces en el último control y si se agotan reinicias el nivel.
+Vidas: tienes 3 por nivel; al morir reapareces en el último control y si se agotan vuelves al nivel 1.
 Doble salto: disponible siempre en el aire; pulsa saltar otra vez para impulsarte.
 Caer rápido: mantén Abajo o S en el aire para caer al instante.
 Inventario (Tab): consulta objetos utilizables, habilidades permanentes y espacios rápidos."
@@ -308,9 +313,7 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -340.0
-offset_top = -320.0
 offset_right = 340.0
-offset_bottom = 320.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
@@ -318,13 +321,13 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 [node name="PanelMargin" type="MarginContainer" parent="OptionsPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 30
-theme_override_constants/margin_top = 24
+theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 30
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_bottom = 14
 
 [node name="VBox" type="VBoxContainer" parent="OptionsPanel/PanelMargin"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 6
 
 [node name="Title" type="Label" parent="OptionsPanel/PanelMargin/VBox"]
 layout_mode = 2
@@ -363,7 +366,7 @@ horizontal_alignment = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 15
-text = "Volumen"
+text = "Volumen general"
 
 [node name="VolumeRow" type="HBoxContainer" parent="OptionsPanel/PanelMargin/VBox"]
 layout_mode = 2

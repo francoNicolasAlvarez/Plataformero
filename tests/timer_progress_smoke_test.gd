@@ -20,6 +20,7 @@ func _run() -> void:
 	var player: Player = level.get_node("Player")
 	var portal: ExitPortal = level.get_node("ExitPortal")
 	var timer_label: Label = level.get_node("HUD/TimerLabel")
+	var medal_label: Label = level.get_node("HUD/MedalLabel")
 	var progress: ProgressBar = level.get_node("HUD/LevelProgress")
 	var progress_label: Label = level.get_node("HUD/LevelProgress/ProgressLabel")
 	var game_over: Label = level.get_node("HUD/GameOver")
@@ -28,6 +29,10 @@ func _run() -> void:
 
 	_check(level.time_limit == 70.0, "El nivel define un límite de tiempo")
 	_check(timer_label.text.begins_with("TIEMPO:"), "El HUD muestra la cuenta regresiva")
+	_check(
+		medal_label.text.contains("ORO") and medal_label.text.contains("00:00"),
+		"El HUD muestra la medalla proyectada y el tiempo exacto"
+	)
 	_check(is_equal_approx(progress.value, 0.0), "La barra de progreso empieza vacía")
 	_check(progress_label.text.begins_with("PROGRESO DE NIVEL"), "El marcador de porcentaje es visible con borde y letras negras")
 	_check(not progress.show_percentage, "El porcentaje interno no se superpone al marcador")

@@ -2,7 +2,8 @@
 
 Videojuego 2D de plataformas lineal hecho con **Godot 4.7 (GL Compatibility)** y
 GDScript. La jugabilidad está inspirada en Super Mario Bros.: saltos, enemigos,
-trampas, checkpoints y seis niveles con ambientaciones distintas.
+trampas, checkpoints y ocho niveles jugables con ambientaciones distintas dentro
+de una hoja de ruta de 40 niveles repartidos en 8 mundos.
 
 ## Jugar
 
@@ -27,11 +28,21 @@ Godot_v4.7.2-stable_win64_console.exe --path . res://scenes/ui/main_menu.tscn
 
 ## Objetivo
 
-Atraviesa los seis niveles hasta llegar al final del juego. Cada nivel da tres
-vidas: al morir reapareces en el último control (bandera) activado con la vida
-completa; si te quedas sin vidas o se agota el tiempo, la partida vuelve al
-nivel 1. El nivel alcanzado se guarda para continuar la partida. El jugador
-aguanta tres golpes y, tras recibir daño, es invulnerable durante 1 segundo.
+Atraviesa los ocho niveles actuales hasta llegar al final del juego. El menú ya
+muestra los 40 huecos previstos en 8 mundos; los niveles todavía no creados
+aparecen desactivados. Cada nivel da tres vidas: al morir reapareces en el último
+control (bandera) activado con la vida completa; si te quedas sin vidas o se
+agota el tiempo, la partida vuelve al nivel 1. El nivel alcanzado se guarda para
+continuar la partida. El jugador aguanta tres golpes y, tras recibir daño, es
+invulnerable durante 1 segundo.
+
+Cada nivel es una prueba contrarreloj: el HUD muestra el tiempo restante, el
+tiempo exacto invertido y la medalla proyectada (Oro, Plata o Bronce). El reloj
+sigue corriendo mientras mueres o reapareces, así que los checkpoints no regalan
+tiempo. Al completar un nivel aparece una pantalla de resultados con el tiempo,
+la medalla, las muertes y la mejor marca; después puedes continuar, repetir el
+nivel o volver al menú. También se guardan el mejor tiempo, la mejor medalla y
+las muertes de ese nivel.
 
 - **Nivel 1:** día, recorrido largo con colinas, pozos y plataformas.
 - **Nivel 2:** atardecer, fosos con plataformas móviles, sierras y pinchos.
@@ -74,7 +85,8 @@ salir del juego.
 ## Objetos
 
 - **Poción (Q):** cura un golpe de vida.
-- **Ración (E):** añade 5 segundos al cronómetro.
+- **Ración (E):** aumenta la velocidad durante 5 segundos sin alterar el
+  cronómetro ni las medallas.
 - **Hierba curativa:** restaura vida al recogerla.
 - **Doble salto:** disponible siempre con una pulsación extra en el aire.
 - **Plataformas:** asset modular con cinco tipos (fija, vaivén horizontal,

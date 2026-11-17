@@ -5,15 +5,20 @@ extends Node2D
 ## Desde 2026-11-12 el juego es un plataformas lineal: hay checkpoints,
 ## tres vidas por nivel, fundido entre escenas y una pantalla de final.
 ## Sin vidas o sin tiempo la expedición vuelve a empezar en el nivel 1.
+## Fase contrarreloj (2026-11-17): el reloj sigue corriendo al morir, no hay
+## bonus de tiempo y el resultado se guarda con medalla y mejor tiempo.
 
 @export var level_variant: int = 1
 @export_file("*.tscn") var next_level_path: String = ""
 @export var level_name: String = "NIVEL 1"
 @export var time_limit: float = 70.0
+@export var gold_medal_time: float = 35.0
+@export var silver_medal_time: float = 50.0
+@export var bronze_medal_time: float = 70.0
 
 const MAX_LIVES := 3
-const RATION_TIME_BONUS := 5.0
 const FIRST_LEVEL_PATH := "res://scenes/levels/level_one.tscn"
+const RESULTS_PATH := "res://scenes/ui/level_results.tscn"
 const HEART_FULL := "\u2665"
 const HEART_EMPTY := "\u2661"
 
@@ -22,6 +27,7 @@ const HEART_EMPTY := "\u2661"
 @onready var camera: HorizontalCamera = $Camera
 @onready var portal_hint: Label = $HUD/PortalHint
 @onready var timer_label: Label = $HUD/TimerLabel
+@onready var medal_label: Label = $HUD/MedalLabel
 @onready var progress_bar: ProgressBar = $HUD/LevelProgress
 @onready var progress_label: Label = $HUD/LevelProgress/ProgressLabel
 @onready var game_over_label: Label = $HUD/GameOver
@@ -38,11 +44,12 @@ const HEART_EMPTY := "\u2661"
 
 var _completed: bool = false
 var _time_left: float = 0.0
+var _timer := RunTimer.new()
 var _progress_start_x: float = 0.0
 var _timer_expired: bool = false
 var _lives: int = MAX_LIVES
+var _level_deaths: int = 0
 var _respawn_point: Vector2 = Vector2.ZERO
-var _time_accounted: float = 0.0
 var _fade_rect: ColorRect
 var _damage_tween: Tween
 
@@ -67,10 +74,16 @@ func _ready() -> void:
 		_prepare_level_seven()
 	elif level_variant == 8:
 		_prepare_level_eight()
+	elif level_variant == 9:
+		_prepare_level_nine()
+	elif level_variant == 10:
+		_prepare_level_ten()
 
 	_apply_run_variation()
 	_decorate_base_hills()
-	_time_left = time_limit
+	_timer.start(time_limit)
+	_time_left = _timer.remaining
+	_level_deaths = 0
 	_progress_start_x = player.global_position.x
 	_respawn_point = player.global_position
 	player.health.died.connect(_on_player_died)
@@ -90,6 +103,7 @@ func _ready() -> void:
 
 	_update_meta_labels()
 	_update_timer_label()
+	_update_medal_label()
 	_update_progress_bar()
 	_show_level_banner()
 	_build_fade()
@@ -108,7 +122,7 @@ func _show_level_banner() -> void:
 	var hud := get_node_or_null("HUD")
 	if hud == null:
 		return
-	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO"}
+	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO"}
 	var banner := Label.new()
 	banner.name = "LevelBanner"
 	banner.text = "%s · %s" % [level_name, MOODS.get(level_variant, "")]
@@ -130,16 +144,25 @@ func _show_level_banner() -> void:
 
 
 func _process(delta: float) -> void:
-	if _completed or _timer_expired or player.health.is_dead:
+	if _completed:
 		return
 
-	_time_left = maxf(0.0, _time_left - delta)
+	# El reloj avanza también mientras el jugador está muerto: la muerte no
+	# puede conceder tiempo extra ni congelar la medalla (2026-11-17).
+	_timer.tick(delta)
+	_time_left = _timer.remaining
 	_update_timer_label()
 	_update_progress_bar()
+	_update_medal_label()
 
-	if _time_left <= 0.0:
-		_timer_expired = true
-		player.health.take_damage(9999)
+	if _timer.expired:
+		if not _timer_expired:
+			_timer_expired = true
+			player.health.take_damage(9999)
+		return
+
+	if player.health.is_dead:
+		return
 
 
 func _prepare_level_two() -> void:
@@ -182,6 +205,16 @@ func _prepare_level_seven() -> void:
 func _prepare_level_eight() -> void:
 	_clear_base_content()
 	LevelEightLayout.build(self)
+
+
+func _prepare_level_nine() -> void:
+	_clear_base_content()
+	LevelNineLayout.build(self)
+
+
+func _prepare_level_ten() -> void:
+	_clear_base_content()
+	LevelTenLayout.build(self)
 
 
 func _clear_base_content() -> void:
@@ -241,6 +274,23 @@ func _update_timer_label() -> void:
 	timer_label.add_theme_color_override("font_color", color)
 
 
+func _update_medal_label() -> void:
+	var medal := _current_medal()
+	medal_label.text = "MEDALLA ACTUAL: %s  ·  %s" % [
+		MedalRules.display(medal),
+		SaveGame.format_time_precise(_timer.elapsed),
+	]
+
+
+func _current_medal() -> String:
+	return MedalRules.for_time(
+		_timer.elapsed,
+		gold_medal_time,
+		silver_medal_time,
+		bronze_medal_time
+	)
+
+
 func _update_progress_bar() -> void:
 	var total_distance := maxf(1.0, portal.global_position.x - _progress_start_x)
 	var travelled := player.global_position.x - _progress_start_x
@@ -277,7 +327,8 @@ func _on_player_died() -> void:
 		return
 
 	FlyingSpawner.clear_flying_enemies(get_tree())
-	_account_time()
+	FallingRock.clear_rocks(get_tree())
+	_level_deaths += 1
 	SaveGame.register_death()
 	_lives = maxi(0, _lives - 1)
 	_update_lives_label()
@@ -313,15 +364,12 @@ func _respawn_player() -> void:
 	game_over_label.visible = false
 	player.revive(_respawn_point)
 	camera.snap_to_target()
-	# Regla de reaparición (2026-11-12): el control devuelve 10 s de cuenta
-	# regresiva, pero si al morir quedaban 20 s o menos se conceden 30 s para
-	# terminar el nivel. Nunca se supera el tiempo máximo del nivel.
-	var remaining := _time_left
-	_time_left = minf(time_limit, _time_left + 10.0)
-	if remaining <= 20.0:
-		_time_left = minf(time_limit, maxf(_time_left, 30.0))
+	# Fase contrarreloj (2026-11-17): reaparecer no regala tiempo. El reloj ha
+	# seguido corriendo durante la animación de muerte y la espera.
+	_time_left = _timer.remaining
 	_update_timer_label()
 	_update_progress_bar()
+	_update_medal_label()
 
 
 func _on_checkpoint_activated(checkpoint: Checkpoint) -> void:
@@ -360,28 +408,35 @@ func _on_portal_reached() -> void:
 	if _completed:
 		return
 	_completed = true
+	_timer.stop()
+	_time_left = _timer.remaining
 	player.set_physics_process(false)
 	player.velocity = Vector2.ZERO
-	_account_time()
+	var elapsed := _timer.elapsed
+	var medal := _current_medal()
+	_account_time(elapsed)
+	SaveGame.record_level_result(level_variant, elapsed, medal, _level_deaths)
 	inventory_panel.visible = false
-	completed_label.text = "%s COMPLETADO" % level_name
+	completed_label.text = "%s COMPLETADO · MEDALLA %s" % [
+		level_name,
+		MedalRules.display(medal),
+	]
 	completed_label.visible = true
 
-	if level_variant >= SaveGame.LAST_LEVEL:
+	var next_level := LevelRegistry.next_implemented_level(level_variant)
+	if next_level == -1:
 		SaveGame.finish_game()
-	else:
-		SaveGame.set_level(level_variant + 1)
+	elif SaveGame.is_level_unlocked(next_level):
+		SaveGame.set_level(next_level)
 
 	await get_tree().create_timer(2.0).timeout
-	await _fade_to_scene(next_level_path)
+	await _fade_to_scene(RESULTS_PATH)
 
 
-func _account_time() -> void:
-	## Suma a la expedición solo el tiempo transcurrido desde el último
-	## registro, para no duplicarlo si se muere varias veces en el nivel.
-	var elapsed := clampf(time_limit - _time_left, 0.0, time_limit)
-	SaveGame.add_time(maxf(0.0, elapsed - _time_accounted))
-	_time_accounted = elapsed
+func _account_time(elapsed: float) -> void:
+	## El tiempo de la expedición es el tiempo real invertido en el nivel; la
+	## medalla usa el mismo valor. Ya no se deriva de la cuenta regresiva.
+	SaveGame.add_time(maxf(0.0, elapsed))
 
 
 func _build_fade() -> void:
@@ -422,7 +477,8 @@ func _on_inventory_changed(_potions: int) -> void:
 func _on_item_used(item_name: String) -> void:
 	if item_name != "ration":
 		return
-	_time_left = minf(time_limit, _time_left + RATION_TIME_BONUS)
+	# La ración ya no regala tiempo: Player.apply_speed_boost() modify only
+	# la velocidad, así el cronómetro y las medallas permanecen limpios.
 	_update_timer_label()
 
 
@@ -466,7 +522,7 @@ func is_run_over() -> bool:
 
 
 func _update_meta_labels() -> void:
-	bonus_info.text = "Nivel %d de %d · %d vidas por nivel. Los controles recuperan toda la vida." % [
+	bonus_info.text = "Nivel %d de %d · %d vidas. El reloj sigue corriendo al morir; la ración da velocidad." % [
 		level_variant,
 		SaveGame.LAST_LEVEL,
 		MAX_LIVES,

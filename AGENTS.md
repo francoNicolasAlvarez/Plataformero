@@ -14,10 +14,12 @@ Videojuego 2D de plataformas **lineal** hecho con **Godot 4.7 (GL
 Compatibility) y GDScript**. Jugabilidad inspirada en Super Mario Bros. con
 exploración, saltos, enemigos, trampas, controles y un final de juego.
 
-Objetivo del jugador: atravesar los ocho niveles hasta llegar al final del
-juego. Cada nivel da tres vidas; al morir se reaparece en el último control
-(bandera) activado y, sin vidas o sin tiempo, el nivel se reinicia. El nivel
-alcanzado queda guardado para continuar la partida.
+Objetivo del jugador: atravesar los ocho niveles actuales hasta llegar al final
+del juego; la hoja de ruta aprobada los ampliará a 40 niveles repartidos en
+8 mundos. Cada nivel da tres vidas y es una prueba contrarreloj: al morir se
+reaparece en el último control (bandera) activado sin regalar tiempo, y sin
+vidas o sin tiempo la partida vuelve al inicio. El nivel alcanzado, el mejor
+tiempo y la medalla de cada nivel quedan guardados.
 
 Desarrollo **incremental**: una mecánica por vez, probada antes de continuar.
 Nunca implementar varios sistemas a la vez ni reescribir código existente sin
@@ -61,6 +63,7 @@ scenes/
   ui/control_guide.tscn    # guía de controles con teclas dibujadas (reutilizable)
   ui/pause_overlay.tscn    # pausa con Enter: congela el SceneTree y muestra guía
   ui/game_complete.tscn    # pantalla final con tiempo total y muertes
+  ui/level_results.tscn    # resultados por nivel: tiempo, medalla, muertes y mejor marca
   levels/test_level.tscn   # BASE de los 8 niveles (HUD, jugador, portal, cámara)
   levels/level_one|two|three|four|five|six|seven|eight.tscn  # variantes 1-8
   player/player.tscn       # Player + AttackHitbox + Health
@@ -92,18 +95,21 @@ scripts/
              # platform_spacing.gd (regla de espaciado entre plataformas)
   combat/    # health.gd (vida reutilizable por jugador y enemigos)
   core/      # save_game.gd (nivel guardado + tiempo/muertes, user://save.cfg),
-             # gamepad_bindings.gd (mapeo fijo de mando, idempotente)
-  ui/        # main_menu.gd, control_guide.gd (keycaps), pause_overlay.gd,
-             # game_complete.gd, game_settings.gd (brillo/volumen/teclas, user://)
+             # gamepad_bindings.gd (mapeo fijo de mando, idempotente),
+             # run_timer.gd y medal_rules.gd (contrarreloj),
+             # level_registry.gd (8 mundos × 5 niveles)
+  ui/        # main_menu.gd, menu_style.gd, menu_backdrop.gd, control_guide.gd (keycaps), pause_overlay.gd,
+             # game_complete.gd, level_results.gd, game_settings.gd
   audio/     # sfx.gd (sonidos sintetizados + música procedural por nivel)
   fx/        # particles.gd (class_name Fx: fábrica de partículas procedurales)
   world/, decor/, camera/, pickups/  # decor/mountain_builder.gd: capas de
              # detalle (nieve/cresta/sombra/arbolitos) para las colinas
 resources/player/  # player_stats.tres y basic_attack.tres (AttackData)
+resources/levels/  # level_config.gd y world_config.gd (configuración declarativa)
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (33 en total)
+tests/       # smoke tests headless, uno por sistema (42 en total)
 ```
 
 Decisiones clave:
@@ -894,12 +900,183 @@ actualizar esos tests.
     - Tests: `level_eight_smoke_test` nuevo (71 comprobaciones: spawn a la derecha, portal a la izquierda, suelo/plataformas móviles/sierras/pinchos/enemigos/hierbas reflejados, control central y dirección real del movimiento), `level_two_smoke_test` 29 (regresión sin espejo), `level_seven_smoke_test` 414 (nueva cadena), `menu_smoke_test` 35 y `platform_spacing_smoke_test` 26. Suite completa: 33/33.
     NOTA: el exe de `dist/` se re-exportó con los ítems 18-46.
 
+47. **Fase 1 auditada y Fase 2 contrarreloj (2026-11-17)**:
+    - **Auditoría previa**: se entregó un informe sin tocar código con sistemas reutilizables, cambios necesarios, arquitectura para 40 niveles, organización de enemigos/obstáculos/gimmicks, cronograma, riesgos y estrategia de tests. El usuario autorizó continuar con la Fase 2.
+    - **`scripts/core/run_timer.gd`** (`class_name RunTimer`): separa `elapsed` (tiempo real, base de la medalla) de `remaining` (cuenta regresiva del HUD). `tick()` sigue corriendo mientras el jugador está muerto; la pausa del SceneTree lo congela al no llamarse `_process()`.
+    - **`scripts/core/medal_rules.gd`** (`class_name MedalRules`): `NONE/BRONCE/PLATA/ORO`, `for_time()`, `rank()`, `is_better()` y `display()`. Umbrales por nivel exportados en `test_level.gd`: 35/50/70 s por defecto.
+    - **Sin bonuses de tiempo**: se eliminaron las reglas de reaparición +10/30 s y el bonus de ración +5 s. La ración ahora activa `Player.apply_speed_boost()` (×1.35 durante 5 s) sin tocar el cronómetro.
+    - **HUD y resultados**: nuevo `HUD/MedalLabel` con medalla proyectada y tiempo con centésimas; al completar, el cartel indica `MEDALLA ...` y se llama a `SaveGame.record_level_result()`.
+    - **`SaveGame` ampliado**: secciones `level_N` con `best_time`, `medal`, `deaths` y `completed`; API `record_level_result`, `get_best_time`, `get_medal`, `get_level_deaths`, `is_level_completed`, `medal_count`, `total_best_time` y `format_time_precise`. Los saves antiguos siguen cargando el progreso de la expedición.
+    - **Tests**: `time_medal_smoke_test` nuevo (16 comprobaciones); `checkpoint`, `inventory`, `timer_progress` y `exit` actualizados. Suite completa: **34/34**.
+    - `SaveGame.LAST_LEVEL` sigue en 8: la expansión a 40 niveles/8 mundos corresponde a fases posteriores.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+48. **Fase 3 inicial — registro de niveles y resultados (2026-11-17)**:
+    - **Configuración declarativa**: `resources/levels/level_config.gd`
+      (`class_name LevelConfig`) guarda número, mundo, posición, nombre, escena,
+      límite y umbrales de medalla. `resources/levels/world_config.gd`
+      (`class_name WorldConfig`) agrupa cinco niveles y un color de acento.
+    - **`scripts/core/level_registry.gd`** (`class_name LevelRegistry`): define
+      8 mundos × 5 niveles (40 entradas) y expone búsquedas, listados, rutas,
+      estado de implementación y siguiente nivel implementado. Los ocho niveles
+      creados ocupan los primeros ocho huecos secuenciales; el resto aparece
+      como "POR CONSTRUIR" sin ruta cargable.
+    - **Menú**: el selector pasa de 8 botones sueltos a un `ScrollContainer` con
+      dos columnas de mundos (40 botones con códigos `m-n`). Los niveles
+      pendientes están desactivados. El rótulo muestra "NIVEL n DE 40 · MUNDO
+      m DE 8" y Jugar usa la ruta del registro.
+    - **Guardado y cadena**: `SaveGame.LAST_LEVEL` pasa de 8 a 40. Tras completar
+      un nivel se calcula el destino con `LevelRegistry.next_implemented_level()`,
+      así el nivel 8 sigue terminando en la pantalla final aunque ya existan 40
+      huecos. `SaveGame` guarda el último resultado (`last_result_*`) en memoria
+      para la pantalla de resultados.
+    - **Pantalla de resultados**: `scenes/ui/level_results.tscn` +
+      `scripts/ui/level_results.gd` muestran tiempo con centésimas, medalla,
+      muertes, mejor marca y botones SIGUIENTE NIVEL / REPETIR / MENÚ. El portal
+      lleva a esta pantalla antes de continuar.
+    - **Tests**: `level_registry_smoke_test` (69) y `level_results_smoke_test`
+      (11) nuevos; `menu_smoke_test` ampliado a 43. Suite completa: **36/36**.
+    - Queda pendiente calibrar umbrales por nivel y poblar los 32 niveles nuevos;
+      las escenas de los mundos 3-8 todavía no existen.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+49. **Rediseño del menú principal (2026-11-17)**: solo se añadió; lo que ya
+    funcionaba no se tocó.
+    - **Cinco botones**: INICIO (pasa a "CONTINUAR · NIVEL n" si hay progreso
+      guardado), SELECCIÓN DE NIVEL, CÓMO JUGAR, OPCIONES y CERRAR JUEGO. La
+      selección de nivel (40 botones, 8 mundos, bloqueados los no creados)
+      pasó del panel principal a `LevelSelectPanel` (mismos nombres de nodo
+      `Level%dButton`/`World%dBox`); muestra mejor marca y medalla del nivel
+      enfocado y un punto de medalla en cada botón. Nombre del botón nuevo:
+      `SelectLevelButton` (no usar `LevelSelectButton`: choca con el patrón
+      `Level*Button` de los tests).
+    - **Estilo**: `scripts/ui/menu_style.gd` (`MenuStyle`, paleta cielo/pradera/
+      tinta/ámbar/ocre, estados normal/hover=foco/presionado/desactivado) y
+      `scripts/ui/menu_backdrop.gd` (`MenuBackdrop`: cielo, sol, nubes,
+      colinas, árboles y jugador corriendo con los assets existentes). La
+      luna/estrellas antiguas quedan ocultas, no borradas.
+    - **Opciones**: música y efectos por separado (buses `Music`/`SFX`
+      creados por `GameSettings.ensure_audio_buses()`), pantalla completa y
+      controles en 2 columnas para que el panel quepa en 648 px. Brillo y
+      volumen general se mantienen.
+    - **Salida con confirmación** (`QuitPanel`; Esc en el menú también pide
+      confirmar), transición de 0,15 s entre paneles y sonidos de foco/
+      confirmación (`ui`, `ui_confirm`).
+    - **Errores corregidos**: el objetivo decía "completa los seis" niveles;
+      Esc cerraba el juego sin avisar; el foco y el hover no se distinguían.
+    - Tests: `menu_ui_smoke_test` nuevo (37) y `menu_smoke_test` 43 (rutas y
+      textos nuevos). Suite: 37/37.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+50. **Desbloqueo por mundos con pasada seguida (2026-11-17)**: el mundo n+1
+    solo se abre al completar TODOS los niveles (creados) del mundo n seguidos
+    en una misma pasada. Cada nivel se puede practicar suelto desde la
+    selección, pero eso no desbloquea nada.
+    - **`SaveGame`**: `cleared_worlds`, `world_run`/`world_run_progress` (pasada
+      activa, persistida en `[run]`), `last_world_cleared`, y la API
+      `is_world_unlocked`, `is_level_unlocked`, `is_world_cleared`,
+      `mark_world_cleared`, `unlock_hint`. Una pasada empieza al elegir el
+      primer nivel de un mundo abierto (`start_at_level`, `begin_new_run` o
+      entrar por la cadena con `set_level`); empezar en otro nivel es práctica.
+      `record_level_result` la avanza solo si el nivel completado es el
+      esperado en orden; saltarse el orden la invalida y el game over/tiempo
+      agotado la reinicia (`start_at_level(1)`). Morir con vidas restantes no
+      la rompe. Los mundos superados se guardan en `[worlds]`; las partidas
+      antiguas se migran respetando los mundos ya alcanzados.
+    - **Menú**: los niveles de mundos bloqueados salen desactivados, la
+      etiqueta del mundo dice BLOQUEADO/SUPERADO, el panel muestra
+      `UnlockRuleLabel` y, al enfocar un nivel bloqueado, qué mundo superar.
+      INICIO vuelve al nivel 1 si el nivel guardado está bloqueado.
+    - **Resultados**: muestra "PASADA DEL MUNDO n: k/total", el aviso de mundo
+      superado o el de práctica; si el mundo siguiente sigue bloqueado el botón
+      pasa a VOLVER AL MENÚ. `TestLevel` no avanza el nivel guardado a un
+      mundo bloqueado.
+    - Tests: `world_unlock_smoke_test` nuevo (22), `menu_ui_smoke_test` 43 y
+      `menu_smoke_test` 43 (marca el mundo 1 superado). Suite: 38/38.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+51. **Niveles 9 "RUINAS" y 10 "TEMPLO" (2026-11-17)**: completan el mundo 2
+    (2-4 y 2-5); ya hay 10 niveles jugables, todos de 70 s.
+    - **Nivel 9** (`level_nine.tscn` + `level_nine_layout.gd`, 15800 px):
+      templo en ruinas al atardecer. Inicio, 9 tramos de suelo de 1120 px y
+      una isla final separados por fosos de 280 px, con una única `FallZone`
+      a todo el ancho. Cada sección lleva escalones de piedra y un puente
+      sobre el foso (fijo, de vaivén o circular según `index % 3`), caminantes
+      y, rotando por sección, pinchos / arquero sobre las ruinas y sierra /
+      mago en el suelo. Control en la sección 4 y hierbas en 2/5/7.
+    - **Nivel 10** (`level_ten.tscn` + `level_ten_layout.gd`, 16600 px):
+      ascensión zigzagueante de 24 plataformas en cuatro alturas
+      (550/450/350/250, desnivel máximo 100 px), con los cinco tipos del asset
+      modular, cuatro altares anchos (arquero y mago alternos, el de la
+      hierba sin enemigo), cuatro sierras suspendidas y murciélagos cada 4 s.
+      Control en el índice 12 y portal en la isla final.
+    - **Integración**: `LevelRegistry.IMPLEMENTED_LEVELS` con 9 y 10; cadena
+      8 -> 9 -> 10 -> pantalla final; `MOODS` y `_prepare_level_nine/ten` en
+      `test_level.gd`; temas de música propios para 9 y 10 (los niveles 1-8
+      conservan los suyos). Superar el mundo 2 (regla de pasada seguida)
+      exige ahora los 5 niveles, 6-10; el mundo 3 sigue sin niveles.
+    - Tests: `level_nine_smoke_test` (31) y `level_ten_smoke_test` (30)
+      nuevos; actualizados `level_registry`, `level_eight`, `level_results`,
+      `menu`, `menu_ui`, `world_unlock` y `platform_spacing` (incluye 9 y 10).
+      Suite: 40/40.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+52. **Nivel 9 más difícil: plataformas altas, más proyectiles y rocas
+    (2026-11-17)**:
+    - **Plataformas altas**: cada sección suma una plataforma a 330 px
+      (`TIER_TOP`, x0+1000) y otra a 220 px (`TIER_PEAK`, x0+560); la regla de
+      espaciado se cumple.
+    - **Más enemigos de proyectil**: 8 arqueros y 8 magos (antes 3 y 3), en
+      suelo, escalones, la plataforma de 330 y la de 220.
+    - **Rocas que caen**: `scripts/world/falling_rock.gd` (`FallingRock`,
+      construida por código) y `scripts/world/rockfall_spawner.gd`
+      (`RockfallSpawner`). Un marcador rojo parpadeante (grupo `rock_warnings`)
+      avisa 1,5 s en la superficie de impacto; después la roca aparece sobre el
+      borde superior de la pantalla y cae a 1500 px/s, quita un golpe al jugador
+      y se rompe contra el primer suelo/plataforma. El generador lanza una cada
+      2,2 s (mitad sobre el jugador, 30 % de dobles), solo con el jugador entre
+      x 1500 y 14200, y no crea nada sobre fosos. `TestLevel._on_player_died()`
+      las limpia.
+    - **Enemigo ya existente añadido**: murciélagos (`FlyingSpawner`) cada 5 s.
+      No se encontró en el repositorio una "lista" de enemigos nuevos; se usó el
+      volador, que el nivel 9 aún no tenía.
+    - Tests: `rockfall_smoke_test` nuevo (19), `level_nine_smoke_test` 36.
+      Suite: 41/41.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+53. **Nivel 9: rocas por delante x3 y bruto lanzarrocas (2026-11-17)**:
+    - **Rocas por delante**: `RockfallSpawner` ya no apunta al jugador; el
+      punto de impacto es siempre `player.x + ahead_direction * [min_ahead
+      (80), max_ahead (480)]` y la segunda roca de un par cae aún más
+      adelante (`double_gap`). **Triple de rocas**: `ROCK_INTERVAL = 2.2 / 3`
+      (≈0,73 s).
+    - **Enemigo nuevo `BruteEnemy`** (`scripts/enemies/brute_enemy.gd`,
+      `scenes/enemies/brute_enemy.tscn`, extiende `TrainingDummy`): persona
+      fornida con ropa roja, 30 % más alta que el resto (colisión 44x62,4 y
+      silueta x1,625 frente a 32x48 y x1,25). Inmóvil y de pie junto a una pila
+      de rocas; lanza un peñasco a 45 grados cada 2,2 s si el jugador está entre
+      120 y 560 px. La velocidad inicial se calcula con v² = g·d²/(dy+d)
+      (g = 1200, entre 480 y 950 px/s) para que la parábola pase por el jugador.
+    - **`ThrownBoulder`** (`scripts/enemies/thrown_boulder.gd`): proyectil con
+      gravedad propia (`fall_gravity`; `gravity` choca con Area2D), diámetro 72
+      px = 1,5 x los 48 px del modelo del jugador, quita un golpe y se rompe al
+      chocar. **`RockPile`** (`scripts/world/rock_pile.gd`): dos bloques sólidos
+      (altura total 88 px) sobre los que se puede saltar.
+    - **Nivel 9**: tres brutos con su pila en las secciones 1, 4 y 7 (bruto a
+      x0+700, pila a x0+585).
+    - Tests: `brute_enemy_smoke_test` nuevo (23), `rockfall_smoke_test` 22 y
+      `level_nine_smoke_test` 40. Nota: un objeto liberado no es `== null` en
+      GDScript; comprobar con `is_instance_valid`. Suite: 42/42.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
-- Suite de 33 smoke tests en verde (verificado en esta sesión) tras aplicar
-  los ítems 28-46: modo plataformas lineal con un único checkpoint a mitad de
-  cada nivel, tres vidas por nivel, reglas de tiempo de reaparición (+10 s /
-  30 s), inventario real con poción/ración y espacios Q/E, selección directa
+- Suite de 42 smoke tests en verde (verificado en esta sesión) tras aplicar
+  los ítems 28-48: modo plataformas lineal con un único checkpoint a mitad de
+  cada nivel, tres vidas por nivel, cronómetro contrarreloj que sigue corriendo
+  al morir y no regala tiempo, medallas guardadas por nivel, selector de 40
+  niveles en 8 mundos con 32 plazas pendientes, resultados por nivel, inventario
+  real con poción/ración y espacios Q/E, selección directa
   de nivel, soporte de mando, guardado de nivel/tiempo/muertes, pantalla de
   juego completado, fundidos de imagen y música, aviso de descanso en
   controles, trampas legibles, menú de pausa completo con guía y
@@ -922,22 +1099,27 @@ actualizar esos tests.
   El mago lanza orbes de energía azules con estela y sonido propios; el
   arquero y el centinela tienen efectos de sonido distintos. El ataque del
   centinela del nivel 6 es rojo (orbe, estela y estallido). La cadena
-  termina en la pantalla final. Los seis niveles tienen un límite de 70 s.
+  termina en la pantalla final. Los ocho niveles tienen un límite de 70 s.
   El nivel 7 es un reflejo vertical del nivel 1 con gravedad invertida;
   todos sus enemigos usan los tipos conocidos con sombrero triangular
   amarillo y ojos almendrados. El nivel 8 reutiliza el nivel 2 como espejo
   horizontal con controles invertidos y recorrido de derecha a izquierda.
-  El ejecutable de `dist/` incluye los ítems 18-46.
+  El ejecutable de `dist/` incluye los ítems 18-46, todavía no el 47 ni el 48.
 
-## 6. Próximos pasos (roadmap acordado, en orden de prioridad)
+## 6. Próximos pasos (roadmap contrarreloj acordado, en orden de prioridad)
 
-1. **Nuevos tipos de recursos** (materiales, llaves) y más objetos
-   utilizables para el inventario y los espacios Q/E (la ración ya ocupa E).
-2. **Desbloqueo de personajes** con estadísticas distintas (aprovechar que
-   `PlayerStats` ya es un Resource intercambiable).
-3. **Dificultad progresiva** y repetición de niveles ya desbloqueados (la
-   selección directa de nivel desde el menú ya existe).
-4. **Polish**: más partículas, transiciones decoradas y créditos ampliados.
+1. **Fase 3 — Registro de niveles**: ya están `LevelConfig`/`WorldConfig`/
+   `LevelRegistry`, el selector de 40 niveles en 8 mundos, la pantalla de
+   resultados y `SaveGame.LAST_LEVEL = 40`. Queda calibrar umbrales por nivel y
+   mostrar medallas/mejores tiempos en el selector.
+2. **Fase 4 — Obstáculos/gimmicks**: bases reutilizables (`Hazard`,
+   `GimmickZone`) y primeras trampas/zonas con aviso, reset y tests propios.
+3. **Fase 5 — Enemigos por familias**: configuración común y lotes terrestres,
+   aéreos y especiales, sin introducir combate para el jugador.
+4. **Fase 6 — Producción de mundos**: cinco niveles por iteración con
+   calibración de tiempo y suite en verde antes de pasar al siguiente mundo.
+5. **Fase 7 — Polish y exportación**: créditos ampliados, resultados finales,
+   optimización y nuevo ejecutable en `dist/`.
 
 ## 7. Convenciones y reglas para agentes
 

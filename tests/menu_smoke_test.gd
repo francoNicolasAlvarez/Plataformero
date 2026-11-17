@@ -14,6 +14,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	# Con el mundo 1 superado, los niveles del mundo 2 quedan habilitados.
+	SaveGame.mark_world_cleared(1)
 	var menu := MENU_SCENE.instantiate()
 	root.add_child(menu)
 
@@ -59,11 +61,25 @@ func _run() -> void:
 			arrow_kept = true
 	_check(arrow_kept, "Las flechas siguen moviendo al jugador tras aplicar los ajustes")
 	_check(
-		total_label.text.contains("NIVEL") and total_label.text.contains("DE 8"),
-		"El menú muestra el nivel guardado sobre el total"
+		total_label.text.contains("NIVEL") and total_label.text.contains("DE 40")
+		and total_label.text.contains("MUNDO"),
+		"El menú muestra el nivel, los 40 niveles y el mundo"
 	)
-	var level_row: HBoxContainer = menu.get_node_or_null("MainPanel/PanelMargin/VBox/LevelSelect")
-	_check(level_row != null and level_row.get_child_count() == 9, "El menú ofrece selección directa de los 8 niveles")
+	var level_select: ScrollContainer = menu.get_node_or_null("LevelSelectPanel/Margin/VBox/LevelSelect")
+	_check(level_select != null, "El menú tiene un selector con scroll")
+	var world_grid: GridContainer = menu.get_node_or_null("LevelSelectPanel/Margin/VBox/LevelSelect/WorldGrid")
+	_check(world_grid != null and world_grid.get_child_count() == 8, "El selector agrupa 8 mundos")
+	_check(menu.find_children("World?Label", "Label", true, false).size() == 8, "Cada mundo tiene etiqueta")
+	_check(menu.find_children("Level?Button", "Button", true, false).size() == 9, "Los 9 primeros botones son de un dígito")
+	_check(menu.find_children("Level??Button", "Button", true, false).size() == 31, "Los otros 31 botones son de dos dígitos")
+	var level_buttons := menu.find_children("Level*Button", "Button", true, false)
+	_check(level_buttons.size() == 40, "El menú ofrece selección directa de los 40 niveles")
+	var first_button: Button = menu.get_node("LevelSelectPanel/Margin/VBox/LevelSelect/WorldGrid/World1Box/World1Row/Level1Button")
+	var eighth_button: Button = menu.get_node("LevelSelectPanel/Margin/VBox/LevelSelect/WorldGrid/World2Box/World2Row/Level8Button")
+	var ninth_button: Button = menu.get_node("LevelSelectPanel/Margin/VBox/LevelSelect/WorldGrid/World3Box/World3Row/Level11Button")
+	_check(first_button.text == "1-1" and not first_button.disabled, "El nivel 1 es accesible y muestra su código")
+	_check(not eighth_button.disabled, "Los 8 niveles creados están habilitados")
+	_check(ninth_button.disabled, "Los niveles pendientes están desactivados")
 	SaveGame.start_at_level(3)
 	_check(SaveGame.level == 3, "La selección de nivel guarda el nivel elegido")
 	_check(not SaveGame.completed and SaveGame.total_time == 0.0 and SaveGame.deaths == 0,
@@ -78,7 +94,7 @@ func _run() -> void:
 	var instructions_panel: PanelContainer = menu.get_node("InstructionsPanel")
 	var instructions_button: Button = menu.get_node("MainPanel/PanelMargin/VBox/InstructionsButton")
 	_check(not instructions_panel.visible, "Las instrucciones empiezan ocultas")
-	_check(instructions_button.text.contains("INSTRUCCIONES"), "El menú tiene un botón de instrucciones")
+	_check(instructions_button.text.contains("CÓMO JUGAR"), "El menú tiene un botón de instrucciones")
 	var instructions_guide: ControlGuide = instructions_panel.find_child("ControlGuide", true, false)
 	_check(instructions_guide.columns == 2, "Las instrucciones muestran todos los controles")
 	var objective: Label = instructions_panel.find_child("ObjectiveText", true, false)
