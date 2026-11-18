@@ -152,7 +152,7 @@ func _check_thirteen(level: Node) -> void:
 		_check(kinds.has(kind), "Nivel 13: la ruta usa el tipo %d" % kind)
 	_check(islands == 6, "Nivel 13: seis islas anchas")
 	_check(_count(_is_brute) == 2 and get_nodes_in_group("rock_piles").size() == 2, "Nivel 13: dos brutos con su pila")
-	_check(_count(_is_archer) == 2 and _count(_is_mage) == 2, "Nivel 13: arqueros y magos en las islas")
+	_check(_count(_is_archer) == 2 and _count(_is_mage) == 1, "Nivel 13: arqueros y mago en las islas (sin enemigos sobre las rocas)")
 	_check(_count(_is_orb) == 3, "Nivel 13: tres orbes sobre el agua")
 	_check(get_nodes_in_group("saws").size() == 3, "Nivel 13: tres sierras suspendidas")
 	var bats := world.get_node_or_null("FlyingSpawner") as FlyingSpawner

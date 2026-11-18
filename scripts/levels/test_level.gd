@@ -41,6 +41,10 @@ var _completed: bool = false
 var _time_left: float = 0.0
 var _timer := RunTimer.new()
 var _progress_start_x: float = 0.0
+## Ruta del recorrido (2026-11-18) para niveles que no avanzan en línea recta
+## (laberinto): el progreso y las medallas usan su longitud, no la distancia en x.
+var _route: PackedVector2Array = PackedVector2Array()
+var _route_length: float = 0.0
 var _timer_expired: bool = false
 var _lives: int = MAX_LIVES
 var _level_deaths: int = 0
@@ -93,6 +97,8 @@ func _ready() -> void:
 		_prepare_level_nineteen()
 	elif level_variant == 20:
 		_prepare_level_twenty()
+	elif level_variant == 21:
+		_prepare_level_twentyone()
 
 	_apply_run_variation()
 	_decorate_base_hills()
@@ -156,7 +162,7 @@ func _connect_checkpoints() -> void:
 			checkpoint.activated.connect(_on_checkpoint_activated)
 
 
-const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO", 11: "VIENTO", 12: "DUNAS", 13: "OASIS", 14: "CAÑÓN", 15: "TORMENTA", 16: "GRUTA", 17: "MINA", 18: "CRISTALES", 19: "GALERÍA", 20: "DERRUMBE"}
+const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO", 11: "VIENTO", 12: "DUNAS", 13: "OASIS", 14: "CAÑÓN", 15: "TORMENTA", 16: "GRUTA", 17: "MINA", 18: "CRISTALES", 19: "GALERÍA", 20: "DERRUMBE", 21: "LABERINTO"}
 
 
 ## Cartel del nivel al comenzar: aparece centrado y se desvanece solo.
@@ -308,6 +314,11 @@ func _prepare_level_twenty() -> void:
 	LevelTwentyLayout.build(self)
 
 
+func _prepare_level_twentyone() -> void:
+	_clear_base_content()
+	LevelTwentyoneLayout.build(self)
+
+
 func _clear_base_content() -> void:
 	for child in $Platforms.get_children():
 		child.free()
@@ -358,9 +369,39 @@ func _update_timer_label() -> void:
 	timer_label.add_theme_color_override("font_color", color)
 
 
+## Registra la ruta (puntos del camino de la salida) del nivel.
+func set_route(points: PackedVector2Array) -> void:
+	_route = points
+	_route_length = 0.0
+	for i in range(1, points.size()):
+		_route_length += points[i - 1].distance_to(points[i])
+
+
+func route_progress(position: Vector2) -> float:
+	## Fracción 0..1 recorrida de la ruta: proyecta la posición sobre el
+	## segmento más cercano y suma la longitud previa.
+	if _route.size() < 2 or _route_length <= 0.0:
+		return 0.0
+	var best_distance := INF
+	var best_along := 0.0
+	var accumulated := 0.0
+	for i in range(1, _route.size()):
+		var a := _route[i - 1]
+		var b := _route[i]
+		var closest := Geometry2D.get_closest_point_to_segment(position, a, b)
+		var d := position.distance_to(closest)
+		if d < best_distance:
+			best_distance = d
+			best_along = accumulated + a.distance_to(closest)
+		accumulated += a.distance_to(b)
+	return clampf(best_along / _route_length, 0.0, 1.0)
+
+
 func _calibrate_medals() -> void:
 	## Umbrales de medalla según la longitud real del recorrido (2026-11-18).
 	var distance := absf(portal.global_position.x - _progress_start_x)
+	if _route_length > 0.0:
+		distance = _route_length
 	var limits := MedalRules.thresholds_for_route(distance, player.stats.run_speed, time_limit)
 	gold_medal_time = limits["gold"]
 	silver_medal_time = limits["silver"]
@@ -385,9 +426,12 @@ func _current_medal() -> String:
 
 
 func _update_progress_bar() -> void:
-	var total_distance := maxf(1.0, portal.global_position.x - _progress_start_x)
-	var travelled := player.global_position.x - _progress_start_x
-	progress_bar.value = clampf(travelled / total_distance * 100.0, 0.0, 100.0)
+	if _route_length > 0.0:
+		progress_bar.value = route_progress(player.global_position) * 100.0
+	else:
+		var total_distance := maxf(1.0, portal.global_position.x - _progress_start_x)
+		var travelled := player.global_position.x - _progress_start_x
+		progress_bar.value = clampf(travelled / total_distance * 100.0, 0.0, 100.0)
 	progress_label.text = "PROGRESO DE NIVEL  %d%%" % roundi(progress_bar.value)
 
 

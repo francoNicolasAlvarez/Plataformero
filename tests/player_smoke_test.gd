@@ -98,7 +98,7 @@ func _run() -> void:
 	Input.action_release("move_right")
 	await _wait_physics(30)
 
-	# Impulso (Ctrl): en el suelo y en el aire (cuenta como doble salto).
+	# Impulso (Ctrl): en el suelo y en el aire (sin gastar el doble salto).
 	Input.action_press("move_right")
 	await _wait_physics(5)
 	Input.action_press("dash")
@@ -110,6 +110,11 @@ func _run() -> void:
 	_check(not player.is_dashing(), "El impulso dura un instante")
 	Input.action_release("move_right")
 	await _wait_physics(40)
+	# Terreno abierto y jugador activo (el portal pudo congelarlo).
+	player.set_physics_process(true)
+	player.global_position = Vector2(300.0, 600.0)
+	player.velocity = Vector2.ZERO
+	await _wait_physics(30)
 	Input.action_press("jump")
 	await _wait_physics(2)
 	Input.action_release("jump")
@@ -124,7 +129,7 @@ func _run() -> void:
 	Input.action_press("jump")
 	await _wait_physics(2)
 	Input.action_release("jump")
-	_check(player.velocity.y >= vy_after_dash - 1.0, "El impulso aéreo consume el doble salto")
+	_check(player.velocity.y < vy_after_dash - 1.0, "El impulso aéreo no consume el doble salto")
 	Input.action_release("move_right")
 	await _wait_until_floor(player, 200)
 	await _wait_physics(30)

@@ -92,7 +92,7 @@ static func _build_route(world: Node2D) -> void:
 			DesertKit.herb(world, platform.position.x, top)
 		if index in ARCHER_INDICES:
 			DesertKit.archer(world, "OasisArcher%d" % index, platform.position.x + 80.0, top)
-		if index in MAGE_INDICES:
+		if index in MAGE_INDICES and index not in BRUTE_INDICES:
 			DesertKit.mage(world, "OasisMage%d" % index, platform.position.x - 80.0, top)
 		if index in BRUTE_INDICES:
 			DesertKit.brute_post(world, "OasisBrute%d" % index, platform.position.x - 80.0, platform.position.x + 100.0, top)

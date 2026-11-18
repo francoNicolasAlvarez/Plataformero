@@ -17,7 +17,7 @@ const NEXT := {
 	17: "res://scenes/levels/level_eighteen.tscn",
 	18: "res://scenes/levels/level_nineteen.tscn",
 	19: "res://scenes/levels/level_twenty.tscn",
-	20: "res://scenes/ui/game_complete.tscn",
+	20: "res://scenes/levels/level_twentyone.tscn",
 }
 const NAMES := {16: "GRUTA", 17: "MINA", 18: "CRISTALES", 19: "GALERÍA", 20: "DERRUMBE"}
 const WORLDS := {16: "LevelSixteenGenerated", 17: "LevelSeventeenGenerated", 18: "LevelEighteenGenerated", 19: "LevelNineteenGenerated", 20: "LevelTwentyGenerated"}

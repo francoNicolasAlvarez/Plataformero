@@ -109,7 +109,7 @@ resources/levels/  # level_config.gd y world_config.gd (configuración declarati
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (54 en total)
+tests/       # smoke tests headless, uno por sistema (57 en total)
 ```
 
 Decisiones clave:
@@ -131,7 +131,7 @@ Decisiones clave:
 Controles (reconfigurables desde Opciones):
 A/D o flechas mover · Espacio saltar (otra pulsación en el aire = doble salto,
 siempre disponible) · S/Abajo caer rápido · se corre siempre por defecto · Ctrl impulso
-rápido hacia delante (cuenta como doble salto en el aire) · Enter pausa.
+rápido hacia delante (no cuenta como salto y atraviesa enemigos y proyectiles) · Enter pausa.
 Mando: stick/DPAD mover y caer rápido · A saltar · X impulso · Start pausa (mapeo fijo, ver `GamepadBindings`).
 NOTA: el juego es SIN combate: la acción `attack` sigue eliminada
 (`no_combat_smoke_test` y `player_smoke_test` lo verifican). El jugador NO lleva objetos
@@ -1411,6 +1411,54 @@ actualizar esos tests.
       (incluye 16-20). `all_levels_smoke_test` recorre ya 20 niveles.
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
+71. **Impulso más corto, sin doble salto y que atraviesa enemigos
+    (2026-11-18)**: `dash_time` pasa de 0,36 a 0,18 s (~205 px, la mitad). El
+    impulso ya NO consume el doble salto: se puede usar en el aire sin gastar
+    `_jumps_used` (solo manda su enfriamiento de 0,4 s). Mientras dura
+    (`Player.is_dashing()`) el jugador no recibe daño de enemigos
+    (`TrainingDummy`), proyectiles (`EnemyProjectile`), peñascos
+    (`ThrownBoulder`) ni ondas (`ShockWave`) y los atraviesa: los proyectiles y
+    peñascos no se detienen al cruzarlo. Las trampas (pinchos, sierras,
+    vapor, rocas que caen) y los pozos siguen dañando. Instrucciones, guía de
+    controles ("Impulso (atraviesa enemigos)") y README actualizados. Tests:
+    `dash_pass_smoke_test` nuevo (7) y `player_smoke_test` ajustado (teletransporta
+    al jugador a terreno abierto: el portal podía congelarlo).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+72. **Sin enemigos sobre las rocas del bruto (2026-11-18)**: en el nivel 13 el
+    mago de la isla 27 nacía encima de la pila de rocas del bruto; ahora esa
+    isla solo lleva al bruto (el nivel conserva un único mago). Test nuevo
+    `pile_overlap_smoke_test` recorre todos los niveles y falla si algún
+    enemigo (salvo el propio bruto) queda sobre una `RockPile`.
+
+73. **Nivel 21 "LABERINTO" (2026-11-18)**: primer nivel que no es una franja
+    lateral; ocupa el hueco 5-1 y cierra la cadena (20 -> 21 -> pantalla final).
+    - **Estructura** (`level_twentyone_layout.gd`): edificio de 5 pisos
+      (3600 x 1760 px) con la cámara siguiendo también en vertical
+      (`HorizontalCamera.follow_y`, límites top/bottom). Dos torres separadas
+      por un muro: se sube por la izquierda (en cada piso un pozo de 420 px
+      en la losa con tres repisas, lejana-cercana-lejana, de 84 px de altura),
+      se cruza por el piso superior (continuo) y se baja por la derecha
+      cayendo por huecos a un solo piso de altura. Camino único (no hay que
+      buscar la salida) de ~17000 px que serpentea entre muros.
+    - **Obstáculos**: en cada corredor, tres muros alternos: bajos de 96 px
+      (hay que saltarlos) y colgantes de 150 px desde el techo (se pasa por
+      debajo, holgura 138 px).
+    - **Sin pozos mortales, sin voladores, sin centinela ni rocas**; solo 10
+      enemigos terrestres (lanceros, arqueros, babosas y un mago), un control en
+      el piso superior y dos hierbas.
+    - **Ruta**: `TestLevel.set_route()`/`route_progress()`: la barra de
+      progreso y los umbrales de medalla usan la longitud de la ruta (no la
+      distancia en x) cuando el nivel la registra.
+    - **Tests**: `maze_level_smoke_test` (20): estructura, ruta, holguras y un
+      robot que sigue la ruta con la física real y llega a la salida en ~52 s
+      (< 70 s). El nivel 21 queda fuera de `platform_spacing` (la regla compara
+      todos los pares y en un edificio de pisos hay pares que nunca se tocan).
+      Actualizados `level_registry` (21 implementados), `level_results` (5-1 es
+      el final), `menu_ui`, `cave_levels` (el 20 encadena al 21). Música propia
+      (índice 18 en `Sfx._build_music`).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
 - Suite de 52 smoke tests en verde (verificado en esta sesión) tras aplicar
@@ -1447,7 +1495,7 @@ actualizar esos tests.
   amarillo y ojos almendrados. El nivel 8 reutiliza el nivel 2 como espejo
   horizontal con controles invertidos y recorrido de derecha a izquierda.
   El ejecutable de `dist/` incluye los ítems 18-46, todavía no del 47 en adelante.
-- Suite de 54 smoke tests en verde tras los ítems 49-70: 20 niveles jugables
+- Suite de 57 smoke tests en verde tras los ítems 49-70: 20 niveles jugables
   en 4 mundos (praderas, ruinas, desierto, cavernas), medallas calibradas por
   longitud de recorrido y la base de obstáculos `Hazard`/`GimmickZone`
   (plataformas que se derrumban, respiraderos, zonas oscuras).
@@ -1465,9 +1513,11 @@ actualizar esos tests.
    interruptores y zonas de gravedad (cada una con aviso, reset y test).
 3. **Fase 5 — Enemigos por familias**: configuración común y lotes terrestres,
    aéreos y especiales, sin introducir combate para el jugador.
-4. **Fase 6 — Producción de mundos**: mundos 1-4 completos (20 niveles). Siguiente:
-   mundo 5 "CIELO Y ALTURAS" (niveles 21-25), con 1-2 mecánicas nuevas de la
-   Fase 4 y la misma calibración de tiempo y suite en verde.
+4. **Fase 6 — Producción de mundos**: mundos 1-4 completos (20 niveles) y el
+   laberinto (nivel 21, mundo 5). Siguiente: niveles 22-25 de "CIELO Y
+   ALTURAS" (el laberinto no encaja con el tema: renombrar el mundo 5 o mover
+   el laberinto), con 1-2 mecánicas nuevas de la Fase 4 y la misma
+   calibración de tiempo y suite en verde.
 5. **Fase 7 — Polish y exportación**: `DEV_UNLOCK_ALL = false`, créditos
    ampliados, resultados finales, optimización y nuevo ejecutable en `dist/`
    (hoy desactualizado desde el ítem 46).

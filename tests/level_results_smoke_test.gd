@@ -30,11 +30,11 @@ func _run() -> void:
 	_check(results.get_node("Center/Panel/Margin/VBox/Buttons/MenuButton") != null, "Ofrece volver al menú")
 	results.queue_free()
 
-	SaveGame.record_level_result(20, 68.2, MedalRules.BRONZE, 1)
+	SaveGame.record_level_result(21, 68.2, MedalRules.BRONZE, 1)
 	var final_results := RESULTS_SCENE.instantiate()
 	root.add_child(final_results)
 	await _wait_process(2)
-	_check(final_results.get_node("Center/Panel/Margin/VBox/Title").text == "NIVEL 4-5 COMPLETADO", "El nivel 20 aparece como 4-5")
+	_check(final_results.get_node("Center/Panel/Margin/VBox/Title").text == "NIVEL 5-1 COMPLETADO", "El nivel 21 aparece como 5-1")
 	_check(final_results.get_node("Center/Panel/Margin/VBox/Buttons/ContinueButton").text == "VER RESULTADO FINAL", "El último nivel lleva al resultado final")
 
 	print("")

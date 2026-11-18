@@ -58,6 +58,9 @@ func _run() -> void:
 	await _check_level(LEVEL_EIGHTEEN.instantiate(), "Nivel 18", 20)
 	await _check_level(LEVEL_NINETEEN.instantiate(), "Nivel 19", 10)
 	await _check_level(LEVEL_TWENTY.instantiate(), "Nivel 20", 4)
+	# El nivel 21 (laberinto) queda fuera: la regla compara todos los pares y en
+	# un edificio de varios pisos hay pares de pisos distintos a menos de 72 px
+	# en vertical que nunca se tocan. Sus holguras se comprueban en maze_level_smoke_test.
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])

@@ -103,6 +103,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
+	# El impulso del jugador atraviesa los proyectiles sin dañar ni detenerlos.
+	if body is Player and (body as Player).is_dashing():
+		return
 	if body.has_method("take_damage") and not body.is_in_group("enemies"):
 		body.take_damage(_damage_against(body), self)
 	if style == Style.FIRE:

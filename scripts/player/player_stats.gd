@@ -28,7 +28,7 @@ extends Resource
 
 @export_group("Impulso")
 @export_range(0.0, 2500.0, 10.0) var dash_speed: float = 1140.0
-@export_range(0.05, 0.6, 0.01) var dash_time: float = 0.36
+@export_range(0.05, 0.6, 0.01) var dash_time: float = 0.18
 @export_range(0.0, 2.0, 0.05) var dash_cooldown: float = 0.4
 
 @export_group("Combate")

@@ -211,18 +211,13 @@ func _handle_horizontal_movement(delta: float) -> void:
 
 
 func _handle_dash_input() -> void:
-	## Impulso rápido hacia delante (Ctrl). En el aire consume el doble salto:
-	## solo está disponible si aún no se ha usado y, tras usarlo, no se puede
-	## volver a saltar en el aire hasta tocar suelo.
+	## Impulso rápido hacia delante (Ctrl), en el suelo y en el aire. Ya no
+	## cuenta como doble salto (2026-11-18) y mientras dura el jugador atraviesa
+	## enemigos y proyectiles sin recibir daño (ver `take_damage`).
 	if not Input.is_action_just_pressed("dash") or _dash_cooldown_left > 0.0:
 		return
 	if _dash_time_left > 0.0:
 		return
-	var on_ground := is_on_floor()
-	if not on_ground:
-		if _jumps_used >= 2:
-			return
-		_jumps_used = 2
 	_dash_direction = float(_facing)
 	_dash_time_left = stats.dash_time
 	_dash_cooldown_left = stats.dash_cooldown
@@ -352,6 +347,9 @@ func _on_landed_fx() -> void:
 func take_damage(amount: int, source: Node = null) -> void:
 	if _is_dead or _invulnerability_left > 0.0 or amount <= 0:
 		return
+	# Durante el impulso se atraviesan enemigos y proyectiles (no trampas).
+	if is_dashing() and _is_dash_ignored_source(source):
+		return
 
 	# Cualquier golpe normal consume uno de los tres impactos permitidos.
 	# Los valores enormes (pozos/cronómetro) siguen siendo letales al instante.
@@ -364,6 +362,10 @@ func take_damage(amount: int, source: Node = null) -> void:
 	visual.modulate = Color(1.0, 0.55, 0.55, 1.0)
 	Sfx.play("hit", -5.0)
 	_apply_knockback(source)
+
+
+func _is_dash_ignored_source(source: Node) -> bool:
+	return source is TrainingDummy or source is EnemyProjectile 			or source is ThrownBoulder or source is ShockWave
 
 
 func _apply_knockback(source: Node) -> void:

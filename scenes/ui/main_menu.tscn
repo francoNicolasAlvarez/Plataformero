@@ -289,7 +289,7 @@ theme_override_font_sizes/font_size = 12
 text = "Vidas: tienes 3 por nivel; al morir reapareces en el último control con la cuenta regresiva reiniciada. Si se agotan, eliges repetir el nivel o empezar el mundo.
 Correr: el personaje corre siempre por defecto.
 Doble salto: disponible siempre en el aire; pulsa saltar otra vez para impulsarte.
-Impulso: pulsa Ctrl para lanzarte rápido hacia delante; en el aire cuenta como tu doble salto (no puedes usar ambos antes de tocar suelo).
+Impulso: pulsa Ctrl para lanzarte rápido hacia delante; no cuenta como salto y mientras dura atraviesas enemigos y proyectiles sin recibir daño (las trampas sí hacen daño).
 Caer rápido: mantén Abajo o S en el aire para caer al instante."
 autowrap_mode = 3
 

@@ -7,6 +7,9 @@ extends Camera2D
 @export var target_path: NodePath
 @export var follow_offset: Vector2 = Vector2.ZERO
 @export var fixed_y: float = 360.0
+## Seguimiento vertical (2026-11-18) para niveles altos como el laberinto; los
+## límites limit_top/limit_bottom de Camera2D acotan el recorrido.
+@export var follow_y: bool = false
 @export_range(0.0, 30.0, 0.1) var follow_smoothing: float = 8.0
 
 var _target: Node2D
@@ -24,8 +27,14 @@ func _ready() -> void:
 
 	global_position = Vector2(
 		_target.global_position.x + follow_offset.x,
-		fixed_y + follow_offset.y
+		_desired_y()
 	)
+
+
+func _desired_y() -> float:
+	if follow_y:
+		return _target.global_position.y + follow_offset.y
+	return fixed_y + follow_offset.y
 
 
 func _physics_process(delta: float) -> void:
@@ -33,11 +42,11 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var desired_x := _target.global_position.x + follow_offset.x
-	var desired_y := fixed_y + follow_offset.y
+	var desired_y := _desired_y()
 	var weight := 1.0 - exp(-follow_smoothing * delta)
 
 	global_position.x = lerpf(global_position.x, desired_x, weight)
-	global_position.y = desired_y
+	global_position.y = lerpf(global_position.y, desired_y, weight) if follow_y else desired_y
 
 	if _shake_left > 0.0:
 		_shake_left = maxf(0.0, _shake_left - delta)
@@ -60,5 +69,5 @@ func snap_to_target() -> void:
 	if is_instance_valid(_target):
 		global_position = Vector2(
 			_target.global_position.x + follow_offset.x,
-			fixed_y + follow_offset.y
+			_desired_y()
 		)

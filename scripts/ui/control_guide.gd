@@ -16,7 +16,7 @@ const GUIDE_ROWS := [
 	{"keys": ["move_left", "move_right"], "extras": ["←", "→"], "label": "Moverse"},
 	{"keys": ["jump"], "label": "Saltar / doble salto"},
 	{"keys": ["move_down"], "extras": ["↓"], "label": "Caer rápido"},
-	{"keys": ["dash"], "label": "Impulso (cuenta como doble salto)"},
+	{"keys": ["dash"], "label": "Impulso (atraviesa enemigos)"},
 	{"keys": ["pause"], "label": "Pausa"},
 ]
 

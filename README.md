@@ -68,7 +68,7 @@ las muertes de ese nivel.
 | Mover | A/D o flechas | Stick / DPAD |
 | Saltar / doble salto | Espacio | A |
 | Caer rápido | S o flecha abajo | Stick abajo / DPAD abajo |
-| Impulso (cuenta como doble salto) | Ctrl | X |
+| Impulso (atraviesa enemigos) | Ctrl | X |
 | Pausa | Enter | Start |
 
 Los controles de teclado se pueden reasignar desde **Opciones**. El mando usa
