@@ -121,6 +121,11 @@ func _update_telegraph(progress: float, delta: float) -> void:
 	_rock.scale = Vector2.ONE * (0.8 + 0.3 * progress)
 
 
+func _reset_state() -> void:
+	_cooldown = 1.0
+	_end_telegraph()
+
+
 func _end_telegraph() -> void:
 	if not _telegraphing:
 		return

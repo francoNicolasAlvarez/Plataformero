@@ -32,6 +32,13 @@ func _ready() -> void:
 	_follow_screen_top()
 
 
+func reset() -> void:
+	## Al morir el jugador se cancela la carga en curso y se reinicia el ciclo.
+	_cooldown = shoot_interval
+	if _rings != null:
+		_rings.stop()
+
+
 func _process(delta: float) -> void:
 	_time += delta
 	_follow_screen_top()

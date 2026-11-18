@@ -100,6 +100,14 @@ func _process(delta: float) -> void:
 		_glow.color = Color(0.7, 0.5, 1.0, 0.25 + 0.2 * heat)
 
 
+func _reset_state() -> void:
+	state = State.HOVER
+	speed = 0.0
+	_heading = Vector2.ZERO
+	_vertical_dir = 1.0
+	_timer = 0.0
+
+
 func _vertical_patrol() -> void:
 	## Oscilación constante, independiente del jugador. El centro se fija en el
 	## primer frame (los layouts colocan al enemigo tras añadirlo).

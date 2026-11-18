@@ -105,6 +105,7 @@ func _run() -> void:
 	await _wait_physics(3)
 	Input.action_release("dash")
 	_check(player.is_dashing() and player.velocity.x >= player.stats.dash_speed - 1.0, "Ctrl lanza un impulso rápido hacia delante")
+	_check(not get_nodes_in_group("dash_afterimages").is_empty(), "El impulso deja una estela de imágenes")
 	await _wait_physics(30)
 	_check(not player.is_dashing(), "El impulso dura un instante")
 	Input.action_release("move_right")

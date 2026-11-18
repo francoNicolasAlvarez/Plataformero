@@ -86,6 +86,7 @@ func _ready() -> void:
 
 	_apply_run_variation()
 	_decorate_base_hills()
+	_add_boundary_walls()
 	_timer.start(time_limit)
 	_time_left = _timer.remaining
 	_level_deaths = 0
@@ -110,6 +111,32 @@ func _ready() -> void:
 	_build_fade()
 	SaveGame.set_level(level_variant)
 	Sfx.start_music(level_variant)
+
+
+func _add_boundary_walls() -> void:
+	## Muros invisibles en los límites laterales de la cámara (2026-11-18): el
+	## jugador ya no puede salirse de la pantalla por el borde del nivel (antes
+	## podía ir a la izquierda del inicio y morir fuera de cámara).
+	if camera == null or get_node_or_null("BoundaryWalls") != null:
+		return
+	var walls := Node2D.new()
+	walls.name = "BoundaryWalls"
+	add_child(walls)
+	for side in [-1, 1]:
+		var limit := camera.limit_left if side < 0 else camera.limit_right
+		if absi(limit) > 1000000:
+			continue
+		var wall := StaticBody2D.new()
+		wall.name = "LeftWall" if side < 0 else "RightWall"
+		wall.collision_layer = 1
+		wall.collision_mask = 0
+		var shape := CollisionShape2D.new()
+		var rect := RectangleShape2D.new()
+		rect.size = Vector2(40.0, 6000.0)
+		shape.shape = rect
+		wall.add_child(shape)
+		wall.position = Vector2(float(limit) + 20.0 * float(side), 360.0)
+		walls.add_child(wall)
 
 
 func _connect_checkpoints() -> void:
@@ -347,8 +374,7 @@ func _on_player_died() -> void:
 	if _completed:
 		return
 
-	FlyingSpawner.clear_flying_enemies(get_tree())
-	FallingRock.clear_rocks(get_tree())
+	_reset_hazards()
 	_level_deaths += 1
 	SaveGame.register_death()
 	_lives = maxi(0, _lives - 1)
@@ -369,6 +395,24 @@ func _on_player_died() -> void:
 		game_over_label.text = "SIN VIDAS"
 		await get_tree().create_timer(0.6).timeout
 		_show_game_over_choice()
+
+
+func _reset_hazards() -> void:
+	## Al morir (2026-11-18): desaparecen todos los proyectiles, ondas y rocas;
+	## los enemigos fijos vuelven a su posición inicial y los que aparecen por
+	## sí solos (murciélagos) simplemente desaparecen.
+	FlyingSpawner.clear_flying_enemies(get_tree())
+	FallingRock.clear_rocks(get_tree())
+	for group in ["enemy_projectiles", "thrown_boulders", "shock_waves", "rock_warnings"]:
+		for node in get_tree().get_nodes_in_group(group):
+			node.queue_free()
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy is FlyingEnemy:
+			continue
+		if enemy is TrainingDummy:
+			(enemy as TrainingDummy).reset_to_start()
+	for sentry in get_tree().get_nodes_in_group("sky_sentries"):
+		(sentry as SkySentry).reset()
 
 
 func first_level_of_group() -> int:

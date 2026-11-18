@@ -94,6 +94,12 @@ func _process(delta: float) -> void:
 	_shoot_cooldown = shoot_interval
 
 
+func _reset_state() -> void:
+	_telegraph_end()
+	_shoot_cooldown = 0.8
+	_direction = -1
+
+
 func is_telegraphing() -> bool:
 	return _telegraphing
 

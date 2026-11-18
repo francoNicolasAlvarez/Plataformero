@@ -31,6 +31,7 @@ var _sentry_style: bool = false
 
 
 func _ready() -> void:
+	add_to_group("enemy_projectiles")
 	_life_left = lifetime
 	body_entered.connect(_on_body_entered)
 	apply_style()

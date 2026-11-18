@@ -118,6 +118,18 @@ func _process(delta: float) -> void:
 		visual.modulate = visual.modulate.lerp(Color.WHITE, minf(1.0, delta * 12.0))
 
 
+func _reset_state() -> void:
+	state = State.PATROL
+	facing = -1
+	_timer = 0.0
+	_cooldown_left = 0.0
+	_thrust_hit = false
+	if _hitbox != null:
+		_hitbox.monitoring = false
+	visual.modulate = Color.WHITE
+	_set_spear(SPEAR_REST_X, 0.0, 0.0)
+
+
 func _patrol() -> void:
 	if is_on_wall():
 		facing = -facing

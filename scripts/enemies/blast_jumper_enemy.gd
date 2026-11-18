@@ -48,6 +48,12 @@ func _ready() -> void:
 		wave_radius = 190.0
 
 
+func _reset_state() -> void:
+	state = State.IDLE
+	_timer = 0.0
+	_flash = 0.0
+
+
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return

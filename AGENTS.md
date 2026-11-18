@@ -42,6 +42,7 @@ C:\Users\Usuario\Downloads\Godot_v4.7.2-stable_win64_console.exe
       & "C:\Users\Usuario\Downloads\Godot_v4.7.2-stable_win64_console.exe" `
           --headless --path . --script "res://tests/$($_.Name)" }
   ```
+  Alternativa en paralelo: `powershell -File tools/run_tests.ps1`.
   Cada test es un script `SceneTree` autónomo que imprime `[OK]`/`[FALLO]`
   y devuelve exit code 0/1. Las pruebas headless no leen ni escriben el
   guardado (`SaveGame` lo desactiva detectando `headless`).
@@ -1316,9 +1317,31 @@ actualizar esos tests.
       `survival` 41 (fundido, botones). Suite: 50/50.
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
+67. **Muros laterales, reinicio al morir, estela y automatización
+    (2026-11-18)**:
+    - **Muros invisibles**: `TestLevel._add_boundary_walls()` crea
+      `BoundaryWalls/LeftWall|RightWall` en los límites de la cámara; ya no se
+      puede salir por la izquierda del inicio y morir fuera de pantalla.
+    - **Reinicio al morir**: `TestLevel._reset_hazards()` elimina proyectiles
+      (grupo `enemy_projectiles`), peñascos, ondas, rocas y avisos; los
+      murciélagos desaparecen y todos los `TrainingDummy` vuelven a su
+      posición local inicial (`reset_to_start()`, anotada con
+      `_record_start` al final del frame) con su máquina de estados
+      reiniciada (`_reset_state()` por enemigo); `SkySentry.reset()`.
+    - **Estela del impulso**: copias translúcidas del sprite (`DashAfterimage`,
+      grupo `dash_afterimages`) que se desvanecen en 0,28 s.
+    - **Automatización**: `tools/run_tests.ps1` ejecuta la suite en paralelo
+      (`-Jobs 3`) con resumen y exit code; `all_levels_smoke_test` recorre solo
+      todos los niveles de `LevelRegistry.implemented_levels()`. No se añadió
+      GUT/GdUnit: el patrón de smoke tests propio cubre lo necesario y la regla
+      del proyecto evita dependencias externas.
+    - Tests: `death_reset_smoke_test` (9) y `all_levels_smoke_test` (105)
+      nuevos. Suite: 52/52.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
-- Suite de 49 smoke tests en verde (verificado en esta sesión) tras aplicar
+- Suite de 52 smoke tests en verde (verificado en esta sesión) tras aplicar
   los ítems 28-48: modo plataformas lineal con un único checkpoint a mitad de
   cada nivel, tres vidas por nivel, cronómetro contrarreloj que sigue corriendo
   al morir y no regala tiempo, medallas guardadas por nivel, selector de 40

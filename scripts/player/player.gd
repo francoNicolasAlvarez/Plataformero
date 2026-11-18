@@ -58,6 +58,9 @@ var _is_dead: bool = false
 var _dash_time_left: float = 0.0
 var _dash_cooldown_left: float = 0.0
 var _dash_direction: float = 1.0
+var _afterimage_left: float = 0.0
+
+const AFTERIMAGE_INTERVAL := 0.035
 
 
 func _ready() -> void:
@@ -232,6 +235,10 @@ func _handle_dash_input() -> void:
 
 func _run_dash(delta: float) -> void:
 	_dash_time_left = maxf(0.0, _dash_time_left - delta)
+	_afterimage_left -= delta
+	if _afterimage_left <= 0.0:
+		_afterimage_left = AFTERIMAGE_INTERVAL
+		_spawn_afterimage()
 	velocity.x = _dash_direction * stats.dash_speed
 	if not is_on_floor():
 		velocity.y = 0.0
@@ -239,6 +246,30 @@ func _run_dash(delta: float) -> void:
 		velocity.y = _gravity_sign * maxf(velocity.y * _gravity_sign, 0.0)
 	if _dash_time_left <= 0.0:
 		velocity.x = _dash_direction * stats.run_speed
+
+
+func _spawn_afterimage() -> void:
+	## Estela del impulso (2026-11-18): copias translúcidas del sprite que se
+	## desvanecen en el mundo.
+	var frames := visual.sprite_frames
+	if frames == null or get_parent() == null:
+		return
+	var texture := frames.get_frame_texture(visual.animation, visual.frame)
+	if texture == null:
+		return
+	var ghost := Sprite2D.new()
+	ghost.name = "DashAfterimage"
+	ghost.texture = texture
+	ghost.flip_h = visual.flip_h
+	ghost.scale = visual.global_scale
+	ghost.global_position = visual.global_position
+	ghost.modulate = Color(0.55, 0.9, 1.0, 0.55)
+	ghost.z_index = z_index - 1
+	ghost.add_to_group("dash_afterimages")
+	get_parent().add_child(ghost)
+	var tween := ghost.create_tween()
+	tween.tween_property(ghost, "modulate:a", 0.0, 0.28)
+	tween.tween_callback(ghost.queue_free)
 
 
 func is_dashing() -> bool:

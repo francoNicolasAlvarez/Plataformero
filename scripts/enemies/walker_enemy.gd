@@ -25,6 +25,11 @@ func _ready() -> void:
 		floor_ray.target_position.y = -34.0
 
 
+func _reset_state() -> void:
+	_direction = -1
+	floor_ray.position.x = float(_direction) * 20.0
+
+
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return

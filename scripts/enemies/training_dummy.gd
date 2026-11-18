@@ -17,6 +17,8 @@ var _bob_time: float = 0.0
 var _gravity_sign: float = 1.0
 var _visual_base_y: float = -6.0
 var _is_dead: bool = false
+var _start_position: Vector2 = Vector2.ZERO
+var _start_recorded: bool = false
 
 
 func _ready() -> void:
@@ -35,6 +37,30 @@ func _ready() -> void:
 
 	health.died.connect(_on_died)
 	damage_area.body_entered.connect(_on_damage_area_body_entered)
+	# Los layouts colocan al enemigo después de añadirlo: la posición inicial
+	# se anota al final del frame (2026-11-18).
+	_record_start.call_deferred()
+
+
+func _record_start() -> void:
+	if not _start_recorded and is_inside_tree():
+		_start_position = position
+		_start_recorded = true
+
+
+## Devuelve al enemigo a su posición y estado iniciales (al morir el jugador).
+## En enemigos sobre plataformas móviles la posición es local a la plataforma.
+func reset_to_start() -> void:
+	if not _start_recorded or _is_dead:
+		return
+	position = _start_position
+	velocity = Vector2.ZERO
+	_reset_state()
+
+
+## Gancho para que cada enemigo reinicie su máquina de estados y temporizadores.
+func _reset_state() -> void:
+	pass
 
 
 func _physics_process(_delta: float) -> void:

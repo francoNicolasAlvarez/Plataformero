@@ -50,6 +50,12 @@ func seed_random(value: int) -> void:
 	_rng.seed = value
 
 
+func _reset_state() -> void:
+	state = State.IDLE
+	jumps_left = 0
+	_timer = 0.0
+
+
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
