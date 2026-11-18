@@ -42,3 +42,15 @@ static func is_better(candidate: String, current: String) -> bool:
 
 static func display(medal: String) -> String:
 	return medal if not medal.is_empty() else "SIN MEDALLA"
+
+
+## Umbrales por nivel (2026-11-18): el oro exige ir un 35 % más lento que una
+## carrera recta a velocidad de correr, la plata un 70 % y el bronce es el
+## límite del nivel. Así los niveles largos no tienen el mismo listón que los
+## cortos. Devuelve {"gold", "silver", "bronze"}.
+static func thresholds_for_route(distance: float, run_speed: float, time_limit: float) -> Dictionary:
+	var par := maxf(1.0, distance) / maxf(1.0, run_speed)
+	var gold := par * 1.35
+	var silver := minf(par * 1.7, time_limit - 3.0)
+	gold = minf(gold, silver - 3.0)
+	return {"gold": snappedf(gold, 0.5), "silver": snappedf(silver, 0.5), "bronze": time_limit}

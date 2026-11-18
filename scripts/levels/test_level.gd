@@ -104,6 +104,7 @@ func _ready() -> void:
 	portal.reached.connect(_on_portal_reached)
 
 	HudLayout.apply($HUD, "%s · %s" % [level_name, MOODS.get(level_variant, "")])
+	_calibrate_medals()
 	_update_timer_label()
 	_update_medal_label()
 	_update_progress_bar()
@@ -320,6 +321,15 @@ func _update_timer_label() -> void:
 	timer_label.text = "TIEMPO: %d" % seconds
 	var color := Color(1.0, 0.32, 0.28, 1.0) if _time_left <= 10.0 else Color.WHITE
 	timer_label.add_theme_color_override("font_color", color)
+
+
+func _calibrate_medals() -> void:
+	## Umbrales de medalla según la longitud real del recorrido (2026-11-18).
+	var distance := absf(portal.global_position.x - _progress_start_x)
+	var limits := MedalRules.thresholds_for_route(distance, player.stats.run_speed, time_limit)
+	gold_medal_time = limits["gold"]
+	silver_medal_time = limits["silver"]
+	bronze_medal_time = limits["bronze"]
 
 
 func _update_medal_label() -> void:

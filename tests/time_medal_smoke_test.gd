@@ -19,6 +19,11 @@ func _run() -> void:
 	_check(MedalRules.for_time(40.0, 35.0, 50.0, 70.0) == MedalRules.SILVER, "Entre 35 y 50 s da plata")
 	_check(MedalRules.for_time(60.0, 35.0, 50.0, 70.0) == MedalRules.BRONZE, "Entre 50 y 70 s da bronce")
 	_check(MedalRules.is_better(MedalRules.GOLD, MedalRules.SILVER), "El oro supera a la plata")
+	var short_route := MedalRules.thresholds_for_route(8000.0, 532.0, 70.0)
+	var long_route := MedalRules.thresholds_for_route(20000.0, 532.0, 70.0)
+	_check(short_route["gold"] < long_route["gold"], "Un recorrido más largo tiene un oro más holgado")
+	_check(long_route["gold"] < long_route["silver"] and long_route["silver"] < long_route["bronze"], "Los umbrales largos están ordenados")
+	_check(short_route["bronze"] == 70.0, "El bronce es el límite del nivel")
 
 	var level := LEVEL_SCENE.instantiate()
 	root.add_child(level)
@@ -30,7 +35,7 @@ func _run() -> void:
 	_check(level._timer.limit == 70.0, "El cronómetro usa el límite del nivel")
 	_check(medal_label.text.contains("ORO"), "La medalla proyectada empieza en oro")
 
-	level._timer.set_elapsed(42.0)
+	level._timer.set_elapsed(60.0)
 	await _wait_process(2)
 	_check(medal_label.text.contains("PLATA"), "La medalla proyectada cambia con el tiempo real")
 

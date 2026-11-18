@@ -35,6 +35,8 @@ func _run() -> void:
 		_check(level.get_node_or_null("BoundaryWalls/LeftWall") != null, "%s: tiene muros laterales" % tag)
 		_check(get_nodes_in_group("checkpoints").size() >= 1, "%s: tiene al menos un control" % tag)
 		_check(is_equal_approx(level.time_limit, 70.0), "%s: límite de 70 s" % tag)
+		_check(level.gold_medal_time > 0.0 and level.gold_medal_time < level.silver_medal_time
+				and level.silver_medal_time < level.bronze_medal_time, "%s: umbrales de medalla ordenados (%.1f/%.1f/%.1f)" % [tag, level.gold_medal_time, level.silver_medal_time, level.bronze_medal_time])
 		var unrecorded := 0
 		for enemy in get_nodes_in_group("enemies"):
 			if enemy is TrainingDummy and level.is_ancestor_of(enemy) and not enemy._start_recorded:

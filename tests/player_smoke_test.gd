@@ -129,8 +129,15 @@ func _run() -> void:
 	await _wait_until_floor(player, 200)
 	await _wait_physics(30)
 
+	# El impulso (triple de alcance) puede haber llegado al portal, que congela
+	# al jugador: se le devuelve a terreno abierto y se reactiva.
+	player.set_physics_process(true)
+	player._dash_time_left = 0.0
+	player.global_position = Vector2(300.0, 600.0)
+	player.velocity = Vector2.ZERO
+	await _wait_physics(20)
 	Input.action_press("move_left")
-	await _wait_physics(30)
+	await _wait_physics(6)
 	Input.action_release("move_left")
 	_check(player.visual.flip_h, "El personaje mira a la izquierda al moverse hacia atrás")
 
