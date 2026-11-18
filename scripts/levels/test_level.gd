@@ -18,6 +18,7 @@ extends Node2D
 
 const MAX_LIVES := 3
 const FIRST_LEVEL_PATH := "res://scenes/levels/level_one.tscn"
+const MAIN_MENU_PATH := "res://scenes/ui/main_menu.tscn"
 const RESULTS_PATH := "res://scenes/ui/level_results.tscn"
 const HEART_FULL := "\u2665"
 const HEART_EMPTY := "\u2661"
@@ -366,7 +367,7 @@ func _on_player_died() -> void:
 		_respawn_player()
 	else:
 		game_over_label.text = "SIN VIDAS"
-		await get_tree().create_timer(1.2).timeout
+		await get_tree().create_timer(0.6).timeout
 		_show_game_over_choice()
 
 
@@ -379,38 +380,42 @@ func first_level_of_group() -> int:
 
 
 func _show_game_over_choice() -> void:
-	## Sin vidas (2026-11-18): el jugador elige entre repetir este nivel o
-	## empezar el grupo de niveles desde su primer nivel (antes siempre volvía
-	## al nivel 1). Si este ya es el primero del grupo solo hay una opción.
+	## Sin vidas (2026-11-18): la pantalla se desvanece a negro y aparece la
+	## pantalla de muerte (`GameOverScreen`) con las opciones: reintentar el
+	## nivel, empezar el grupo desde su primer nivel (si no lo abre este),
+	## volver al nivel 1, ir al menú principal o cerrar el juego.
 	if _completed or get_node_or_null("HUD/GameOverChoice") != null:
 		return
 	_timer.stop()
-	var box := VBoxContainer.new()
-	box.name = "GameOverChoice"
-	box.set_anchors_preset(Control.PRESET_CENTER)
-	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	box.grow_vertical = Control.GROW_DIRECTION_BOTH
-	box.offset_top = 40.0
-	box.add_theme_constant_override("separation", 10)
-	$HUD.add_child(box)
+	game_over_label.visible = false
+	var world := LevelRegistry.get_world_for_level(level_variant)
+	var screen := GameOverScreen.new()
+	screen.build(
+		level_variant,
+		str(MOODS.get(level_variant, "")).capitalize(),
+		world.display_name if world != null else "",
+		first_level_of_group(),
+		SaveGame.format_time_precise(_timer.elapsed),
+		_level_deaths
+	)
+	screen.retry_requested.connect(_restart_current_level)
+	screen.group_restart_requested.connect(_restart_from_group_start)
+	screen.first_level_requested.connect(_restart_from_first_level_choice)
+	screen.main_menu_requested.connect(_go_to_main_menu)
+	screen.quit_requested.connect(func() -> void: get_tree().quit())
+	$HUD.add_child(screen)
+	screen.play()
 
-	var retry := Button.new()
-	retry.name = "RetryLevelButton"
-	retry.text = "REINTENTAR NIVEL %d" % level_variant
-	retry.custom_minimum_size = Vector2(320.0, 46.0)
-	retry.pressed.connect(_restart_current_level)
-	box.add_child(retry)
 
-	var first_level := first_level_of_group()
-	if first_level != level_variant:
-		var group_button := Button.new()
-		group_button.name = "RestartGroupButton"
-		var world := LevelRegistry.get_world_for_level(level_variant)
-		group_button.text = "EMPEZAR «%s» DESDE EL NIVEL %d" % [world.display_name, first_level]
-		group_button.custom_minimum_size = Vector2(320.0, 46.0)
-		group_button.pressed.connect(_restart_from_group_start)
-		box.add_child(group_button)
-	retry.grab_focus()
+func _restart_from_first_level_choice() -> void:
+	_start_over_at(SaveGame.FIRST_LEVEL)
+
+
+func _go_to_main_menu() -> void:
+	var box := get_node_or_null("HUD/GameOverChoice")
+	if box != null:
+		box.queue_free()
+	await _fade_to_scene(MAIN_MENU_PATH)
 
 
 func _restart_current_level() -> void:

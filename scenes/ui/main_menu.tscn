@@ -287,7 +287,9 @@ custom_minimum_size = Vector2(700, 0)
 theme_override_colors/font_color = Color(0.87, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "Vidas: tienes 3 por nivel; al morir reapareces en el último control con la cuenta regresiva reiniciada. Si se agotan, eliges repetir el nivel o empezar el mundo.
+Correr: el personaje corre siempre por defecto.
 Doble salto: disponible siempre en el aire; pulsa saltar otra vez para impulsarte.
+Impulso: pulsa Ctrl para lanzarte rápido hacia delante; en el aire cuenta como tu doble salto (no puedes usar ambos antes de tocar suelo).
 Caer rápido: mantén Abajo o S en el aire para caer al instante."
 autowrap_mode = 3
 

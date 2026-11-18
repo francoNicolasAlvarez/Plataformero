@@ -16,7 +16,7 @@ const GUIDE_ROWS := [
 	{"keys": ["move_left", "move_right"], "extras": ["←", "→"], "label": "Moverse"},
 	{"keys": ["jump"], "label": "Saltar / doble salto"},
 	{"keys": ["move_down"], "extras": ["↓"], "label": "Caer rápido"},
-	{"keys": ["run"], "label": "Correr"},
+	{"keys": ["dash"], "label": "Impulso (cuenta como doble salto)"},
 	{"keys": ["pause"], "label": "Pausa"},
 ]
 
@@ -116,6 +116,8 @@ func _key_text(action: String) -> String:
 			return "Espacio"
 		KEY_SHIFT:
 			return "Shift"
+		KEY_CTRL:
+			return "Ctrl"
 		KEY_TAB:
 			return "Tab"
 		KEY_ENTER, KEY_KP_ENTER:

@@ -111,13 +111,19 @@ func _run() -> void:
 	vertical.axis = OrbEnemy.Axis.VERTICAL
 	vertical.position = Vector2(300.0, 200.0)
 	world.add_child(vertical)
-	await _wait_physics(60)
-	_check(vertical.global_position.y > 220.0, "El orbe vertical se desplaza hacia la altura del jugador (y=%.0f)" % vertical.global_position.y)
+	var min_y := 9999.0
+	var max_y := -9999.0
+	for _frame in 300:
+		await physics_frame
+		min_y = minf(min_y, vertical.global_position.y)
+		max_y = maxf(max_y, vertical.global_position.y)
+	_check(max_y - min_y > 200.0, "El orbe vertical sube y baja sin parar (%.0f px de recorrido)" % (max_y - min_y))
+	_check(min_y >= 200.0 - vertical.vertical_range - 8.0 and max_y <= 200.0 + vertical.vertical_range + 8.0, "El recorrido se limita a su rango")
 	_check(is_equal_approx(vertical.global_position.x, 300.0), "El orbe vertical no se mueve en horizontal")
 	target.global_position = Vector2(1500.0, 480.0)
-	var before := vertical.global_position
-	await _wait_physics(30)
-	_check(vertical.global_position.is_equal_approx(before), "El orbe vertical ignora a un jugador que no pasa por su columna")
+	var before_y := vertical.global_position.y
+	await _wait_physics(20)
+	_check(not is_equal_approx(vertical.global_position.y, before_y), "El orbe vertical sigue moviéndose aunque el jugador se aleje")
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])

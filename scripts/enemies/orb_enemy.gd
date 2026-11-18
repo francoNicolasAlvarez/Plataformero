@@ -8,6 +8,9 @@ extends TrainingDummy
 ## suspendido.
 ## Variación `axis = VERTICAL`: solo se desplaza en vertical (sube o baja hasta
 ## la altura del jugador) y reacciona cuando éste pasa cerca de su columna.
+## Cambio 2026-11-18: el orbe vertical ya no sigue al jugador; sube y baja sin
+## parar entre `vertical_range` px por encima y por debajo de su posición
+## inicial (y rebota si choca con una plataforma).
 
 enum State { HOVER, CHASE, STUNNED }
 enum Axis { FREE, VERTICAL }
@@ -22,10 +25,17 @@ enum Axis { FREE, VERTICAL }
 ## Velocidad máxima de giro del rumbo (rad/s); ~100°/s por defecto.
 @export_range(0.2, 12.0, 0.1) var turn_speed: float = 1.8
 
+## Recorrido (px) hacia cada lado y velocidad del orbe vertical.
+@export_range(20.0, 600.0, 5.0) var vertical_range: float = 140.0
+@export_range(20.0, 600.0, 5.0) var vertical_speed: float = 120.0
+
 var state: State = State.HOVER
 var speed: float = 0.0
 
 var _heading: Vector2 = Vector2.ZERO
+var _origin_y: float = 0.0
+var _origin_set: bool = false
+var _vertical_dir: float = 1.0
 var _timer: float = 0.0
 var _pulse: float = 0.0
 var _glow: Polygon2D
@@ -41,6 +51,10 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if _is_dead:
+		return
+	if axis == Axis.VERTICAL:
+		_vertical_patrol()
+		_check_contact_damage()
 		return
 	var target := get_tree().get_first_node_in_group("player") as Node2D
 	match state:
@@ -84,6 +98,24 @@ func _process(delta: float) -> void:
 		var heat := clampf(speed / max_speed, 0.0, 1.0)
 		_core.color = Color("#b48cff").lerp(Color("#ff6fb0"), heat)
 		_glow.color = Color(0.7, 0.5, 1.0, 0.25 + 0.2 * heat)
+
+
+func _vertical_patrol() -> void:
+	## Oscilación constante, independiente del jugador. El centro se fija en el
+	## primer frame (los layouts colocan al enemigo tras añadirlo).
+	if not _origin_set:
+		_origin_set = true
+		_origin_y = global_position.y
+	state = State.CHASE
+	speed = vertical_speed
+	if global_position.y >= _origin_y + vertical_range:
+		_vertical_dir = -1.0
+	elif global_position.y <= _origin_y - vertical_range:
+		_vertical_dir = 1.0
+	velocity = Vector2(0.0, _vertical_dir * vertical_speed)
+	move_and_slide()
+	if get_slide_collision_count() > 0:
+		_vertical_dir = -_vertical_dir
 
 
 func _in_range(target: Node2D, factor: float) -> bool:

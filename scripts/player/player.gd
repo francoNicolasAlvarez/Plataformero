@@ -5,6 +5,7 @@ extends CharacterBody2D
 ## (AttackData) para poder reutilizarlos con otros personajes y armas.
 
 signal jumped
+signal dashed
 signal landed
 signal attack_started(attack: AttackData)
 signal attack_finished
@@ -54,6 +55,9 @@ var _fall_speed: float = 0.0
 var _gravity_sign: float = 1.0
 var _invulnerability_left: float = 0.0
 var _is_dead: bool = false
+var _dash_time_left: float = 0.0
+var _dash_cooldown_left: float = 0.0
+var _dash_direction: float = 1.0
 
 
 func _ready() -> void:
@@ -100,9 +104,13 @@ func _physics_process(delta: float) -> void:
 
 	_tick_timers(delta)
 	_update_jump_windows(delta)
-	_handle_horizontal_movement(delta)
-	_apply_gravity(delta)
-	_handle_jump()
+	_handle_dash_input()
+	if _dash_time_left > 0.0:
+		_run_dash(delta)
+	else:
+		_handle_horizontal_movement(delta)
+		_apply_gravity(delta)
+		_handle_jump()
 
 	# Velocidad de caída justo antes del impacto: alimenta el squash y el
 	# polvo al aterrizar.
@@ -121,6 +129,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _tick_timers(delta: float) -> void:
+	_dash_cooldown_left = maxf(0.0, _dash_cooldown_left - delta)
 	_attack_cooldown_left = maxf(0.0, _attack_cooldown_left - delta)
 
 	if _invulnerability_left > 0.0:
@@ -174,7 +183,8 @@ func _handle_horizontal_movement(delta: float) -> void:
 	var direction := Input.get_axis("move_left", "move_right")
 	if inverted_controls:
 		direction = -direction
-	_is_running = Input.is_action_pressed("run") and not is_zero_approx(direction)
+	# Se corre siempre por defecto (2026-11-18); Ctrl es ahora el impulso.
+	_is_running = not is_zero_approx(direction)
 
 	if not is_zero_approx(direction):
 		_facing = 1 if direction > 0.0 else -1
@@ -195,6 +205,44 @@ func _handle_horizontal_movement(delta: float) -> void:
 		current_acceleration = stats.turn_acceleration
 
 	velocity.x = move_toward(velocity.x, target_speed, current_acceleration * delta)
+
+
+func _handle_dash_input() -> void:
+	## Impulso rápido hacia delante (Ctrl). En el aire consume el doble salto:
+	## solo está disponible si aún no se ha usado y, tras usarlo, no se puede
+	## volver a saltar en el aire hasta tocar suelo.
+	if not Input.is_action_just_pressed("dash") or _dash_cooldown_left > 0.0:
+		return
+	if _dash_time_left > 0.0:
+		return
+	var on_ground := is_on_floor()
+	if not on_ground:
+		if _jumps_used >= 2:
+			return
+		_jumps_used = 2
+	_dash_direction = float(_facing)
+	_dash_time_left = stats.dash_time
+	_dash_cooldown_left = stats.dash_cooldown
+	_jump_hold_left = 0.0
+	_squash(Vector2(1.3, 0.8), 0.14)
+	_dust.restart()
+	Sfx.play("jump", -14.0)
+	dashed.emit()
+
+
+func _run_dash(delta: float) -> void:
+	_dash_time_left = maxf(0.0, _dash_time_left - delta)
+	velocity.x = _dash_direction * stats.dash_speed
+	if not is_on_floor():
+		velocity.y = 0.0
+	else:
+		velocity.y = _gravity_sign * maxf(velocity.y * _gravity_sign, 0.0)
+	if _dash_time_left <= 0.0:
+		velocity.x = _dash_direction * stats.run_speed
+
+
+func is_dashing() -> bool:
+	return _dash_time_left > 0.0
 
 
 func _apply_gravity(delta: float) -> void:

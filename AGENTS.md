@@ -129,8 +129,9 @@ Decisiones clave:
 
 Controles (reconfigurables desde Opciones):
 A/D o flechas mover · Espacio saltar (otra pulsación en el aire = doble salto,
-siempre disponible) · S/Abajo caer rápido · Shift correr · Enter pausa.
-Mando: stick/DPAD mover y caer rápido · A saltar · X correr · Start pausa (mapeo fijo, ver `GamepadBindings`).
+siempre disponible) · S/Abajo caer rápido · se corre siempre por defecto · Ctrl impulso
+rápido hacia delante (cuenta como doble salto en el aire) · Enter pausa.
+Mando: stick/DPAD mover y caer rápido · A saltar · X impulso · Start pausa (mapeo fijo, ver `GamepadBindings`).
 NOTA: el juego es SIN combate: la acción `attack` sigue eliminada
 (`no_combat_smoke_test` y `player_smoke_test` lo verifican). El jugador NO lleva objetos
 utilizables (ver ítem 63): no existen `item_1`/`item_2`/`inventory`. `player.gd`
@@ -1286,6 +1287,33 @@ actualizar esos tests.
       horizontal a la vertical (`SWEEP_ANGLE_DEG`).
     - Tests: `enemy_los_smoke_test` reescrito (la pared no bloquea),
       `spearman_enemy_smoke_test` 23, `sky_sentry`/`level_six` ajustados.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+66. **Correr por defecto, impulso, orbe vertical y pantalla de muerte
+    (2026-11-18)**:
+    - **Correr por defecto**: se corre siempre (`run_speed`); la acción `run`
+      desaparece y su sitio lo ocupa `dash` (Ctrl; mando X; rebindable en
+      Opciones como "Impulso").
+    - **Impulso** (`Player._handle_dash_input()/_run_dash()`, `PlayerStats`
+      `dash_speed` 1140, `dash_time` 0,36 (~410 px, el triple del primer ajuste), `dash_cooldown` 0,4): empuje
+      horizontal hacia donde mira el jugador, sin gravedad en el aire. En el
+      aire consume el doble salto (`_jumps_used = 2`): no se puede usar si ya
+      se hizo doble salto, y después no se puede volver a saltar en el aire
+      hasta tocar suelo. En el suelo está siempre disponible. Instrucciones,
+      guía de controles y README actualizados.
+    - **Orbe vertical**: `OrbEnemy` con `axis = VERTICAL` ya no sigue al
+      jugador; sube y baja sin parar (`vertical_range` 140, `vertical_speed`
+      120) alrededor de su posición inicial y rebota al chocar.
+    - **Pantalla de muerte**: `scripts/ui/game_over_screen.gd`
+      (`GameOverScreen`, nodo `HUD/GameOverChoice`). Al perder las tres vidas
+      (0,6 s tras "SIN VIDAS") la pantalla se desvanece a negro en 1 s, aparece
+      un resplandor rojizo y un panel con tres corazones vacíos, título, resumen
+      (nivel, tiempo, muertes) y botones: REINTENTAR NIVEL, EMPEZAR «mundo»
+      DESDE EL NIVEL m (si el nivel no abre su grupo), VOLVER AL NIVEL 1 (si el
+      nivel no es el 1 ni el grupo empieza en él), VOLVER AL MENÚ PRINCIPAL y
+      CERRAR JUEGO.
+    - Tests: `player_smoke_test` 34 (dash), `orb_enemy` 19, `gamepad` 15,
+      `survival` 41 (fundido, botones). Suite: 50/50.
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
 ## 5. En progreso / estado actual

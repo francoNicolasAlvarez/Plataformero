@@ -78,12 +78,30 @@ func _run() -> void:
 	await _wait_physics(2)
 	_check(game_over.visible, "Sin vidas aparece el mensaje de game over")
 	_check(game_over.text.contains("SIN VIDAS"), "Sin vidas se avisa del game over")
-	await _wait_physics(90)
-	var choice := level.get_node_or_null("HUD/GameOverChoice")
-	_check(choice != null, "Sin vidas aparece la elección de cómo continuar")
-	_check(choice != null and choice.get_node_or_null("RetryLevelButton") != null, "Se puede reintentar el nivel")
-	# El nivel base es el 1, primer nivel de su grupo: solo hay una opción.
-	_check(choice != null and choice.get_node_or_null("RestartGroupButton") == null, "En el primer nivel del grupo no se ofrece reiniciar el grupo")
+	await _wait_physics(60)
+	var choice := level.get_node_or_null("HUD/GameOverChoice") as GameOverScreen
+	_check(choice != null, "Sin vidas aparece la pantalla de muerte")
+	var early_alpha := choice.black.modulate.a if choice != null else 0.0
+	_check(early_alpha < 0.99, "La pantalla se desvanece a negro poco a poco")
+	await _wait_physics(150)
+	_check(choice != null and choice.black.modulate.a > 0.99, "La pantalla termina totalmente negra")
+	_check(choice != null and choice.content.modulate.a > 0.99, "Después aparece el panel con las opciones")
+	_check(choice != null and choice.find_child("RetryLevelButton", true, false) != null, "Se puede reintentar el nivel")
+	_check(choice != null and choice.find_child("MainMenuButton", true, false) != null, "Hay opción de volver al menú principal")
+	_check(choice != null and choice.find_child("QuitButton", true, false) != null, "Hay opción de cerrar el juego")
+	# El nivel base es el 1, primer nivel de su grupo: no hay reinicio de grupo ni "volver al nivel 1".
+	_check(choice != null and choice.find_child("RestartGroupButton", true, false) == null, "En el primer nivel del grupo no se ofrece reiniciar el grupo")
+	_check(choice != null and choice.find_child("FirstLevelButton", true, false) == null, "En el nivel 1 no se ofrece volver al nivel 1")
+	var late := GameOverScreen.new()
+	late.build(8, "Espejo", "Mundo 2", 6, "01:02.34", 3)
+	root.add_child(late)
+	_check(late.find_child("FirstLevelButton", true, false) != null, "En un nivel avanzado se ofrece volver al nivel 1")
+	_check(late.find_child("RestartGroupButton", true, false) != null, "En un nivel avanzado se ofrece reiniciar el grupo")
+	var fired := [false]
+	late.first_level_requested.connect(func() -> void: fired[0] = true)
+	(late.find_child("FirstLevelButton", true, false) as Button).pressed.emit()
+	_check(fired[0], "El botón de volver al nivel 1 emite su señal")
+	late.queue_free()
 	_check(level.first_level_of_group() == 1, "El grupo del nivel 1 empieza en el nivel 1")
 	level.level_variant = 4
 	_check(level.first_level_of_group() == 1, "El grupo del nivel 4 empieza en el nivel 1")

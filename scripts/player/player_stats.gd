@@ -26,6 +26,11 @@ extends Resource
 @export_range(0.0, 0.5, 0.01) var coyote_time: float = 0.10
 @export_range(0.0, 0.5, 0.01) var jump_buffer_time: float = 0.12
 
+@export_group("Impulso")
+@export_range(0.0, 2500.0, 10.0) var dash_speed: float = 1140.0
+@export_range(0.05, 0.6, 0.01) var dash_time: float = 0.36
+@export_range(0.0, 2.0, 0.05) var dash_cooldown: float = 0.4
+
 @export_group("Combate")
 @export_range(0.0, 5.0, 0.05) var invulnerability_time: float = 1.0
 @export_range(0.0, 1000.0, 10.0) var knockback_force: float = 260.0
