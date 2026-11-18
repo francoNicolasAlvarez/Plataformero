@@ -1270,6 +1270,24 @@ actualizar esos tests.
     - Tests: `attack_telegraph_smoke_test` reescrito (24) y
       `spearman_enemy_smoke_test` (21).
 
+65. **Caída rápida clavada, sin línea de visión y ataques más lentos
+    (2026-11-18)**:
+    - **Caída rápida**: tras una caída rápida, mantener S/abajo en el suelo deja
+      al jugador clavado (`_fast_fall_planted`, velocidad horizontal 0) hasta
+      soltar la tecla.
+    - **Sin línea de visión**: `RangedEnemy` (mago y arquero) ya no comprueba
+      `LineOfSight`; dispara (con su aviso) siempre que el jugador esté en su
+      alcance, aunque haya una pared en medio.
+    - **Frecuencia al 50 %**: mago/arquero 3,4 s (nivel 1: 3,0 s), bruto 4,4 s,
+      saltador explosivo 5 s (largo 6 s), centinela 5,33 s y lancero con
+      `attack_cooldown` 1,55 s tras recuperarse.
+    - **Lancero**: la estocada dura 0,1 s y es un barrido: la lanza parte hacia
+      delante y gira hasta 90° (vertical); el abanico pasa a cubrir de la
+      horizontal a la vertical (`SWEEP_ANGLE_DEG`).
+    - Tests: `enemy_los_smoke_test` reescrito (la pared no bloquea),
+      `spearman_enemy_smoke_test` 23, `sky_sentry`/`level_six` ajustados.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
 - Suite de 49 smoke tests en verde (verificado en esta sesión) tras aplicar

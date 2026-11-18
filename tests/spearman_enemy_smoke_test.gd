@@ -74,6 +74,8 @@ func _run() -> void:
 	var spear_front := 0.0
 	var order: Array[int] = []
 	var hp_before := player.health.current_health
+	var sweep_start := 999.0
+	var sweep_end := 0.0
 	var damage_during_recover := false
 	var thrust_seen := false
 	for _frame in 260:
@@ -89,17 +91,22 @@ func _run() -> void:
 		if state == SpearmanEnemy.State.THRUST:
 			thrust_seen = true
 			spear_front = maxf(spear_front, spear.position.x)
+			if sweep_start == 999.0:
+				sweep_start = spear.rotation_degrees
+			sweep_end = spear.rotation_degrees
 		if state == SpearmanEnemy.State.RECOVER and thrust_seen and player.health.current_health < hp_before - 1:
 			damage_during_recover = true
 		# Solo se mide el primer ciclo completo.
 		if order.size() >= 4 and state == SpearmanEnemy.State.PATROL:
 			break
 	_check(counts[SpearmanEnemy.State.WINDUP] >= 28 and counts[SpearmanEnemy.State.WINDUP] <= 33, "Se prepara durante medio segundo (%d frames)" % counts[SpearmanEnemy.State.WINDUP])
-	_check(counts[SpearmanEnemy.State.THRUST] >= 6 and counts[SpearmanEnemy.State.THRUST] <= 12, "La estocada es muy rápida (%d frames)" % counts[SpearmanEnemy.State.THRUST])
+	_check(counts[SpearmanEnemy.State.THRUST] >= 5 and counts[SpearmanEnemy.State.THRUST] <= 12, "La estocada es muy rápida (%d frames)" % counts[SpearmanEnemy.State.THRUST])
 	_check(counts[SpearmanEnemy.State.RECOVER] >= 50, "Después queda recuperándose (%d frames)" % counts[SpearmanEnemy.State.RECOVER])
 	_check(order.size() >= 4 and order[1] == SpearmanEnemy.State.WINDUP and order[2] == SpearmanEnemy.State.THRUST and order[3] == SpearmanEnemy.State.RECOVER, "Orden: patrulla, preparación, estocada, recuperación")
 	_check(spear_back < -10.0, "En la preparación echa la lanza hacia atrás")
-	_check(spear_front > 40.0, "En la estocada proyecta la lanza hacia delante")
+	_check(spear_front > 10.0, "En la estocada adelanta la lanza")
+	_check(absf(sweep_start) < 60.0 and sweep_end < -75.0, "La lanza parte hacia delante y sube hasta ~90° (%.0f° -> %.0f°)" % [sweep_start, sweep_end])
+	_check(is_equal_approx(spearman.thrust_time, 0.1), "El barrido dura 0,1 s")
 	_check(player.health.current_health == hp_before - 1, "La estocada quita un golpe al jugador a su altura")
 	_check(not damage_during_recover, "Durante la recuperación no hay segundo golpe")
 	_check(spearman.facing == 1, "Se gira hacia el jugador")
@@ -111,13 +118,13 @@ func _run() -> void:
 	spearman = SPEARMAN_SCENE.instantiate()
 	spearman.position = Vector2(0.0, 610.0)
 	world.add_child(spearman)
-	player = _make_player(world, Vector2(40.0, 525.0))
+	player = _make_player(world, Vector2(40.0, 690.0))
 	hp_before = player.health.current_health
 	await _wait_physics(160)
-	_check(spearman.state != SpearmanEnemy.State.WINDUP and spearman.state != SpearmanEnemy.State.THRUST, "El lancero detecta al jugador por encima y completa su ciclo")
-	_check(player.health.current_health == hp_before, "Un jugador por encima del abanico (>45°) no recibe daño")
-	player.global_position = Vector2(245.0, 592.0)
-	await _wait_physics(160)
+	_check(spearman.state != SpearmanEnemy.State.WINDUP and spearman.state != SpearmanEnemy.State.THRUST, "El lancero detecta al jugador más abajo y completa su ciclo")
+	_check(player.health.current_health == hp_before, "Un jugador por debajo del abanico no recibe daño")
+	player.global_position = Vector2(360.0, 592.0)
+	await _wait_physics(300)
 	_check(player.health.current_health == hp_before, "Un jugador más allá del alcance (%.0f px) no recibe daño" % spearman.reach)
 	world.queue_free()
 	await process_frame
@@ -130,7 +137,7 @@ func _run() -> void:
 	await _wait_physics(3)
 	_check(is_equal_approx(SpearmanEnemy.REACH, 180.0) and is_equal_approx(SpearmanEnemy.REACH_NARROW, 225.0), "El alcance sube un 50 % (180 / 225 px)")
 	var points := spearman.fan_points(spearman.reach)
-	_check(points[0] == Vector2.ZERO and absf(rad_to_deg(points[1].angle()) + 45.0) < 0.1 and absf(rad_to_deg(points[points.size() - 1].angle()) - 45.0) < 0.1, "La estocada es un abanico de 90 grados (±45°)")
+	_check(points[0] == Vector2.ZERO and absf(rad_to_deg(points[1].angle()) + 90.0) < 0.1 and absf(rad_to_deg(points[points.size() - 1].angle())) < 0.1, "La estocada es un abanico de 90 grados (de la horizontal a la vertical)")
 	_check(spearman.get_node_or_null("FanIndicator") != null, "El lancero tiene el indicador del abanico")
 	world.queue_free()
 	await process_frame

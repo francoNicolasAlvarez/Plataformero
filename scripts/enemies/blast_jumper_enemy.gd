@@ -24,7 +24,7 @@ const LONG_DISTANCE := 540.0
 @export_range(0.0, 4000.0, 10.0) var gravity: float = 2000.0
 @export_range(200.0, 1400.0, 10.0) var jump_speed: float = 720.0
 @export_range(0.2, 3.0, 0.05) var windup_time: float = 0.7
-@export_range(0.5, 8.0, 0.1) var rest_time: float = 2.5
+@export_range(0.5, 8.0, 0.1) var rest_time: float = 5.0
 @export_range(60.0, 400.0, 5.0) var wave_radius: float = 150.0
 
 var state: State = State.IDLE
@@ -43,7 +43,7 @@ func _ready() -> void:
 	if long_jump:
 		max_distance = LONG_DISTANCE
 		windup_time = maxf(windup_time, 1.1)
-		rest_time = maxf(rest_time, 3.0)
+		rest_time = maxf(rest_time, 6.0)
 		jump_speed = 820.0
 		wave_radius = 190.0
 

@@ -36,7 +36,7 @@ func _run() -> void:
 
 	_check(sentry.is_in_group("sky_sentries"), "El centinela se registra en su grupo")
 	_check(sentry.is_in_group("enemies"), "El centinela cuenta como enemigo")
-	_check(is_equal_approx(sentry.shoot_interval, 2.0 / 0.75), "El centinela dispara con 25 % menos frecuencia (cada 2,67 s)")
+	_check(is_equal_approx(sentry.shoot_interval, 4.0 / 0.75), "El centinela dispara cada 5,33 s (frecuencia a la mitad)")
 	_check(sentry.get_node("Visual").scale.x > 1.5, "El centinela del nivel 6 es más grande")
 
 	var center := camera.get_screen_center_position()

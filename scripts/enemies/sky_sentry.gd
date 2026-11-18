@@ -9,7 +9,7 @@ const PROJECTILE_SCENE := preload("res://scenes/enemies/enemy_projectile.tscn")
 const PROJECTILE_LIFETIME := 30.0
 
 ## 2.0 s / 0.75 = 25 % menos frecuencia de disparo.
-@export_range(0.5, 6.0, 0.01) var shoot_interval: float = 2.0 / 0.75
+@export_range(0.5, 6.0, 0.01) var shoot_interval: float = 4.0 / 0.75
 @export_range(80.0, 600.0, 10.0) var projectile_speed: float = 260.0
 @export_range(0.0, 160.0, 1.0) var top_margin: float = 80.0
 @export_range(0.0, 260.0, 1.0) var right_margin: float = 120.0

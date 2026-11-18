@@ -3,6 +3,8 @@ extends TrainingDummy
 ## Enemigo a distancia: mago azul con baston que lanza orbes de energia azul.
 ## Reutiliza vida, daño por contacto y muerte del enemigo base, y añade
 ## gravedad y disparos cuando detecta al jugador.
+## Cambio 2026-11-18: ya no exige línea de visión (ataca siempre dentro de su
+## alcance, con su aviso) y su frecuencia de disparo baja un 50 % (3,4 s).
 ## Cambio 2026-11-11: ya no apunta al jugador; los proyectiles vuelan siempre
 ## en horizontal, hacia el lado en el que esté el jugador (se esquiva
 ## saltando o cambiando de altura).
@@ -15,7 +17,7 @@ const FIREBALL_COUNT := 3
 const FIREBALL_SPREAD_DEG := 10.0
 
 @export_range(60.0, 900.0, 10.0) var shoot_range: float = 430.0
-@export_range(0.4, 6.0, 0.05) var shoot_interval: float = 1.7
+@export_range(0.4, 6.0, 0.05) var shoot_interval: float = 3.4
 @export_range(80.0, 600.0, 10.0) var projectile_speed: float = 240.0
 @export_range(0.0, 3000.0, 10.0) var gravity: float = 1400.0
 @export_range(0.0, 200.0, 5.0) var patrol_speed: float = 32.0
@@ -26,8 +28,6 @@ const FIREBALL_SPREAD_DEG := 10.0
 ## Segundos de aviso visual antes de cada disparo: el mago acumula energía
 ## en el bastón y el arquero tensa el arco (ver `_telegraph_update`).
 @export_range(0.1, 1.5, 0.05) var telegraph_time: float = 0.6
-
-@onready var line_of_sight: RayCast2D = $LineOfSight
 
 var _shoot_cooldown: float = 0.8
 var _origin_x: float = 0.0
@@ -82,9 +82,6 @@ func _process(delta: float) -> void:
 	var direction := 1.0 if offset.x >= 0.0 else -1.0
 	visual.scale.x = direction
 
-	if not _has_line_of_sight(target):
-		_telegraph_end()
-		return
 	if _shoot_cooldown > 0.0:
 		# Aviso visual justo antes del disparo (2026-11-18).
 		if _shoot_cooldown <= telegraph_time:
@@ -133,14 +130,6 @@ func _telegraph_end() -> void:
 	var glow := get_node_or_null("Visual/Staff/OrbGlow") as Polygon2D
 	if glow != null:
 		glow.scale = Vector2.ONE
-
-
-func _has_line_of_sight(target: Node2D) -> bool:
-	if line_of_sight == null:
-		return true
-	line_of_sight.target_position = line_of_sight.to_local(target.global_position)
-	line_of_sight.force_raycast_update()
-	return not line_of_sight.is_colliding()
 
 
 ## Los proyectiles deben vivir en el mundo, no dentro de una plataforma móvil:

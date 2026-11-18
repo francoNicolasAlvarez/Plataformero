@@ -11,6 +11,10 @@ extends TrainingDummy
 ## Cambio 2026-11-18: el alcance sube un 50 % (180 / 225 px desde el cuerpo) y la
 ## estocada ya no es una línea sino un abanico de 90 grados (±45° respecto a la
 ## horizontal). El abanico se dibuja como aviso durante la preparación.
+## Cambio 2026-11-18: la estocada dura 0,1 s y es un barrido: la lanza parte
+## apuntando hacia delante y sube hasta 90° (vertical); el abanico cubre ese
+## cuarto de círculo (de la horizontal hacia arriba). La frecuencia de ataque
+## baja un 50 %: tras recuperarse espera `attack_cooldown` antes del siguiente.
 
 signal thrust_started
 
@@ -18,8 +22,10 @@ enum State { PATROL, WINDUP, THRUST, RECOVER }
 
 const REACH := 180.0
 const REACH_NARROW := 225.0
-const FAN_HALF_ANGLE_DEG := 45.0
+const SWEEP_ANGLE_DEG := 90.0
 const FAN_ORIGIN := Vector2(18.0, -2.0)
+## Posición local de la lanza durante el barrido (la mano).
+const SPEAR_SWEEP_X := 20.0
 const SPEAR_REST_X := 0.0
 const SPEAR_WINDUP_X := -24.0
 const SPEAR_THRUST_X := 62.0
@@ -30,9 +36,11 @@ const SPEAR_THRUST_X := 62.0
 @export_range(60.0, 600.0, 10.0) var detect_range: float = 280.0
 @export_range(20.0, 300.0, 5.0) var detect_height: float = 90.0
 @export_range(0.1, 2.0, 0.05) var windup_time: float = 0.5
-@export_range(0.05, 0.5, 0.01) var thrust_time: float = 0.14
+@export_range(0.05, 0.5, 0.01) var thrust_time: float = 0.1
 @export_range(0.2, 3.0, 0.05) var recover_time: float = 0.9
 @export_range(0.0, 3000.0, 10.0) var gravity: float = 1400.0
+## Pausa entre ataques (la duración del ciclo se duplica: -50 % de frecuencia).
+@export_range(0.0, 5.0, 0.05) var attack_cooldown: float = 1.55
 @export var thrust_damage: int = 15
 
 var state: State = State.PATROL
@@ -41,6 +49,7 @@ var reach: float = REACH
 
 var _origin_x: float = 0.0
 var _timer: float = 0.0
+var _cooldown_left: float = 0.0
 var _thrust_hit: bool = false
 var _spear: Node2D
 var _hitbox: Area2D
@@ -72,6 +81,7 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.PATROL:
 			_patrol()
+			_cooldown_left = maxf(0.0, _cooldown_left - delta)
 			_try_detect()
 		State.WINDUP:
 			velocity.x = 0.0
@@ -126,7 +136,7 @@ func _floor_ahead() -> bool:
 
 
 func _try_detect() -> void:
-	if not is_on_floor():
+	if not is_on_floor() or _cooldown_left > 0.0:
 		return
 	var target := get_tree().get_first_node_in_group("player") as Node2D
 	if target == null:
@@ -138,7 +148,7 @@ func _try_detect() -> void:
 	state = State.WINDUP
 	_timer = windup_time
 	velocity.x = 0.0
-	_set_spear(SPEAR_WINDUP_X, windup_time * 0.6)
+	_set_spear(SPEAR_WINDUP_X, windup_time * 0.6, 0.0)
 
 
 func _begin_thrust() -> void:
@@ -148,7 +158,7 @@ func _begin_thrust() -> void:
 	_hitbox.position.x = float(facing) * FAN_ORIGIN.x
 	_hitbox.scale.x = float(facing)
 	_hitbox.monitoring = true
-	_set_spear(SPEAR_THRUST_X + (reach - REACH) * 0.4, thrust_time * 0.4)
+	_set_spear(SPEAR_SWEEP_X, thrust_time, -SWEEP_ANGLE_DEG)
 	Sfx.play("attack", -14.0)
 	thrust_started.emit()
 
@@ -157,7 +167,8 @@ func _begin_recover() -> void:
 	state = State.RECOVER
 	_timer = recover_time
 	_hitbox.monitoring = false
-	_set_spear(SPEAR_THRUST_X * 0.4, 0.1)
+	_cooldown_left = attack_cooldown
+	_set_spear(SPEAR_THRUST_X * 0.4, 0.15, 0.0)
 	visual.modulate = Color(0.75, 0.75, 0.85, 1.0)
 
 
@@ -171,25 +182,29 @@ func _apply_thrust_damage() -> void:
 			return
 
 
-func _set_spear(x: float, duration: float) -> void:
+func _set_spear(x: float, duration: float, angle_deg: float = 0.0) -> void:
+	## Coloca la lanza en `x` con una inclinación (grados, negativo = hacia
+	## arriba); durante el barrido ambas cosas se animan en `duration`.
 	if _spear == null:
 		return
 	if _spear_tween != null and _spear_tween.is_valid():
 		_spear_tween.kill()
 	if duration <= 0.0:
 		_spear.position.x = x
+		_spear.rotation_degrees = angle_deg
 		return
-	_spear_tween = create_tween()
+	_spear_tween = create_tween().set_parallel(true)
 	_spear_tween.tween_property(_spear, "position:x", x, duration)
+	_spear_tween.tween_property(_spear, "rotation_degrees", angle_deg, duration)
 
 
 func fan_points(radius: float) -> PackedVector2Array:
-	## Sector de 90 grados mirando a +X desde el origen de la estocada.
+	## Sector de 90 grados: de la horizontal (+X) hasta la vertical hacia arriba.
 	var points := PackedVector2Array([Vector2.ZERO])
-	var half := deg_to_rad(FAN_HALF_ANGLE_DEG)
+	var sweep := deg_to_rad(SWEEP_ANGLE_DEG)
 	var steps := 8
 	for step in steps + 1:
-		var angle := -half + 2.0 * half * float(step) / float(steps)
+		var angle := -sweep + sweep * float(step) / float(steps)
 		points.append(Vector2(cos(angle), sin(angle)) * radius)
 	return points
 

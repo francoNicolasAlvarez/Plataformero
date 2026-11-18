@@ -100,7 +100,7 @@ func _build_section(index: int, start_x: float) -> void:
 		walker.patrol_distance = 240.0
 	elif index % 3 == 0:
 		var ranged = _spawn(RANGED_SCENE, Vector2(start_x + 520.0, mid_y - 36.0))
-		ranged.shoot_interval = 1.5
+		ranged.shoot_interval = 3.0
 		ranged.shoot_range = 430.0
 
 	# Enemigo ráfaga común (antiguo jefe) cada pocas secciones, en tierra firme.

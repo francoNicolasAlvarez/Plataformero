@@ -129,7 +129,7 @@ func _run() -> void:
 	_check(sentry != null, "El nivel 6 tiene un centinela superior")
 	if sentry != null:
 		_check(sentry.is_in_group("enemies"), "El centinela cuenta como enemigo")
-		_check(is_equal_approx(sentry.shoot_interval, 2.0 / 0.75), "El centinela dispara con 25 % menos frecuencia")
+		_check(is_equal_approx(sentry.shoot_interval, 4.0 / 0.75), "El centinela dispara cada 5,33 s (frecuencia a la mitad)")
 		var center := camera.get_screen_center_position()
 		var half_width := root.get_visible_rect().size.x * 0.5 / maxf(camera.zoom.x, 0.01)
 		var expected_x := center.x + half_width - sentry.right_margin

@@ -1,6 +1,6 @@
 extends SceneTree
-## Comprueba que el enemigo a distancia solo dispara cuando la línea de visión
-## está despejada.
+## Comprueba que el enemigo a distancia dispara aunque no haya línea de visión
+## (2026-11-18): una pared ya no impide el ataque.
 ## Ejecutar con:
 ## godot --headless --path . --script res://tests/enemy_los_smoke_test.gd
 
@@ -38,11 +38,10 @@ func _run() -> void:
 			child.free()
 
 	await _wait_physics(120)
-	_check(_count_projectiles(level) == 0, "Una pared bloquea el disparo enemigo")
-
-	wall.free()
-	await _wait_physics(40)
-	_check(_count_projectiles(level) >= 1, "Al despejar la línea de visión vuelve a disparar")
+	ranged._shoot_cooldown = 0.0
+	await _wait_physics(10)
+	_check(_count_projectiles(level) >= 1, "Con una pared en medio el enemigo dispara igualmente")
+	_check(is_equal_approx(ranged.shoot_interval, 3.4), "La frecuencia de disparo baja un 50 % (3,4 s)")
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])

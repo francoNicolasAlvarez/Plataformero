@@ -160,7 +160,17 @@ func _update_jump_windows(delta: float) -> void:
 			velocity.y *= stats.jump_cut_multiplier
 
 
+var _fast_fall_planted: bool = false
+
+
 func _handle_horizontal_movement(delta: float) -> void:
+	# Tras una caída rápida, mantener el botón deja al jugador clavado donde cae
+	# (2026-11-18): sin deslizarse ni caminar hasta soltar la tecla.
+	if not Input.is_action_pressed("move_down"):
+		_fast_fall_planted = false
+	elif is_on_floor() and _fast_fall_planted:
+		velocity.x = 0.0
+		return
 	var direction := Input.get_axis("move_left", "move_right")
 	if inverted_controls:
 		direction = -direction
@@ -209,6 +219,7 @@ func _apply_gravity(delta: float) -> void:
 	velocity.y = _gravity_sign * falling_speed
 
 	if fast_falling:
+		_fast_fall_planted = true
 		velocity.y = _gravity_sign * maxf(falling_speed, stats.fast_fall_speed)
 		_jump_hold_left = 0.0
 
