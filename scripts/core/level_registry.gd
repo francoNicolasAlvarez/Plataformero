@@ -39,6 +39,11 @@ const IMPLEMENTED_LEVELS := {
 	13: {"name": "OASIS", "mood": "OASIS", "path": "res://scenes/levels/level_thirteen.tscn"},
 	14: {"name": "CAÑÓN", "mood": "CAÑÓN", "path": "res://scenes/levels/level_fourteen.tscn"},
 	15: {"name": "TORMENTA", "mood": "TORMENTA", "path": "res://scenes/levels/level_fifteen.tscn"},
+	16: {"name": "GRUTA", "mood": "GRUTA", "path": "res://scenes/levels/level_sixteen.tscn"},
+	17: {"name": "MINA", "mood": "MINA", "path": "res://scenes/levels/level_seventeen.tscn"},
+	18: {"name": "CRISTALES", "mood": "CRISTALES", "path": "res://scenes/levels/level_eighteen.tscn"},
+	19: {"name": "GALERÍA", "mood": "GALERÍA", "path": "res://scenes/levels/level_nineteen.tscn"},
+	20: {"name": "DERRUMBE", "mood": "DERRUMBE", "path": "res://scenes/levels/level_twenty.tscn"},
 }
 
 static var _worlds: Array[WorldConfig] = []

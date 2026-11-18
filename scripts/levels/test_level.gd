@@ -83,6 +83,16 @@ func _ready() -> void:
 		_prepare_level_fourteen()
 	elif level_variant == 15:
 		_prepare_level_fifteen()
+	elif level_variant == 16:
+		_prepare_level_sixteen()
+	elif level_variant == 17:
+		_prepare_level_seventeen()
+	elif level_variant == 18:
+		_prepare_level_eighteen()
+	elif level_variant == 19:
+		_prepare_level_nineteen()
+	elif level_variant == 20:
+		_prepare_level_twenty()
 
 	_apply_run_variation()
 	_decorate_base_hills()
@@ -146,7 +156,7 @@ func _connect_checkpoints() -> void:
 			checkpoint.activated.connect(_on_checkpoint_activated)
 
 
-const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO", 11: "VIENTO", 12: "DUNAS", 13: "OASIS", 14: "CAÑÓN", 15: "TORMENTA"}
+const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO", 11: "VIENTO", 12: "DUNAS", 13: "OASIS", 14: "CAÑÓN", 15: "TORMENTA", 16: "GRUTA", 17: "MINA", 18: "CRISTALES", 19: "GALERÍA", 20: "DERRUMBE"}
 
 
 ## Cartel del nivel al comenzar: aparece centrado y se desvanece solo.
@@ -271,6 +281,31 @@ func _prepare_level_fourteen() -> void:
 func _prepare_level_fifteen() -> void:
 	_clear_base_content()
 	LevelFifteenLayout.build(self)
+
+
+func _prepare_level_sixteen() -> void:
+	_clear_base_content()
+	LevelSixteenLayout.build(self)
+
+
+func _prepare_level_seventeen() -> void:
+	_clear_base_content()
+	LevelSeventeenLayout.build(self)
+
+
+func _prepare_level_eighteen() -> void:
+	_clear_base_content()
+	LevelEighteenLayout.build(self)
+
+
+func _prepare_level_nineteen() -> void:
+	_clear_base_content()
+	LevelNineteenLayout.build(self)
+
+
+func _prepare_level_twenty() -> void:
+	_clear_base_content()
+	LevelTwentyLayout.build(self)
 
 
 func _clear_base_content() -> void:
@@ -423,6 +458,11 @@ func _reset_hazards() -> void:
 			(enemy as TrainingDummy).reset_to_start()
 	for sentry in get_tree().get_nodes_in_group("sky_sentries"):
 		(sentry as SkySentry).reset()
+	# Obstáculos con ciclo y zonas con efecto (Fase 4, 2026-11-18).
+	for hazard in get_tree().get_nodes_in_group("hazards"):
+		(hazard as Hazard).reset()
+	for zone in get_tree().get_nodes_in_group("gimmick_zones"):
+		(zone as GimmickZone).reset()
 
 
 func first_level_of_group() -> int:

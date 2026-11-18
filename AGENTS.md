@@ -109,7 +109,7 @@ resources/levels/  # level_config.gd y world_config.gd (configuración declarati
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (49 en total)
+tests/       # smoke tests headless, uno por sistema (54 en total)
 ```
 
 Decisiones clave:
@@ -1339,6 +1339,78 @@ actualizar esos tests.
       nuevos. Suite: 52/52.
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
+68. **Medallas calibradas por nivel (2026-11-18)**: `MedalRules.
+    thresholds_for_route(distancia, run_speed, límite)` calcula los umbrales a
+    partir de la longitud real del recorrido (distancia al portal / velocidad
+    de correr = tiempo "par"): oro = par x 1,35, plata = par x 1,7 (máx.
+    límite-3 s, y siempre >= 3 s por encima del oro) y bronce = límite del
+    nivel (70 s). `TestLevel._calibrate_medals()` los aplica al arrancar, así
+    los niveles largos (1 y 7: oro 54 s) ya no comparten el listón de los
+    cortos (nivel 3: oro 29,5 s). Los valores fijos 35/50/70 de
+    `LevelRegistry` solo quedan como valores por defecto de niveles sin crear.
+    `player_smoke_test` pasa a teletransportar al jugador a terreno abierto
+    antes de la prueba de dirección (el impulso triple podía llegar al portal
+    y congelarlo: era un fallo intermitente del test, no del juego).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+69. **Fase 4: obstáculos con ciclo y zonas con efecto (2026-11-18)**:
+    - **`Hazard`** (`scripts/world/hazard.gd`, Node2D): máquina de estados
+      común IDLE -> WARNING -> ACTIVE -> COOLDOWN con `warning_time`,
+      `active_time`, `cooldown_time`, `initial_delay` y `auto_cycle`;
+      `tick()` público, `trigger()`, `reset()` y ganchos `_on_state_entered`,
+      `_on_active_tick`, `_on_reset`. Grupo `hazards`.
+    - **`SteamVent`** (respiradero): aviso de 1 s (boca naranja que tiembla y
+      vapor tenue), chorro de 1,2 s que quita un golpe si el jugador está en la
+      columna de 170 px, enfriamiento de 2 s.
+    - **`CrumblingPlatform`** (plataforma que se derrumba): sin ciclo
+      automático; al pisarla tiembla y se agrieta 0,6 s, cae y desaparece
+      2,5 s y reaparece con fundido. La colisión se desactiva con
+      `set_deferred`, por eso tras `reset()` hay que esperar un frame para
+      leer `is_solid()`.
+    - **`GimmickZone`** (`gimmick_zone.gd`, Area2D) detecta al jugador
+      (`player_inside`, señales `player_entered/exited`, grupo
+      `gimmick_zones`) y **`DarkZone`** la usa para oscurecer la pantalla
+      dejando un círculo de luz alrededor del jugador (capa 5, bajo el HUD,
+      textura radial 12x el radio de luz, fundido de 0,5 s).
+    - `TestLevel._reset_hazards()` reinicia todos los `hazards` y
+      `gimmick_zones` al morir.
+    - Test: `hazard_smoke_test` (32 comprobaciones: máquina de estados,
+      vapor, derrumbe, oscuridad y reinicio por muerte).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+70. **Mundo 4 "CAVERNAS Y MINAS", niveles 16-20 (2026-11-18)**: ya hay 20
+    niveles jugables de 70 s. Cadena 15 -> 16 -> ... -> 20 -> pantalla final;
+    `LevelRegistry` con GRUTA, MINA, CRISTALES, GALERÍA y DERRUMBE; música
+    propia por nivel (índices 13-17 en `Sfx._build_music`). Superar el mundo 4
+    (pasada seguida) exige los cinco niveles 16-20.
+    - **`scripts/levels/cave_kit.gd` (`CaveKit`)**: fondo de cueva (degradado,
+      estalagmitas con parallax, techo con estalactitas, cristales) y
+      envoltorios de `CrumblingPlatform`/`SteamVent`/`DarkZone`; el suelo, las
+      plataformas, los enemigos, las rocas, los murciélagos y el centinela
+      reutilizan `DesertKit`.
+    - **Nivel 16 GRUTA** (15000 px): diez tramos separados por fosos de 300 px
+      con una plataforma que se derrumba en cada uno; lanceros, arqueros,
+      babosas, orbes y dos magos. Control en la sección 4.
+    - **Nivel 17 MINA** (15000 px): 18 respiraderos desfasados (0 y 1,6 s),
+      puentes móviles, rocas que caen y arqueros/magos/lanceros.
+    - **Nivel 18 CRISTALES** (15000 px): dos tramos a oscuras (secciones 1-3 y
+      5-7; el control queda iluminado), puentes circulares, murciélagos,
+      babosas, orbes, saltadores y dos respiraderos.
+    - **Nivel 19 GALERÍA** (16000 px): ascensión de 28 plataformas (paso 480,
+      mezcla fijas/vaivén/circulares/pinchos/derrumbe, sierras), cuatro
+      cornisas con arqueros, magos, respiraderos, control y hierbas, tramo
+      oscuro central, centinela y murciélagos.
+    - **Nivel 20 DERRUMBE** (16000 px): cinco cadenas de seis plataformas que se
+      derrumban (paso 280, periodo 2500 px) y cuatro islas (arquero + vapor,
+      control + hierba, mago + bruto, saltador + babosa), rocas x3,
+      murciélagos, centinela, último tramo a oscuras e isla final con bruto,
+      babosa de doble salto y dos lanceros.
+    - Tests: `cave_levels_smoke_test` (84) nuevo; actualizados
+      `level_registry` (20 implementados), `level_results` (4-5 es el final),
+      `menu_ui`, `desert_levels` (el 15 encadena al 16) y `platform_spacing`
+      (incluye 16-20). `all_levels_smoke_test` recorre ya 20 niveles.
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
 - Suite de 52 smoke tests en verde (verificado en esta sesión) tras aplicar
@@ -1374,22 +1446,31 @@ actualizar esos tests.
   todos sus enemigos usan los tipos conocidos con sombrero triangular
   amarillo y ojos almendrados. El nivel 8 reutiliza el nivel 2 como espejo
   horizontal con controles invertidos y recorrido de derecha a izquierda.
-  El ejecutable de `dist/` incluye los ítems 18-46, todavía no el 47 ni el 48.
+  El ejecutable de `dist/` incluye los ítems 18-46, todavía no del 47 en adelante.
+- Suite de 54 smoke tests en verde tras los ítems 49-70: 20 niveles jugables
+  en 4 mundos (praderas, ruinas, desierto, cavernas), medallas calibradas por
+  longitud de recorrido y la base de obstáculos `Hazard`/`GimmickZone`
+  (plataformas que se derrumban, respiraderos, zonas oscuras).
+  `SaveGame.DEV_UNLOCK_ALL` sigue en `true` (modo de pruebas): ponerlo en
+  `false` antes de exportar la versión final.
 
 ## 6. Próximos pasos (roadmap contrarreloj acordado, en orden de prioridad)
 
-1. **Fase 3 — Registro de niveles**: ya están `LevelConfig`/`WorldConfig`/
-   `LevelRegistry`, el selector de 40 niveles en 8 mundos, la pantalla de
-   resultados y `SaveGame.LAST_LEVEL = 40`. Queda calibrar umbrales por nivel y
-   mostrar medallas/mejores tiempos en el selector.
-2. **Fase 4 — Obstáculos/gimmicks**: bases reutilizables (`Hazard`,
-   `GimmickZone`) y primeras trampas/zonas con aviso, reset y tests propios.
+1. **Fase 3 — Registro de niveles (hecha)**: `LevelConfig`/`WorldConfig`/
+   `LevelRegistry`, selector de 40 niveles con medallas y mejores tiempos,
+   resultados y umbrales de medalla por longitud de recorrido (ítem 68).
+2. **Fase 4 — Obstáculos/gimmicks (primera tanda hecha, ítem 69)**: `Hazard`
+   y `GimmickZone` con tres implementaciones. Pendiente para los mundos 5-8:
+   hielo resbaladizo, viento vertical, plataformas con temporizador,
+   interruptores y zonas de gravedad (cada una con aviso, reset y test).
 3. **Fase 5 — Enemigos por familias**: configuración común y lotes terrestres,
    aéreos y especiales, sin introducir combate para el jugador.
-4. **Fase 6 — Producción de mundos**: cinco niveles por iteración con
-   calibración de tiempo y suite en verde antes de pasar al siguiente mundo.
-5. **Fase 7 — Polish y exportación**: créditos ampliados, resultados finales,
-   optimización y nuevo ejecutable en `dist/`.
+4. **Fase 6 — Producción de mundos**: mundos 1-4 completos (20 niveles). Siguiente:
+   mundo 5 "CIELO Y ALTURAS" (niveles 21-25), con 1-2 mecánicas nuevas de la
+   Fase 4 y la misma calibración de tiempo y suite en verde.
+5. **Fase 7 — Polish y exportación**: `DEV_UNLOCK_ALL = false`, créditos
+   ampliados, resultados finales, optimización y nuevo ejecutable en `dist/`
+   (hoy desactualizado desde el ítem 46).
 
 ## 7. Convenciones y reglas para agentes
 

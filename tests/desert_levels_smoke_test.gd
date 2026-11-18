@@ -14,7 +14,7 @@ const NEXT := {
 	12: "res://scenes/levels/level_thirteen.tscn",
 	13: "res://scenes/levels/level_fourteen.tscn",
 	14: "res://scenes/levels/level_fifteen.tscn",
-	15: "res://scenes/ui/game_complete.tscn",
+	15: "res://scenes/levels/level_sixteen.tscn",
 }
 const NAMES := {12: "DUNAS", 13: "OASIS", 14: "CAÑÓN", 15: "TORMENTA"}
 
