@@ -55,17 +55,22 @@ func _run() -> void:
 		"Reaparece en el último control activado"
 	)
 	_check(
-		level._timer.remaining <= 12.0 and level._timer.remaining >= 10.0,
-		"Reaparecer no regala tiempo aunque quedaran menos de 20 s"
+		level._timer.remaining >= level._timer.limit - 1.0,
+		"Reaparecer reinicia la cuenta regresiva al límite completo"
 	)
 
 	await _wait_physics(70)
 	level._timer.set_remaining(45.0)
+	var elapsed_before: float = level._timer.elapsed
 	player.take_damage(9999)
 	await _wait_until_alive(player)
 	_check(
-		level._timer.remaining <= 45.0 and level._timer.remaining >= 42.0,
-		"Reaparecer con más de 20 s tampoco regala tiempo"
+		level._timer.remaining >= level._timer.limit - 1.0,
+		"Cada muerte reinicia la cuenta regresiva"
+	)
+	_check(
+		level._timer.elapsed >= elapsed_before,
+		"El tiempo real de la medalla no se reinicia al morir"
 	)
 
 	print("")

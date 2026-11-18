@@ -6,7 +6,10 @@ extends Node2D
 
 const PROJECTILE_SCENE := preload("res://scenes/enemies/enemy_projectile.tscn")
 
-@export_range(0.5, 6.0, 0.1) var shoot_interval: float = 2.0
+const PROJECTILE_LIFETIME := 30.0
+
+## 2.0 s / 0.75 = 25 % menos frecuencia de disparo.
+@export_range(0.5, 6.0, 0.01) var shoot_interval: float = 2.0 / 0.75
 @export_range(80.0, 600.0, 10.0) var projectile_speed: float = 260.0
 @export_range(0.0, 160.0, 1.0) var top_margin: float = 80.0
 @export_range(0.0, 260.0, 1.0) var right_margin: float = 120.0
@@ -72,6 +75,9 @@ func _shoot_at_player() -> void:
 		var angle := start_angle + step * float(index)
 		var direction := Vector2(cos(angle), sin(angle))
 		var projectile := PROJECTILE_SCENE.instantiate() as EnemyProjectile
+		# Solo desaparece al tocar suelo, plataforma o jugador; la vida larga
+		# es una red de seguridad si sale del mundo.
+		projectile.lifetime = PROJECTILE_LIFETIME
 		parent.add_child(projectile)
 		projectile.use_sentry_style()
 		projectile.global_position = origin

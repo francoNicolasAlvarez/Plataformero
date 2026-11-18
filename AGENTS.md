@@ -1173,6 +1173,26 @@ actualizar esos tests.
       Suite: 49/49.
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
+57. **Modo de pruebas con todo desbloqueado (2026-11-17)**:
+    `SaveGame.DEV_UNLOCK_ALL = true` hace que `is_world_unlocked()` devuelva
+    siempre `true` fuera de headless, así el selector de niveles queda abierto
+    para buscar errores. Los tests headless siguen validando la regla real de
+    pasada seguida. Poner la constante en `false` antes de exportar la versión
+    final. Los tests relacionados siguen en verde.
+
+58. **Centinela: proyectiles persistentes y 25 % menos disparos
+    (2026-11-17)**: `SkySentry` fija `lifetime = 30 s` en sus proyectiles
+    (red de seguridad), de modo que solo desaparecen al chocar con suelo,
+    plataforma o jugador; el resto de enemigos conserva sus 3 s. El intervalo
+    pasa de 2 s a 2/0.75 ≈ 2,67 s. Tests `sky_sentry` y `level_six` ajustados.
+
+59. **Cuenta regresiva reiniciada al morir (2026-11-17)**: `RunTimer.
+    reset_countdown()` devuelve `remaining` al límite completo y
+    `TestLevel._respawn_player()` lo llama en cada reaparición. El tiempo real
+    (`elapsed`, base de la medalla) sigue acumulándose, así que morir no
+    mejora la medalla. Sin vidas o con tiempo agotado se sigue volviendo al
+    nivel 1. `checkpoint_smoke_test` actualizado.
+
 ## 5. En progreso / estado actual
 
 - Suite de 49 smoke tests en verde (verificado en esta sesión) tras aplicar
@@ -1237,6 +1257,13 @@ actualizar esos tests.
   funcionalidad, añadir/actualizar su test.
 - **Antes de terminar cualquier cambio**: correr la suite completa (sección 2)
   y actualizar las secciones 4-6 de este archivo.
+- **Punto de rollback por cada cambio**: antes de empezar un cambio, el
+  árbol debe estar limpio y `HEAD` marcado con un tag
+  `rollback/AAAA-MM-DD-NN-descripcion-corta` (`git tag <nombre>`); al terminar
+  y pasar la suite, se hace commit y se marca también ese commit con su tag.
+  Cada cambio queda así reversible con `git reset --hard <tag>` (o
+  `git revert`). Los tags se suben con el push (`git push --tags`). Nunca
+  borrar ni mover tags de rollback existentes.
 - No usar librerías externas; el motor y GDScript puro bastan.
 - Nombres de nodos en las escenas base (`Player`, `ExitPortal`, `Camera`,
   `HUD/...`) son contratos usados por scripts y tests: no renombrar sin

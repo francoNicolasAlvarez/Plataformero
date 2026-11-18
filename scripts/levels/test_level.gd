@@ -399,8 +399,9 @@ func _respawn_player() -> void:
 	game_over_label.visible = false
 	player.revive(_respawn_point)
 	camera.snap_to_target()
-	# Fase contrarreloj (2026-11-17): reaparecer no regala tiempo. El reloj ha
-	# seguido corriendo durante la animación de muerte y la espera.
+	# Cada muerte reinicia la cuenta regresiva al límite completo; el tiempo
+	# real (medalla) no se reinicia y sigue contando.
+	_timer.reset_countdown()
 	_time_left = _timer.remaining
 	_update_timer_label()
 	_update_progress_bar()

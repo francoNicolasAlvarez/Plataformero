@@ -14,6 +14,9 @@ extends RefCounted
 const SAVE_PATH := "user://save.cfg"
 const FIRST_LEVEL := 1
 const LAST_LEVEL := 40
+## Modo de pruebas: todos los mundos abiertos fuera de headless. Poner en
+## false antes de exportar la versión final.
+const DEV_UNLOCK_ALL := true
 const RECORD_SECTION := "level_%d"
 
 static var level: int = FIRST_LEVEL
@@ -202,7 +205,10 @@ static func mark_world_cleared(world_number: int) -> void:
 
 static func is_world_unlocked(world_number: int) -> bool:
 	## El mundo 1 siempre está abierto; los demás exigen haber superado el
-	## anterior en una pasada completa.
+	## anterior en una pasada completa. Con DEV_UNLOCK_ALL todo queda abierto
+	## para probar (los tests headless siguen validando la regla real).
+	if DEV_UNLOCK_ALL and not _is_headless():
+		return true
 	return world_number <= 1 or is_world_cleared(world_number - 1)
 
 
