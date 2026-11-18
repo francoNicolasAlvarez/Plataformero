@@ -28,10 +28,9 @@ func _run() -> void:
 	_check(InputMap.has_action("move_down"), "Existe la acción move_down")
 	_check(InputMap.has_action("jump"), "Existe la acción jump")
 	_check(InputMap.has_action("run"), "Existe la acción run")
-	_check(InputMap.has_action("item_1"), "Existe la acción item_1")
-	_check(InputMap.has_action("inventory"), "Existe la acción inventory")
+	_check(not InputMap.has_action("item_1") and not InputMap.has_action("inventory"), "No existen acciones de objetos ni inventario")
 	_check(not InputMap.has_action("attack"), "La acción de ataque fue eliminada")
-	_check(InputMap.has_action("item_2"), "Existe el espacio rápido 2 (E)")
+	_check(not InputMap.has_action("item_2"), "No existe el espacio rápido 2")
 
 	_check(player.is_on_floor(), "El personaje cae y detecta el suelo")
 	_check(player.visual.animation == &"idle", "Animación idle en reposo")

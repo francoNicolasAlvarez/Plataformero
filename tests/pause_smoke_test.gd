@@ -66,7 +66,7 @@ func _run() -> void:
 	_check(guide_panel.size.y <= viewport_height, "La guía cabe en la pantalla")
 	_check(guide != null, "La guía muestra los controles")
 	_check(guide.columns == 1, "La guía de la pausa usa una columna")
-	_check(_count_keycaps(guide) == 12, "La guía dibuja las teclas de todos los comandos")
+	_check(_count_keycaps(guide) == 9, "La guía dibuja las teclas de todos los comandos")
 	pause_overlay._show_main_menu()
 	_check(menu_panel.visible and not guide_panel.visible, "Volver regresa al menú de pausa")
 

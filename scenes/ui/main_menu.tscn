@@ -279,20 +279,16 @@ autowrap_mode = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.827451, 0.247059, 1)
 theme_override_font_sizes/font_size = 14
-text = "ITEMS"
+text = "HABILIDADES Y VIDAS"
 
 [node name="ItemsText" type="Label" parent="InstructionsPanel/PanelMargin/VBox/Scroll/Content"]
 layout_mode = 2
 custom_minimum_size = Vector2(700, 0)
 theme_override_colors/font_color = Color(0.87, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "Poción (Q): recupera un punto de vida. Empiezas con 2.
-Ración (E): aumenta la velocidad 5 s sin alterar el reloj. Empiezas con 1.
-Objetos rápidos: Q usa el espacio 1 y E el espacio 2; el inventario muestra ambos.
-Vidas: tienes 3 por nivel; al morir reapareces en el último control y si se agotan vuelves al nivel 1.
+text = "Vidas: tienes 3 por nivel; al morir reapareces en el último control con la cuenta regresiva reiniciada. Si se agotan, eliges repetir el nivel o empezar el mundo.
 Doble salto: disponible siempre en el aire; pulsa saltar otra vez para impulsarte.
-Caer rápido: mantén Abajo o S en el aire para caer al instante.
-Inventario (Tab): consulta objetos utilizables, habilidades permanentes y espacios rápidos."
+Caer rápido: mantén Abajo o S en el aire para caer al instante."
 autowrap_mode = 3
 
 [node name="BackButton" type="Button" parent="InstructionsPanel/PanelMargin/VBox"]

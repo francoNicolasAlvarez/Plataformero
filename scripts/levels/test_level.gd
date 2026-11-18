@@ -32,12 +32,6 @@ const HEART_EMPTY := "\u2661"
 @onready var progress_label: Label = $HUD/LevelProgress/ProgressLabel
 @onready var game_over_label: Label = $HUD/GameOver
 @onready var completed_label: Label = $HUD/Completed
-@onready var item_slots: Label = $HUD/ItemSlots
-@onready var inventory_panel: PanelContainer = $HUD/InventoryPanel
-@onready var potion_info: Label = $HUD/InventoryPanel/PanelMargin/VBox/PotionInfo
-@onready var jumps_info: Label = $HUD/InventoryPanel/PanelMargin/VBox/JumpsInfo
-@onready var meta_info: Label = $HUD/InventoryPanel/PanelMargin/VBox/MetaInfo
-@onready var bonus_info: Label = $HUD/InventoryPanel/PanelMargin/VBox/BonusInfo
 @onready var health_icons: Label = $HUD/HealthIcons
 @onready var lives_label: Label = $HUD/LivesLabel
 @onready var damage_flash: ColorRect = $HUD/DamageFlash
@@ -99,19 +93,15 @@ func _ready() -> void:
 	player.health.died.connect(_on_player_died)
 	player.health.health_changed.connect(_on_health_changed)
 	player.health.damaged.connect(_on_player_damaged)
-	player.inventory_changed.connect(_on_inventory_changed)
-	player.item_used.connect(_on_item_used)
-	_on_inventory_changed(player.potions)
 	_on_health_changed(player.health.current_health, player.health.max_health)
 	_update_lives_label()
 	_connect_checkpoints()
 	game_over_label.visible = false
 	completed_label.visible = false
-	inventory_panel.visible = false
 	portal_hint.visible = false
 	portal.reached.connect(_on_portal_reached)
 
-	_update_meta_labels()
+	HudLayout.apply($HUD, "%s · %s" % [level_name, MOODS.get(level_variant, "")])
 	_update_timer_label()
 	_update_medal_label()
 	_update_progress_bar()
@@ -127,12 +117,14 @@ func _connect_checkpoints() -> void:
 			checkpoint.activated.connect(_on_checkpoint_activated)
 
 
+const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO", 11: "VIENTO", 12: "DUNAS", 13: "OASIS", 14: "CAÑÓN", 15: "TORMENTA"}
+
+
 ## Cartel del nivel al comenzar: aparece centrado y se desvanece solo.
 func _show_level_banner() -> void:
 	var hud := get_node_or_null("HUD")
 	if hud == null:
 		return
-	const MOODS := {1: "DÍA", 2: "ATARDECER", 3: "NOCHE", 4: "ABISMO", 5: "CIELO", 6: "FORTALEZA", 7: "INVERSO", 8: "ESPEJO", 9: "RUINAS", 10: "TEMPLO", 11: "VIENTO", 12: "DUNAS", 13: "OASIS", 14: "CAÑÓN", 15: "TORMENTA"}
 	var banner := Label.new()
 	banner.name = "LevelBanner"
 	banner.text = "%s · %s" % [level_name, MOODS.get(level_variant, "")]
@@ -295,13 +287,6 @@ func _decorate_base_hills() -> void:
 		)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("inventory"):
-		inventory_panel.visible = not inventory_panel.visible
-		Sfx.play("ui", -12.0)
-		get_viewport().set_input_as_handled()
-
-
 func _update_timer_label() -> void:
 	var seconds := ceili(_time_left)
 	timer_label.text = "TIEMPO: %d" % seconds
@@ -367,7 +352,6 @@ func _on_player_died() -> void:
 	SaveGame.register_death()
 	_lives = maxi(0, _lives - 1)
 	_update_lives_label()
-	inventory_panel.visible = false
 	game_over_label.visible = true
 
 	if _timer_expired:
@@ -381,9 +365,69 @@ func _on_player_died() -> void:
 		await get_tree().create_timer(1.2).timeout
 		_respawn_player()
 	else:
-		game_over_label.text = "SIN VIDAS - Volviendo al nivel 1..."
-		await get_tree().create_timer(2.2).timeout
-		await _restart_from_first_level()
+		game_over_label.text = "SIN VIDAS"
+		await get_tree().create_timer(1.2).timeout
+		_show_game_over_choice()
+
+
+func first_level_of_group() -> int:
+	## Primer nivel del grupo (mundo) al que pertenece este nivel.
+	var world := LevelRegistry.get_world_for_level(level_variant)
+	if world == null or world.levels.is_empty():
+		return level_variant
+	return world.levels[0].number
+
+
+func _show_game_over_choice() -> void:
+	## Sin vidas (2026-11-18): el jugador elige entre repetir este nivel o
+	## empezar el grupo de niveles desde su primer nivel (antes siempre volvía
+	## al nivel 1). Si este ya es el primero del grupo solo hay una opción.
+	if _completed or get_node_or_null("HUD/GameOverChoice") != null:
+		return
+	_timer.stop()
+	var box := VBoxContainer.new()
+	box.name = "GameOverChoice"
+	box.set_anchors_preset(Control.PRESET_CENTER)
+	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	box.grow_vertical = Control.GROW_DIRECTION_BOTH
+	box.offset_top = 40.0
+	box.add_theme_constant_override("separation", 10)
+	$HUD.add_child(box)
+
+	var retry := Button.new()
+	retry.name = "RetryLevelButton"
+	retry.text = "REINTENTAR NIVEL %d" % level_variant
+	retry.custom_minimum_size = Vector2(320.0, 46.0)
+	retry.pressed.connect(_restart_current_level)
+	box.add_child(retry)
+
+	var first_level := first_level_of_group()
+	if first_level != level_variant:
+		var group_button := Button.new()
+		group_button.name = "RestartGroupButton"
+		var world := LevelRegistry.get_world_for_level(level_variant)
+		group_button.text = "EMPEZAR «%s» DESDE EL NIVEL %d" % [world.display_name, first_level]
+		group_button.custom_minimum_size = Vector2(320.0, 46.0)
+		group_button.pressed.connect(_restart_from_group_start)
+		box.add_child(group_button)
+	retry.grab_focus()
+
+
+func _restart_current_level() -> void:
+	_start_over_at(level_variant)
+
+
+func _restart_from_group_start() -> void:
+	_start_over_at(first_level_of_group())
+
+
+func _start_over_at(level_number: int) -> void:
+	var box := get_node_or_null("HUD/GameOverChoice")
+	if box != null:
+		box.queue_free()
+	SaveGame.start_at_level(level_number)
+	var path := LevelRegistry.scene_path_for(level_number)
+	await _fade_to_scene(path if not path.is_empty() else FIRST_LEVEL_PATH)
 
 
 func _restart_from_first_level() -> void:
@@ -452,7 +496,6 @@ func _on_portal_reached() -> void:
 	var medal := _current_medal()
 	_account_time(elapsed)
 	SaveGame.record_level_result(level_variant, elapsed, medal, _level_deaths)
-	inventory_panel.visible = false
 	completed_label.text = "%s COMPLETADO · MEDALLA %s" % [
 		level_name,
 		MedalRules.display(medal),
@@ -505,62 +548,7 @@ func _fade_to_scene(path: String) -> void:
 		get_tree().change_scene_to_file(path)
 
 
-func _on_inventory_changed(_potions: int) -> void:
-	_update_item_slots()
-	_update_inventory_panel()
-
-
-func _on_item_used(item_name: String) -> void:
-	if item_name != "ration":
-		return
-	# La ración ya no regala tiempo: Player.apply_speed_boost() modify only
-	# la velocidad, así el cronómetro y las medallas permanecen limpios.
-	_update_timer_label()
-
-
-func _update_item_slots() -> void:
-	item_slots.text = "Q  %s    -    E  %s" % [
-		player.inventory.slot_label(0),
-		player.inventory.slot_label(1),
-	]
-
-
-func _update_inventory_panel() -> void:
-	var usable_lines := PackedStringArray(["UTILIZABLES"])
-	for item_id in player.inventory.usable_items():
-		usable_lines.append("  %s x%d - %s" % [
-			player.inventory.item_name(item_id),
-			player.inventory.count(item_id),
-			player.inventory.item_description(item_id),
-		])
-	if usable_lines.size() == 1:
-		usable_lines.append("  (sin objetos utilizables)")
-	potion_info.text = "\n".join(usable_lines)
-
-	var permanent_lines := PackedStringArray(["PERMANENTES"])
-	for item_id in player.inventory.permanent_items():
-		permanent_lines.append("  %s - %s" % [
-			player.inventory.item_name(item_id),
-			player.inventory.item_description(item_id),
-		])
-	jumps_info.text = "\n".join(permanent_lines)
-
-	meta_info.text = "RÁPIDOS:  Q %s   |   E %s" % [
-		player.inventory.slot_label(0),
-		player.inventory.slot_label(1),
-	]
-
-
 func is_run_over() -> bool:
 	## Consulta del overlay de pausa: evita pausar tras morir, completar el
 	## nivel o agotar el tiempo (las transiciones no deben congelarse).
 	return _completed or _timer_expired or player.health.is_dead
-
-
-func _update_meta_labels() -> void:
-	bonus_info.text = "Nivel %d de %d · %d vidas. El reloj sigue corriendo al morir; la ración da velocidad." % [
-		level_variant,
-		SaveGame.LAST_LEVEL,
-		MAX_LIVES,
-	]
-	_update_inventory_panel()

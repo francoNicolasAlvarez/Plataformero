@@ -23,17 +23,23 @@ const FIREBALL_SPREAD_DEG := 10.0
 ## Los guardias que viajan sobre plataformas móviles no deben moverse por su
 ## cuenta: el padre ya los desplaza y move_and_slide los desincronizaba.
 @export var anchored: bool = false
+## Segundos de aviso visual antes de cada disparo: el mago acumula energía
+## en el bastón y el arquero tensa el arco (ver `_telegraph_update`).
+@export_range(0.1, 1.5, 0.05) var telegraph_time: float = 0.6
 
 @onready var line_of_sight: RayCast2D = $LineOfSight
 
 var _shoot_cooldown: float = 0.8
 var _origin_x: float = 0.0
 var _direction: int = -1
+var _telegraphing: bool = false
+var _charge: EnergyCharge
 
 
 func _ready() -> void:
 	super._ready()
 	_origin_x = global_position.x
+	_setup_telegraph()
 
 
 func _physics_process(delta: float) -> void:
@@ -70,18 +76,63 @@ func _process(delta: float) -> void:
 
 	var offset := target.global_position - global_position
 	if absf(offset.x) > shoot_range or absf(offset.y) > 170.0:
+		_telegraph_end()
 		return
 
 	var direction := 1.0 if offset.x >= 0.0 else -1.0
 	visual.scale.x = direction
 
 	if not _has_line_of_sight(target):
+		_telegraph_end()
 		return
 	if _shoot_cooldown > 0.0:
+		# Aviso visual justo antes del disparo (2026-11-18).
+		if _shoot_cooldown <= telegraph_time:
+			_telegraphing = true
+			_telegraph_update(1.0 - _shoot_cooldown / telegraph_time)
 		return
 
+	_telegraph_end()
 	_shoot(direction)
 	_shoot_cooldown = shoot_interval
+
+
+func is_telegraphing() -> bool:
+	return _telegraphing
+
+
+func _setup_telegraph() -> void:
+	## Mago: luz de carga sobre el orbe del bastón (hijo de `Visual`, así se
+	## voltea con el enemigo).
+	var staff := get_node_or_null("Visual/Staff")
+	if staff == null:
+		return
+	_charge = EnergyCharge.new()
+	_charge.name = "EnergyCharge"
+	_charge.position = Vector2(0.0, -20.0)
+	_charge.color = Color(1.0, 0.62, 0.25, 1.0)
+	_charge.max_radius = 30.0
+	_charge.core_max = 7.0
+	staff.add_child(_charge)
+
+
+func _telegraph_update(progress: float) -> void:
+	if _charge != null:
+		_charge.set_progress(progress)
+	var glow := get_node_or_null("Visual/Staff/OrbGlow") as Polygon2D
+	if glow != null:
+		glow.scale = Vector2.ONE * (1.0 + 1.2 * progress)
+
+
+func _telegraph_end() -> void:
+	if not _telegraphing:
+		return
+	_telegraphing = false
+	if _charge != null:
+		_charge.stop()
+	var glow := get_node_or_null("Visual/Staff/OrbGlow") as Polygon2D
+	if glow != null:
+		glow.scale = Vector2.ONE
 
 
 func _has_line_of_sight(target: Node2D) -> bool:

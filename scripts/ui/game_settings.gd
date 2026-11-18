@@ -8,16 +8,13 @@ const BUS_MUSIC := "Music"
 const BUS_SFX := "SFX"
 const MIN_BRIGHTNESS := 0.55
 const MAX_BRIGHTNESS := 1.35
-const CONTROLS := ["move_left", "move_right", "move_down", "jump", "run", "item_1", "item_2", "inventory", "pause"]
+const CONTROLS := ["move_left", "move_right", "move_down", "jump", "run", "pause"]
 const DEFAULT_KEYS := {
 	"move_left": KEY_A,
 	"move_right": KEY_D,
 	"move_down": KEY_S,
 	"jump": KEY_SPACE,
 	"run": KEY_SHIFT,
-	"item_1": KEY_Q,
-	"item_2": KEY_E,
-	"inventory": KEY_TAB,
 	"pause": KEY_ENTER,
 }
 const CONTROL_LABELS := {
@@ -26,9 +23,6 @@ const CONTROL_LABELS := {
 	"move_down": "Caer rápido",
 	"jump": "Saltar",
 	"run": "Correr",
-	"item_1": "Objeto 1",
-	"item_2": "Objeto 2",
-	"inventory": "Inventario",
 	"pause": "Pausa",
 }
 # Teclas secundarias fijas que se conservan aunque se remapee la principal

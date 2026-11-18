@@ -15,13 +15,13 @@ func _initialize() -> void:
 func _run() -> void:
 	GamepadBindings.apply()
 	for action in ["move_left", "move_right", "move_down", "jump", "run",
-			"item_1", "item_2", "inventory", "pause"]:
+			"pause"]:
 		_check(_has_joypad_event(action), "La acción %s acepta mando" % action)
 
 	_check(_has_button("jump", JOY_BUTTON_A), "Saltar usa el botón A")
 	_check(_has_button("run", JOY_BUTTON_X), "Correr usa el botón X")
 	_check(_has_button("pause", JOY_BUTTON_START), "Pausa usa Start")
-	_check(_has_button("inventory", JOY_BUTTON_BACK), "Inventario usa Back/Select")
+	_check(not InputMap.has_action("item_1") and not InputMap.has_action("inventory"), "No hay acciones de objetos ni inventario")
 	_check(_has_axis("move_left", JOY_AXIS_LEFT_X, -1.0), "Mover a la izquierda usa el stick")
 	_check(_has_axis("move_right", JOY_AXIS_LEFT_X, 1.0), "Mover a la derecha usa el stick")
 	_check(_has_axis("move_down", JOY_AXIS_LEFT_Y, 1.0), "Caer rápido usa el stick")

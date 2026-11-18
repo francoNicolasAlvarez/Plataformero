@@ -69,9 +69,6 @@ las muertes de ese nivel.
 | Saltar / doble salto | Espacio | A |
 | Caer rápido | S o flecha abajo | Stick abajo / DPAD abajo |
 | Correr | Shift | X |
-| Objeto rápido Q | Q | LB |
-| Objeto rápido E | E | RB |
-| Inventario | Tab | Back |
 | Pausa | Enter | Start |
 
 Los controles de teclado se pueden reasignar desde **Opciones**. El mando usa
@@ -82,11 +79,8 @@ Durante la partida, **Enter** abre el menú de pausa: continuar, consultar la
 guía de controles, ajustar brillo/volumen/teclas, volver al menú principal o
 salir del juego.
 
-## Objetos
+## Elementos del nivel
 
-- **Poción (Q):** cura un golpe de vida.
-- **Ración (E):** aumenta la velocidad durante 5 segundos sin alterar el
-  cronómetro ni las medallas.
 - **Hierba curativa:** restaura vida al recogerla.
 - **Doble salto:** disponible siempre con una pulsación extra en el aire.
 - **Plataformas:** asset modular con cinco tipos (fija, vaivén horizontal,

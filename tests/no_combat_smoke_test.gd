@@ -25,7 +25,7 @@ func _run() -> void:
 	await _wait_physics(20)
 
 	_check(not InputMap.has_action("attack"), "No existe una acción de ataque")
-	_check(InputMap.has_action("item_2"), "Existe el espacio rápido 2 (E) para objetos")
+	_check(not InputMap.has_action("item_2") and not InputMap.has_action("item_1"), "No existen acciones de objetos utilizables")
 	_check(not player.attack_hitbox.monitoring, "La hitbox de ataque permanece desactivada")
 
 	var health_before := walker.health.current_health

@@ -59,6 +59,15 @@ func _run() -> void:
 	_check(orb.global_position.distance_to(target.global_position) < early_distance, "Se acerca al jugador")
 	_check(absf(orb.global_position.y - 300.0) < 1.0, "Sigue una trayectoria directa hacia el jugador")
 
+	# Giro limitado: si el jugador pasa al lado opuesto, el orbe conserva inercia.
+	var heading_before: Vector2 = orb._heading
+	target.global_position = orb.global_position - heading_before * 300.0
+	await _wait_physics(6)
+	_check(orb._heading.dot(heading_before) > 0.95, "Con giro limitado no da la vuelta al instante (dot %.2f)" % orb._heading.dot(heading_before))
+	_check(orb.velocity.dot(heading_before) > 0.0, "Sigue avanzando por inercia antes de girar")
+	await _wait_physics(120)
+	_check(orb._heading.dot((target.global_position - orb.global_position).normalized()) > 0.9, "Con el tiempo termina girando hacia el jugador")
+
 	# Si el jugador se aleja del todo, vuelve a quedarse suspendido.
 	target.global_position = Vector2(5000.0, 300.0)
 	await _wait_physics(5)

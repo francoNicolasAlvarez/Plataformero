@@ -9,13 +9,9 @@ signal landed
 signal attack_started(attack: AttackData)
 signal attack_finished
 signal died
-signal inventory_changed(potions: int)
-signal item_used(item_name: String)
 signal weapon_range_changed(current_range: int)
 
 const BASE_WEAPON_RANGE := 20
-const RATION_SPEED_MULTIPLIER := 1.35
-const RATION_SPEED_DURATION := 5.0
 
 const ANIM_IDLE := &"idle"
 const ANIM_WALK := &"walk"
@@ -26,9 +22,6 @@ const ANIM_DEATH := &"death"
 
 @export var stats: PlayerStats
 @export var basic_attack: AttackData
-@export_range(0, 9, 1) var starting_potions: int = 2
-@export_range(0, 9, 1) var starting_rations: int = 1
-@export_range(1, 999, 1) var potion_heal_amount: int = 30
 @export_range(1, 999, 1) var weapon_range: int = BASE_WEAPON_RANGE
 @export_range(0.5, 20.0, 0.1) var range_pixels_per_point: float = 2.3
 @export var inverted_gravity: bool = false
@@ -58,15 +51,9 @@ var _death_tween: Tween
 var _squash_tween: Tween
 var _dust: CPUParticles2D
 var _fall_speed: float = 0.0
-var _speed_boost_left: float = 0.0
-var _speed_boost_multiplier: float = 1.0
 var _gravity_sign: float = 1.0
 var _invulnerability_left: float = 0.0
 var _is_dead: bool = false
-var inventory: Inventory = Inventory.new()
-var potions: int:
-	get:
-		return inventory.count("potion") if inventory != null else 0
 
 
 func _ready() -> void:
@@ -79,9 +66,6 @@ func _ready() -> void:
 	configure_controls()
 
 	health.died.connect(_on_health_died)
-	inventory.reset_starting_items(starting_potions, starting_rations)
-	inventory.changed.connect(_on_inventory_changed)
-	inventory_changed.emit(potions)
 	visual.flip_h = _facing < 0
 	_play_animation(ANIM_IDLE)
 	landed.connect(_on_landed_fx)
@@ -119,7 +103,6 @@ func _physics_process(delta: float) -> void:
 	_handle_horizontal_movement(delta)
 	_apply_gravity(delta)
 	_handle_jump()
-	_handle_items()
 
 	# Velocidad de caída justo antes del impacto: alimenta el squash y el
 	# polvo al aterrizar.
@@ -139,9 +122,6 @@ func _physics_process(delta: float) -> void:
 
 func _tick_timers(delta: float) -> void:
 	_attack_cooldown_left = maxf(0.0, _attack_cooldown_left - delta)
-	_speed_boost_left = maxf(0.0, _speed_boost_left - delta)
-	if is_zero_approx(_speed_boost_left):
-		_speed_boost_multiplier = 1.0
 
 	if _invulnerability_left > 0.0:
 		_invulnerability_left = maxf(0.0, _invulnerability_left - delta)
@@ -193,8 +173,6 @@ func _handle_horizontal_movement(delta: float) -> void:
 	var target_speed := 0.0
 	if not is_zero_approx(direction):
 		var speed := stats.run_speed if _is_running else stats.max_speed
-		if _speed_boost_left > 0.0:
-			speed *= _speed_boost_multiplier
 		target_speed = direction * speed
 
 	var current_acceleration := stats.acceleration
@@ -309,55 +287,6 @@ func _apply_knockback(source: Node) -> void:
 	velocity.y = -_gravity_sign * stats.knockback_up_force
 
 
-func _handle_items() -> void:
-	for slot in Inventory.SLOT_COUNT:
-		if Input.is_action_just_pressed(Inventory.SLOT_ACTIONS[slot]):
-			use_quick_slot(slot)
-
-
-func apply_speed_boost(duration: float = RATION_SPEED_DURATION, multiplier: float = RATION_SPEED_MULTIPLIER) -> void:
-	## Fase contrarreloj: la ración sustituye el bonus de tiempo por una subida
-	## temporal de velocidad que no altera las medallas.
-	_speed_boost_left = maxf(_speed_boost_left, duration)
-	_speed_boost_multiplier = maxf(1.0, multiplier)
-
-
-func is_speed_boosted() -> bool:
-	return _speed_boost_left > 0.0
-
-
-func use_quick_slot(slot_index: int) -> bool:
-	## Usa el objeto equipado en un espacio rápido (Q = 0, E = 1).
-	var item_id := inventory.slot_item(slot_index)
-	if item_id.is_empty():
-		return false
-	if item_id == "potion":
-		return use_potion()
-	if item_id == "ration":
-		inventory.consume("ration")
-		apply_speed_boost()
-		Sfx.play("ui", -8.0)
-		item_used.emit("ration")
-		return true
-	return false
-
-
-func use_potion() -> bool:
-	if not inventory.has_item("potion") or health.is_dead \
-			or health.current_health >= health.max_health:
-		return false
-
-	inventory.consume("potion")
-	health.heal(potion_heal_amount)
-	Sfx.play("heal", -6.0)
-	item_used.emit("potion")
-	return true
-
-
-func _on_inventory_changed() -> void:
-	inventory_changed.emit(potions)
-
-
 func _on_health_died() -> void:
 	_is_dead = true
 	attack_hitbox.deactivate()
@@ -409,8 +338,6 @@ func revive(spawn_position: Vector2) -> void:
 	_jump_buffer_left = 0.0
 	_coyote_left = 0.0
 	_invulnerability_left = stats.invulnerability_time
-	_speed_boost_left = 0.0
-	_speed_boost_multiplier = 1.0
 	visual.modulate = Color.WHITE
 	visual.rotation = 0.0
 	visual.position = Vector2.ZERO

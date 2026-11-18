@@ -17,9 +17,6 @@ const GUIDE_ROWS := [
 	{"keys": ["jump"], "label": "Saltar / doble salto"},
 	{"keys": ["move_down"], "extras": ["↓"], "label": "Caer rápido"},
 	{"keys": ["run"], "label": "Correr"},
-	{"keys": ["item_1"], "label": "Usar objeto 1"},
-	{"keys": ["item_2"], "label": "Usar objeto 2"},
-	{"keys": ["inventory"], "label": "Inventario"},
 	{"keys": ["pause"], "label": "Pausa"},
 ]
 

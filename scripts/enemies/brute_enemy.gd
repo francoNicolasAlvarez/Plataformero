@@ -22,6 +22,12 @@ const FALLBACK_SPEED := 700.0
 @export var boulder_gravity: float = 1200.0
 
 var _cooldown: float = 1.0
+var _rock: Node2D
+var _shake_time: float = 0.0
+var _telegraphing: bool = false
+## Segundos que la roca está a sus pies y él tiembla antes de lanzarla.
+@export_range(0.1, 1.5, 0.05) var telegraph_time: float = 0.8
+@export_range(0.0, 8.0, 0.5) var shake_amplitude: float = 3.0
 
 
 func _ready() -> void:
@@ -31,6 +37,7 @@ func _ready() -> void:
 	# Los pies de la silueta quedan en +24 (arte de 48 px); la colisión llega a
 	# +31,2, así que el visual sube lo que falta.
 	_visual_base_y = 31.2 - 24.0 * visual.scale.y
+	_build_feet_rock()
 
 
 func _physics_process(delta: float) -> void:
@@ -57,11 +64,69 @@ func _process(delta: float) -> void:
 	var direction := 1.0 if offset.x >= 0.0 else -1.0
 	visual.scale.x = direction * absf(visual.scale.y)
 	if absf(offset.x) > throw_range or absf(offset.x) < min_range or absf(offset.y) > 260.0:
+		_end_telegraph()
 		return
 	if _cooldown > 0.0:
+		if _cooldown <= telegraph_time:
+			_update_telegraph(1.0 - _cooldown / telegraph_time, delta)
 		return
+	_end_telegraph()
 	throw_boulder(target.global_position)
 	_cooldown = throw_interval
+
+
+func is_telegraphing() -> bool:
+	return _telegraphing
+
+
+func _build_feet_rock() -> void:
+	## Roca que levanta del suelo: a sus pies, delante de él. Los pies de la
+	## silueta quedan en +24 (coordenadas locales de `Visual`).
+	_rock = Node2D.new()
+	_rock.name = "FeetRock"
+	_rock.position = Vector2(30.0, 17.0)
+	_rock.visible = false
+	var points := PackedVector2Array([
+		Vector2(-9, 7), Vector2(-11, -1), Vector2(-5, -8), Vector2(4, -9),
+		Vector2(11, -2), Vector2(10, 7),
+	])
+	var body := Polygon2D.new()
+	body.name = "Body"
+	body.polygon = points
+	body.color = Color("#7a7468")
+	_rock.add_child(body)
+	var shade := Polygon2D.new()
+	shade.name = "Shade"
+	shade.polygon = PackedVector2Array([Vector2(1, -9), Vector2(4, -9), Vector2(11, -2), Vector2(10, 7), Vector2(2, 7)])
+	shade.color = Color("#5a564d")
+	_rock.add_child(shade)
+	var outline := Line2D.new()
+	outline.name = "Outline"
+	outline.points = points
+	outline.closed = true
+	outline.width = 1.2
+	outline.default_color = Color.BLACK
+	_rock.add_child(outline)
+	$Visual.add_child(_rock)
+
+
+func _update_telegraph(progress: float, delta: float) -> void:
+	## La roca aparece a sus pies y todo él tiembla cada vez más.
+	_telegraphing = true
+	_shake_time += delta
+	var strength := shake_amplitude * (0.35 + 0.65 * progress)
+	visual.position.x = sin(_shake_time * 70.0) * strength
+	_rock.visible = true
+	_rock.position = Vector2(30.0 + sin(_shake_time * 95.0 + 1.3) * 0.8, 17.0 - 3.0 * progress)
+	_rock.scale = Vector2.ONE * (0.8 + 0.3 * progress)
+
+
+func _end_telegraph() -> void:
+	if not _telegraphing:
+		return
+	_telegraphing = false
+	visual.position.x = 0.0
+	_rock.visible = false
 
 
 func launch_origin(direction: float) -> Vector2:

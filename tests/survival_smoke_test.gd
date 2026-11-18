@@ -77,7 +77,19 @@ func _run() -> void:
 	player.take_damage(9999)
 	await _wait_physics(2)
 	_check(game_over.visible, "Sin vidas aparece el mensaje de game over")
-	_check(game_over.text.contains("nivel 1"), "Sin vidas la partida vuelve al nivel 1")
+	_check(game_over.text.contains("SIN VIDAS"), "Sin vidas se avisa del game over")
+	await _wait_physics(90)
+	var choice := level.get_node_or_null("HUD/GameOverChoice")
+	_check(choice != null, "Sin vidas aparece la elección de cómo continuar")
+	_check(choice != null and choice.get_node_or_null("RetryLevelButton") != null, "Se puede reintentar el nivel")
+	# El nivel base es el 1, primer nivel de su grupo: solo hay una opción.
+	_check(choice != null and choice.get_node_or_null("RestartGroupButton") == null, "En el primer nivel del grupo no se ofrece reiniciar el grupo")
+	_check(level.first_level_of_group() == 1, "El grupo del nivel 1 empieza en el nivel 1")
+	level.level_variant = 4
+	_check(level.first_level_of_group() == 1, "El grupo del nivel 4 empieza en el nivel 1")
+	level.level_variant = 8
+	_check(level.first_level_of_group() == 6, "El grupo del nivel 8 empieza en el nivel 6")
+	level.level_variant = 1
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])

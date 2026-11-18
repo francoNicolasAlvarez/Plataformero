@@ -108,11 +108,7 @@ func _run() -> void:
 	)
 	_check(objects.text.contains("voladores"), "Las instrucciones mencionan a los enemigos voladores")
 	_check(time_text.text.contains("70"), "Las instrucciones explican la restricción de tiempo")
-	_check(items.text.contains("Poción") and items.text.contains("Tab"), "Las instrucciones explican los items")
-	_check(
-		items.text.contains("Q") and items.text.contains("E"),
-		"Las instrucciones explican los dos espacios rápidos Q/E"
-	)
+	_check(not items.text.contains("Poción") and not items.text.contains("Ración") and not items.text.contains("Tab"), "Las instrucciones ya no mencionan objetos utilizables")
 	_check(
 		items.text.contains("siempre") and items.text.contains("Caer"),
 		"Las instrucciones explican el doble salto permanente y la caída rápida"

@@ -27,18 +27,6 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_inventory"]
-bg_color = Color(0.0431373, 0.0627451, 0.0980392, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.309804, 0.827451, 1, 0.85)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
 bg_color = Color(0.752941, 0.772549, 0.8, 1)
 border_width_left = 2
@@ -261,18 +249,6 @@ theme_override_font_sizes/font_size = 18
 text = "¡Alcanza el portal para completar el nivel!"
 horizontal_alignment = 1
 
-[node name="ItemSlots" type="Label" parent="HUD"]
-offset_left = 790.0
-offset_top = 660.0
-offset_right = 1136.0
-offset_bottom = 684.0
-theme_override_colors/font_color = Color(0.831373, 0.941176, 1, 0.92)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 12
-text = "Poción x2"
-horizontal_alignment = 2
-
 [node name="TimerLabel" type="Label" parent="HUD"]
 offset_top = 36.0
 offset_right = 1152.0
@@ -321,53 +297,6 @@ theme_override_font_sizes/font_size = 13
 text = "PROGRESO DE NIVEL  0%"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="InventoryPanel" type="PanelContainer" parent="HUD"]
-visible = false
-offset_left = 306.0
-offset_top = 188.0
-offset_right = 846.0
-offset_bottom = 500.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_inventory")
-
-[node name="PanelMargin" type="MarginContainer" parent="HUD/InventoryPanel"]
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 18
-
-[node name="VBox" type="VBoxContainer" parent="HUD/InventoryPanel/PanelMargin"]
-theme_override_constants/separation = 8
-
-[node name="InventoryTitle" type="Label" parent="HUD/InventoryPanel/PanelMargin/VBox"]
-theme_override_colors/font_color = Color(0.431373, 0.960784, 1, 1)
-theme_override_font_sizes/font_size = 24
-text = "INVENTARIO"
-
-[node name="PotionInfo" type="Label" parent="HUD/InventoryPanel/PanelMargin/VBox"]
-theme_override_colors/font_color = Color(0.760784, 0.941176, 0.831373, 1)
-theme_override_font_sizes/font_size = 13
-text = "Q  Poción x2 — recupera 1 golpe (máximo 2)"
-
-[node name="JumpsInfo" type="Label" parent="HUD/InventoryPanel/PanelMargin/VBox"]
-theme_override_colors/font_color = Color(1, 0.807843, 0.501961, 1)
-theme_override_font_sizes/font_size = 13
-text = "Doble salto: disponible siempre en el aire. Abajo/S: caer rápido."
-
-[node name="MetaInfo" type="Label" parent="HUD/InventoryPanel/PanelMargin/VBox"]
-theme_override_colors/font_color = Color(0.803922, 0.827451, 0.909804, 1)
-theme_override_font_sizes/font_size = 12
-text = "Nivel 1 de 4"
-
-[node name="BonusInfo" type="Label" parent="HUD/InventoryPanel/PanelMargin/VBox"]
-theme_override_colors/font_color = Color(1, 0.827451, 0.247059, 1)
-theme_override_font_sizes/font_size = 12
-text = "Tienes 3 vidas por nivel. Los controles recuperan toda la vida."
-
-[node name="CloseHint" type="Label" parent="HUD/InventoryPanel/PanelMargin/VBox"]
-theme_override_colors/font_color = Color(0.607843, 0.905882, 1, 0.75)
-theme_override_font_sizes/font_size = 11
-text = "Tab para cerrar"
 
 [node name="Completed" type="Label" parent="HUD"]
 visible = false

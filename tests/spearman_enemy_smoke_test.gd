@@ -106,16 +106,32 @@ func _run() -> void:
 	world.queue_free()
 	await process_frame
 
-	# --- Saltar sobre la estocada: el jugador en el aire no es alcanzado.
+	# --- El abanico de 90 grados: fuera de él (muy por encima o más allá del alcance) no hay daño.
 	world = _make_world(-1000.0, 1000.0)
 	spearman = SPEARMAN_SCENE.instantiate()
 	spearman.position = Vector2(0.0, 610.0)
 	world.add_child(spearman)
-	player = _make_player(world, Vector2(120.0, 616.0 - 75.0))
+	player = _make_player(world, Vector2(40.0, 525.0))
 	hp_before = player.health.current_health
 	await _wait_physics(160)
-	_check(spearman.state != SpearmanEnemy.State.WINDUP and spearman.state != SpearmanEnemy.State.THRUST, "El lancero detecta al jugador en el aire y completa su ciclo")
-	_check(player.health.current_health == hp_before, "Saltando por encima de la estocada no hay daño")
+	_check(spearman.state != SpearmanEnemy.State.WINDUP and spearman.state != SpearmanEnemy.State.THRUST, "El lancero detecta al jugador por encima y completa su ciclo")
+	_check(player.health.current_health == hp_before, "Un jugador por encima del abanico (>45°) no recibe daño")
+	player.global_position = Vector2(245.0, 592.0)
+	await _wait_physics(160)
+	_check(player.health.current_health == hp_before, "Un jugador más allá del alcance (%.0f px) no recibe daño" % spearman.reach)
+	world.queue_free()
+	await process_frame
+
+	# --- Geometría: alcance +50 % y sector de 90 grados.
+	world = _make_world(-1000.0, 1000.0)
+	spearman = SPEARMAN_SCENE.instantiate()
+	spearman.position = Vector2(0.0, 610.0)
+	world.add_child(spearman)
+	await _wait_physics(3)
+	_check(is_equal_approx(SpearmanEnemy.REACH, 180.0) and is_equal_approx(SpearmanEnemy.REACH_NARROW, 225.0), "El alcance sube un 50 % (180 / 225 px)")
+	var points := spearman.fan_points(spearman.reach)
+	_check(points[0] == Vector2.ZERO and absf(rad_to_deg(points[1].angle()) + 45.0) < 0.1 and absf(rad_to_deg(points[points.size() - 1].angle()) - 45.0) < 0.1, "La estocada es un abanico de 90 grados (±45°)")
+	_check(spearman.get_node_or_null("FanIndicator") != null, "El lancero tiene el indicador del abanico")
 	world.queue_free()
 	await process_frame
 

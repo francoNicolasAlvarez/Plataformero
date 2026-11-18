@@ -6,9 +6,6 @@ extends RefCounted
 const BUTTON_ACTIONS := {
 	"jump": JOY_BUTTON_A,
 	"run": JOY_BUTTON_X,
-	"item_1": JOY_BUTTON_LEFT_SHOULDER,
-	"item_2": JOY_BUTTON_RIGHT_SHOULDER,
-	"inventory": JOY_BUTTON_BACK,
 	"pause": JOY_BUTTON_START,
 }
 

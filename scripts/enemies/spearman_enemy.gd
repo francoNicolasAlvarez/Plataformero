@@ -8,16 +8,21 @@ extends TrainingDummy
 ## aprovechar la recuperación para pasar.
 ## Variación `narrow`: cubre plataformas estrechas (apenas se mueve) y su lanza
 ## llega más lejos, así que obliga a saltos precisos.
+## Cambio 2026-11-18: el alcance sube un 50 % (180 / 225 px desde el cuerpo) y la
+## estocada ya no es una línea sino un abanico de 90 grados (±45° respecto a la
+## horizontal). El abanico se dibuja como aviso durante la preparación.
 
 signal thrust_started
 
 enum State { PATROL, WINDUP, THRUST, RECOVER }
 
-const REACH := 120.0
-const REACH_NARROW := 150.0
+const REACH := 180.0
+const REACH_NARROW := 225.0
+const FAN_HALF_ANGLE_DEG := 45.0
+const FAN_ORIGIN := Vector2(18.0, -2.0)
 const SPEAR_REST_X := 0.0
 const SPEAR_WINDUP_X := -24.0
-const SPEAR_THRUST_X := 56.0
+const SPEAR_THRUST_X := 62.0
 
 @export var narrow: bool = false
 @export_range(0.0, 300.0, 5.0) var patrol_speed: float = 70.0
@@ -40,6 +45,7 @@ var _thrust_hit: bool = false
 var _spear: Node2D
 var _hitbox: Area2D
 var _spear_tween: Tween
+var _fan: Polygon2D
 
 
 func _ready() -> void:
@@ -51,6 +57,7 @@ func _ready() -> void:
 		reach = REACH_NARROW
 	_origin_x = global_position.x
 	_build_hitbox()
+	_build_fan_indicator()
 	_set_spear(SPEAR_REST_X, 0.0)
 
 
@@ -93,6 +100,7 @@ func _process(delta: float) -> void:
 	if _is_dead:
 		return
 	visual.scale.x = float(facing) * absf(visual.scale.y)
+	_update_fan_indicator()
 	# Aviso visual: el cuerpo se tiñe de amarillo mientras se prepara.
 	if state == State.WINDUP:
 		visual.modulate = Color(1.0, 0.95, 0.55, 1.0)
@@ -137,9 +145,10 @@ func _begin_thrust() -> void:
 	state = State.THRUST
 	_timer = thrust_time
 	_thrust_hit = false
-	_hitbox.position.x = float(facing) * (20.0 + reach * 0.5)
+	_hitbox.position.x = float(facing) * FAN_ORIGIN.x
+	_hitbox.scale.x = float(facing)
 	_hitbox.monitoring = true
-	_set_spear(SPEAR_THRUST_X + (reach - REACH) * 0.8, thrust_time * 0.4)
+	_set_spear(SPEAR_THRUST_X + (reach - REACH) * 0.4, thrust_time * 0.4)
 	Sfx.play("attack", -14.0)
 	thrust_started.emit()
 
@@ -174,19 +183,56 @@ func _set_spear(x: float, duration: float) -> void:
 	_spear_tween.tween_property(_spear, "position:x", x, duration)
 
 
+func fan_points(radius: float) -> PackedVector2Array:
+	## Sector de 90 grados mirando a +X desde el origen de la estocada.
+	var points := PackedVector2Array([Vector2.ZERO])
+	var half := deg_to_rad(FAN_HALF_ANGLE_DEG)
+	var steps := 8
+	for step in steps + 1:
+		var angle := -half + 2.0 * half * float(step) / float(steps)
+		points.append(Vector2(cos(angle), sin(angle)) * radius)
+	return points
+
+
 func _build_hitbox() -> void:
 	_hitbox = Area2D.new()
 	_hitbox.name = "SpearHitbox"
 	_hitbox.collision_layer = 0
 	_hitbox.collision_mask = 2
 	_hitbox.monitoring = false
-	var shape := CollisionShape2D.new()
-	var rectangle := RectangleShape2D.new()
-	rectangle.size = Vector2(reach, 16.0)
-	shape.shape = rectangle
+	var shape := CollisionPolygon2D.new()
+	shape.polygon = fan_points(reach)
 	_hitbox.add_child(shape)
-	_hitbox.position = Vector2(float(facing) * (20.0 + reach * 0.5), -2.0)
+	_hitbox.position = Vector2(float(facing) * FAN_ORIGIN.x, FAN_ORIGIN.y)
 	add_child(_hitbox)
+
+
+func _build_fan_indicator() -> void:
+	## Abanico translúcido que marca la zona de la estocada (aviso de ataque).
+	_fan = Polygon2D.new()
+	_fan.name = "FanIndicator"
+	_fan.polygon = fan_points(reach)
+	_fan.color = Color(1.0, 0.25, 0.2, 0.0)
+	_fan.z_index = 5
+	_fan.visible = false
+	add_child(_fan)
+
+
+func _update_fan_indicator() -> void:
+	if _fan == null:
+		return
+	_fan.position = Vector2(float(facing) * FAN_ORIGIN.x, FAN_ORIGIN.y * _gravity_sign)
+	_fan.scale = Vector2(float(facing), _gravity_sign)
+	match state:
+		State.WINDUP:
+			var progress := 1.0 - clampf(_timer / windup_time, 0.0, 1.0)
+			_fan.visible = true
+			_fan.color = Color(1.0, 0.3, 0.2, 0.08 + 0.3 * progress)
+		State.THRUST:
+			_fan.visible = true
+			_fan.color = Color(1.0, 0.9, 0.5, 0.6)
+		_:
+			_fan.visible = false
 
 
 func _build_visual() -> void:
@@ -212,12 +258,12 @@ func _build_visual() -> void:
 	var shaft := Polygon2D.new()
 	shaft.name = "Shaft"
 	shaft.color = Color("#7a5230")
-	shaft.polygon = PackedVector2Array([Vector2(6, -3), Vector2(46, -3), Vector2(46, 0), Vector2(6, 0)])
+	shaft.polygon = PackedVector2Array([Vector2(-30, -3), Vector2(76, -3), Vector2(76, 0), Vector2(-30, 0)])
 	_spear.add_child(shaft)
 	var tip := Polygon2D.new()
 	tip.name = "Tip"
 	tip.color = Color("#d8dee6")
-	tip.polygon = PackedVector2Array([Vector2(46, -6), Vector2(58, -1.5), Vector2(46, 3)])
+	tip.polygon = PackedVector2Array([Vector2(76, -6), Vector2(90, -1.5), Vector2(76, 3)])
 	_spear.add_child(tip)
 	_rect("ArmFront", Rect2(8, -6, 12, 5), armor)
 	_rect("HandFront", Rect2(18, -6, 5, 5), skin)

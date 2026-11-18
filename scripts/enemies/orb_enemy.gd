@@ -19,10 +19,13 @@ enum Axis { FREE, VERTICAL }
 @export_range(20.0, 1500.0, 10.0) var acceleration: float = 220.0
 @export_range(0.1, 3.0, 0.05) var stun_time: float = 0.8
 @export_range(1.0, 3.0, 0.1) var lose_factor: float = 1.5
+## Velocidad máxima de giro del rumbo (rad/s); ~100°/s por defecto.
+@export_range(0.2, 12.0, 0.1) var turn_speed: float = 1.8
 
 var state: State = State.HOVER
 var speed: float = 0.0
 
+var _heading: Vector2 = Vector2.ZERO
 var _timer: float = 0.0
 var _pulse: float = 0.0
 var _glow: Polygon2D
@@ -51,7 +54,8 @@ func _physics_process(delta: float) -> void:
 				velocity = Vector2.ZERO
 			else:
 				speed = minf(max_speed, speed + acceleration * delta)
-				velocity = _direction_to(target) * speed
+				_steer_toward(_direction_to(target), delta)
+				velocity = _heading * speed
 				move_and_slide()
 				if get_slide_collision_count() > 0:
 					_stun()
@@ -96,9 +100,26 @@ func _direction_to(target: Node2D) -> Vector2:
 	return offset.normalized()
 
 
+func _steer_toward(desired: Vector2, delta: float) -> void:
+	## Giro limitado (2026-11-18): el rumbo solo puede rotar `turn_speed`
+	## rad/s hacia el jugador, así que conserva inercia y se esquiva con
+	## cambios bruscos de dirección. En eje vertical no hay giro que limitar.
+	if axis == Axis.VERTICAL or desired == Vector2.ZERO:
+		_heading = desired
+		return
+	if _heading == Vector2.ZERO:
+		_heading = desired
+		return
+	var diff := wrapf(desired.angle() - _heading.angle(), -PI, PI)
+	var step := clampf(diff, -turn_speed * delta, turn_speed * delta)
+	_heading = _heading.rotated(step)
+
+
 func _start_chase() -> void:
 	state = State.CHASE
 	speed = start_speed
+	var target := get_tree().get_first_node_in_group("player") as Node2D
+	_heading = _direction_to(target) if target != null else Vector2.ZERO
 
 
 func _stun() -> void:

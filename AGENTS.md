@@ -74,8 +74,7 @@ scenes/
   camera/horizontal_camera.tscn
   decor/                   # árboles, arbustos, nubes, aves, sol (sin colisión)
 scripts/
-  player/    # player.gd (movimiento, salto/doble salto, caída rápida, gravedad invertida y controles espejo, pociones),
-             # inventory.gd (inventario real: utilizables/permanentes + Q/E),
+  player/    # player.gd (movimiento, salto/doble salto, caída rápida, gravedad invertida y controles espejo),
              # player_stats.gd,
              # attacks/ (attack_data.gd + attack_hitbox.gd)
   enemies/   # jerarquía: TrainingDummy -> RangedEnemy/SpreadEnemy/WalkerEnemy;
@@ -130,13 +129,11 @@ Decisiones clave:
 
 Controles (reconfigurables desde Opciones):
 A/D o flechas mover · Espacio saltar (otra pulsación en el aire = doble salto,
-siempre disponible) · S/Abajo caer rápido · Shift correr · Q poción · E ración ·
-Tab inventario · Enter pausa.
-Mando: stick/DPAD mover y caer rápido · A saltar · X correr · LB/RB objetos
-rápidos · Back inventario · Start pausa (mapeo fijo, ver `GamepadBindings`).
+siempre disponible) · S/Abajo caer rápido · Shift correr · Enter pausa.
+Mando: stick/DPAD mover y caer rápido · A saltar · X correr · Start pausa (mapeo fijo, ver `GamepadBindings`).
 NOTA: el juego es SIN combate: la acción `attack` sigue eliminada
-(`no_combat_smoke_test` y `player_smoke_test` lo verifican). `item_2` volvió
-como espacio rápido de objeto (E), no como bomba ni ataque. `player.gd`
+(`no_combat_smoke_test` y `player_smoke_test` lo verifican). El jugador NO lleva objetos
+utilizables (ver ítem 63): no existen `item_1`/`item_2`/`inventory`. `player.gd`
 conserva `_handle_attack()` sin llamar como código muerto; no reactivarlo sin
 actualizar esos tests.
 
@@ -1192,6 +1189,86 @@ actualizar esos tests.
     (`elapsed`, base de la medalla) sigue acumulándose, así que morir no
     mejora la medalla. Sin vidas o con tiempo agotado se sigue volviendo al
     nivel 1. `checkpoint_smoke_test` actualizado.
+
+60. **Orbe perseguidor con giro limitado (2026-11-18)**: `OrbEnemy` gana
+    `turn_speed` (1,8 rad/s ≈ 100°/s) y un rumbo `_heading` que solo rota
+    hacia el jugador a esa velocidad (`_steer_toward()`); la velocidad se
+    aplica sobre el rumbo, así conserva inercia y se esquiva con cambios
+    bruscos de dirección. Con el jugador pegado a él describe órbitas en vez
+    de alcanzarlo al instante (radio ≈ velocidad/giro). El orbe de eje
+    vertical no cambia. `orb_enemy_smoke_test` ampliado (inercia y giro
+    posterior).
+
+61. **Elección al quedarse sin vidas (2026-11-18)**: al acabarse las tres
+    vidas `TestLevel` muestra "SIN VIDAS" y, tras 1,2 s, el panel
+    `HUD/GameOverChoice` con `RetryLevelButton` ("REINTENTAR NIVEL n") y, si
+    el nivel no es el primero de su grupo, `RestartGroupButton` ("EMPEZAR
+    «mundo» DESDE EL NIVEL m"). Ambos llaman a `SaveGame.start_at_level()` y
+    cargan la escena por `LevelRegistry.scene_path_for()`; el cronómetro se
+    detiene mientras se elige. `first_level_of_group()` da el primer nivel del
+    mundo. El tiempo agotado conserva el comportamiento anterior (vuelve al
+    nivel 1). `survival_smoke_test` actualizado (32 comprobaciones).
+
+62. **Rediseño del HUD por zonas (2026-11-18)**: `scripts/ui/hud_layout.gd`
+    (`HudLayout.apply()`, llamado desde `TestLevel._ready()`) divide la
+    pantalla (1152x648) en barra superior (46 px), franja inferior (26 px) y
+    área central libre. Barra superior: izquierda corazones y vidas, centro
+    cuenta regresiva y barra de progreso, derecha `LevelInfo` ("NIVEL n ·
+    ambiente", nodo nuevo) y medalla; franja inferior: `PortalHint` a la
+    izquierda y `ItemSlots` a la derecha. Textos más pequeños (timer 20,
+    medalla 11) sobre paneles oscuros `TopBar`/`BottomBar` con borde de acento.
+    Los nodos existentes conservan nombre y ruta. En el área central solo
+    quedan mensajes temporales (cartel de nivel, control activado, muerte).
+    `MOODS` pasa a constante de clase. Antes `ItemSlots` quedaba fuera de
+    pantalla (y=660 con alto 648). Test nuevo `hud_layout_smoke_test` (17).
+
+63. **Eliminados los objetos utilizables del jugador (2026-11-18)**: fuera
+    poción, ración, inventario (Tab), espacios rápidos Q/E y el impulso de
+    velocidad. Borrados `scripts/player/inventory.gd` y
+    `tests/inventory_smoke_test.gd`; `player.gd` pierde `inventory`, `potions`,
+    `use_quick_slot`, `use_potion`, `apply_speed_boost`, las señales
+    `inventory_changed`/`item_used` y los exports de pociones/raciones. Las
+    acciones `item_1`, `item_2` e `inventory` salen del Input Map, de
+    `GameSettings` (controles y Opciones), de `GamepadBindings` (LB/RB/Back) y
+    de la guía de controles (ahora 9 keycaps). El HUD pierde `ItemSlots` y
+    `InventoryPanel`; las instrucciones del menú (sección "HABILIDADES Y
+    VIDAS") y el README ya no los mencionan. Se conservan la hierba curativa
+    del mundo, el doble salto y la caída rápida (habilidades, no objetos). Los
+    ítems históricos 27, 29, 47 y anteriores describen lo que existió.
+    Tests actualizados: `gamepad`, `menu`, `no_combat`, `player`, `pause`,
+    `hud_layout`.
+
+64. **Señales de ataque y lancero en abanico (2026-11-18)**:
+    - **Lancero**: alcance +50 % (`REACH` 180, `REACH_NARROW` 225 px, medidos
+      desde el cuerpo) y estocada en abanico de 90° (±45°, `fan_points()`;
+      hitbox `CollisionPolygon2D` en `SpearHitbox`). `FanIndicator` dibuja el
+      sector en rojo translúcido durante la preparación y en dorado al golpear;
+      la lanza es más larga. Ya no se esquiva saltando dentro del abanico: hay
+      que quedar por encima de 45°, fuera del alcance o pasar durante la
+      recuperación.
+    - **Señales por enemigo** (un primer intento con un "!" genérico,
+      `AttackTelegraph`, se retiró a petición del usuario y su script y test
+      se borraron):
+      - **Mago** (`RangedEnemy`): `EnergyCharge` (`scripts/fx/energy_charge.gd`,
+        mezcla aditiva) sobre el orbe del bastón: núcleo que crece y chispas que
+        convergen, y el `OrbGlow` se agranda; 0,6 s antes del disparo.
+      - **Arquero** (`SpreadEnemy`): flecha `NockedArrow` encajada en el arco;
+        se retrae `BOW_MAX_PULL` (10 px), la cuerda forma una V y la punta
+        brilla; desaparece al disparar. Ganchos virtuales de `RangedEnemy`:
+        `_setup_telegraph()`, `_telegraph_update(progress)`,
+        `_telegraph_end()`.
+      - **Centinela** (`SkySentry`): `SentryRings`
+        (`scripts/fx/sentry_rings.gd`, nodo `ChargeRings`): tres círculos que
+        parten del mismo radio y se cierran sobre el ojo en 0,4 / 0,8 / 1,2 s
+        (rápido, medio, lento); al cerrarse el último (1,2 s) dispara.
+      - **Bruto** (`BruteEnemy`): roca `FeetRock` a sus pies (delante) y todo
+        el cuerpo tiembla (`shake_amplitude` 3 px, crece con el aviso) los 0,8 s
+        previos al lanzamiento.
+      - Saltador explosivo y lancero conservan sus avisos propios (compresión y
+        parpadeo rojo; postura y abanico). Slug, orbe, voladores y caminantes no
+        tienen ataque propio salvo contacto.
+    - Tests: `attack_telegraph_smoke_test` reescrito (24) y
+      `spearman_enemy_smoke_test` (21).
 
 ## 5. En progreso / estado actual
 

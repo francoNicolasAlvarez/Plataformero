@@ -19,12 +19,16 @@ const PROJECTILE_LIFETIME := 30.0
 @onready var muzzle: Marker2D = $Muzzle
 
 var _cooldown: float = 0.0
+var _rings: SentryRings
 var _time: float = 0.0
 
 
 func _ready() -> void:
 	add_to_group("sky_sentries")
 	_cooldown = shoot_interval
+	_rings = SentryRings.new()
+	_rings.name = "ChargeRings"
+	add_child(_rings)
 	_follow_screen_top()
 
 
@@ -32,7 +36,14 @@ func _process(delta: float) -> void:
 	_time += delta
 	_follow_screen_top()
 	_cooldown -= delta
+	# Tres círculos se cierran sobre el ojo (rápido, medio, lento); al cerrarse
+	# el último se dispara.
+	var charge_time := SentryRings.total_time()
+	if _cooldown > 0.0 and _cooldown <= charge_time:
+		_rings.position = to_local(eye.global_position) if eye != null else Vector2.ZERO
+		_rings.set_elapsed(charge_time - _cooldown)
 	if _cooldown <= 0.0:
+		_rings.stop()
 		_shoot_at_player()
 		_cooldown = shoot_interval
 	if eye != null:
@@ -51,6 +62,10 @@ func _follow_screen_top() -> void:
 	var top_y := center.y - visible_height * 0.5 + top_margin
 	var bob := sin(_time * 2.0) * bob_amplitude
 	global_position = Vector2(center.x + visible_width * 0.5 - right_margin, top_y + bob)
+
+
+func is_charging() -> bool:
+	return _rings != null and _rings.active
 
 
 func _shoot_at_player() -> void:
