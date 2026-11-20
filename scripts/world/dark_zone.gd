@@ -20,6 +20,7 @@ var _amount: float = 0.0
 func _ready() -> void:
 	super._ready()
 	_build_overlay()
+	set_process(false)  # solo trabaja mientras hay oscuridad que animar
 
 
 func _build_overlay() -> void:
@@ -35,6 +36,7 @@ func _build_overlay() -> void:
 	shade.size = Vector2(light_radius * 2.0, light_radius * 2.0) * 6.0
 	shade.pivot_offset = shade.size * 0.5
 	shade.modulate.a = 0.0
+	shade.visible = false
 	overlay_layer.add_child(shade)
 
 
@@ -44,6 +46,8 @@ func _process(delta: float) -> void:
 	shade.modulate.a = _amount * darkness
 	shade.visible = _amount > 0.001
 	if not shade.visible:
+		if not player_inside:
+			set_process(false)
 		return
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player == null:
@@ -56,6 +60,10 @@ func _process(delta: float) -> void:
 ## Oscuridad actual 0..1 (para tests y otros efectos).
 func current_amount() -> float:
 	return _amount
+
+
+func _on_player_entered() -> void:
+	set_process(true)
 
 
 func _on_reset() -> void:

@@ -159,21 +159,6 @@ static func is_level_completed(level_id: int) -> bool:
 	return bool(completed_levels.get(level_id, false))
 
 
-static func medal_count(medal: String) -> int:
-	var total := 0
-	for level_id in medals.keys():
-		if String(medals[level_id]) == medal:
-			total += 1
-	return total
-
-
-static func total_best_time() -> float:
-	var total := 0.0
-	for level_id in best_times.keys():
-		total += float(best_times[level_id])
-	return total
-
-
 static func finish_game() -> void:
 	## El juego se completó: la partida queda cerrada y el menú ofrecerá una
 	## nueva expedición al pulsar Jugar.

@@ -119,12 +119,17 @@ func _ready() -> void:
 	portal_hint.visible = false
 	portal.reached.connect(_on_portal_reached)
 
+	# El nivel se nombra siempre por su código "zona-nivel" (2026-11-20).
+	var level_config := LevelRegistry.get_level(level_variant)
+	if level_config != null:
+		level_name = "NIVEL %s" % level_config.code()
 	HudLayout.apply($HUD, "%s · %s" % [level_name, MOODS.get(level_variant, "")])
 	_calibrate_medals()
 	_update_timer_label()
 	_update_medal_label()
 	_update_progress_bar()
 	_show_level_banner()
+	ScreenFx.add_vignette(self)
 	_build_fade()
 	SaveGame.set_level(level_variant)
 	Sfx.start_music(level_variant)
@@ -449,6 +454,7 @@ func _update_lives_label() -> void:
 func _on_player_damaged(_amount: int, _source: Node) -> void:
 	_flash_damage()
 	camera.shake(7.0, 0.25)
+	ScreenFx.hit_stop(get_tree())
 
 
 func _flash_damage() -> void:
@@ -526,13 +532,13 @@ func _show_game_over_choice() -> void:
 		return
 	_timer.stop()
 	game_over_label.visible = false
-	var world := LevelRegistry.get_world_for_level(level_variant)
+	var config := LevelRegistry.get_level(level_variant)
 	var screen := GameOverScreen.new()
 	screen.build(
-		level_variant,
+		config.code() if config != null else str(level_variant),
 		str(MOODS.get(level_variant, "")).capitalize(),
-		world.display_name if world != null else "",
-		first_level_of_group(),
+		config.world_number if config != null else 1,
+		config.index_in_world if config != null else level_variant,
 		SaveGame.format_time_precise(_timer.elapsed),
 		_level_deaths
 	)

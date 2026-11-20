@@ -50,7 +50,7 @@ corner_radius_bottom_left = 4
 script = ExtResource("5_level")
 level_variant = 1
 next_level_path = "res://scenes/levels/level_two.tscn"
-level_name = "NIVEL 1"
+level_name = "NIVEL 1-1"
 
 [node name="Brightness" type="CanvasModulate" parent="."]
 

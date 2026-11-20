@@ -27,7 +27,7 @@ func _run() -> void:
 	await _wait_physics(30)
 
 	_check(level.level_variant == 3, "El nivel 3 usa la variante nocturna")
-	_check(level.level_name == "NIVEL 3", "El nivel se identifica como NIVEL 3")
+	_check(level.level_name == "NIVEL 1-3", "El nivel se identifica como NIVEL 1-3")
 	_check(level.next_level_path == LEVEL_FOUR, "El nivel 3 continúa hacia el nivel 4")
 	_check(level.get_node_or_null("LevelThreeGenerated") != null, "Se generó el contenido de la granja")
 	_check(not level.get_node("Background").visible, "El fondo diurno queda oculto")

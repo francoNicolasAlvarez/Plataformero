@@ -50,12 +50,3 @@ func _refresh_texture() -> void:
 	if visual != null:
 		color = visual.color
 	PLATFORM_TEXTURE.apply(self, size, color)
-
-
-func teleport_to(new_origin: Vector2) -> void:
-	# Reinicia la plataforma en un nuevo origen sin tocar sync_to_physics.
-	_origin = new_origin
-	_time = 0.0
-	_base_rotation = 0.0
-	rotation = 0.0
-	position = new_origin

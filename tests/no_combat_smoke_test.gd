@@ -25,8 +25,8 @@ func _run() -> void:
 	await _wait_physics(20)
 
 	_check(not InputMap.has_action("attack"), "No existe una acción de ataque")
+	_check(player.get_node_or_null("AttackHitbox") == null and not player.has_method("_handle_attack"), "El jugador ya no lleva código ni nodos de ataque")
 	_check(not InputMap.has_action("item_2") and not InputMap.has_action("item_1"), "No existen acciones de objetos utilizables")
-	_check(not player.attack_hitbox.monitoring, "La hitbox de ataque permanece desactivada")
 
 	var health_before := walker.health.current_health
 	var x_before := player.global_position.x
@@ -37,7 +37,6 @@ func _run() -> void:
 
 	_check(walker.health.current_health == health_before, "El contacto no daña al enemigo")
 	_check(player.global_position.x > x_before, "El jugador se mueve sin atacar")
-	_check(not player.attack_hitbox.monitoring, "La hitbox sigue desactivada tras moverse")
 
 	walker.take_damage(9999)
 	await _wait_physics(20)

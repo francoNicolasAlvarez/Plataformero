@@ -64,6 +64,31 @@ func _run() -> void:
 	player.health.take_damage(9999)
 	_check(player.health.is_dead, "El impulso no protege de los pozos (daño letal directo)")
 
+
+	# Físicamente: con el impulso se cruza a un enemigo sólido; sin él, no.
+	var blocker := (load("res://scenes/enemies/training_dummy.tscn") as PackedScene).instantiate() as TrainingDummy
+	level.add_child(blocker)
+	_check(blocker.intangible_during_dash, "Los enemigos tienen la propiedad intangible_during_dash")
+	player._dash_time_left = 0.0
+	player._intangible_left = 0.0
+	player._invulnerability_left = 5.0
+	player.global_position = Vector2(400.0, 600.0)
+	player.velocity = Vector2.ZERO
+	blocker.global_position = Vector2(470.0, 600.0)
+	blocker.set_physics_process(false)
+	await _wait_physics(10)
+	Input.action_press("move_right")
+	await _wait_physics(40)
+	_check(player.global_position.x < blocker.global_position.x + 10.0, "Sin impulso el enemigo sólido bloquea al jugador")
+	Input.action_press("dash")
+	await _wait_physics(3)
+	Input.action_release("dash")
+	await _wait_physics(30)
+	Input.action_release("move_right")
+	_check(player.global_position.x > blocker.global_position.x + 30.0, "Con el impulso el jugador atraviesa al enemigo (x=%.0f)" % player.global_position.x)
+	await _wait_physics(15)
+	_check(not player.is_intangible(), "La intangibilidad termina poco después del impulso")
+	_check(player.get_collision_exceptions().is_empty(), "Se retiran las excepciones de colisión al terminar")
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)

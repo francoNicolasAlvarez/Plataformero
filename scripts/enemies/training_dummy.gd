@@ -5,6 +5,8 @@ extends CharacterBody2D
 
 @export_range(0, 999, 1) var contact_damage: int = 20
 @export var inverted_gravity: bool = false
+## Si es cierto, el jugador atraviesa a este enemigo mientras hace un impulso.
+@export var intangible_during_dash: bool = true
 
 @onready var health: Health = $Health
 @onready var visual: Node2D = $Visual

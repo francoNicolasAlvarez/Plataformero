@@ -23,7 +23,7 @@ func _run() -> void:
 	var generated := level.get_node_or_null("LevelSevenGenerated")
 
 	_check(level.level_variant == 7, "El nivel 7 usa la variante INVERSO")
-	_check(level.level_name == "NIVEL 7", "El nivel se identifica como NIVEL 7")
+	_check(level.level_name == "NIVEL 2-2", "El nivel se identifica como NIVEL 2-2")
 	_check(level.time_limit == 70.0, "El nivel 7 tiene 70 segundos")
 	_check(level.next_level_path == NEXT_SCENE, "El nivel 7 lleva al nivel 8")
 	_check(generated != null, "Se generó el mundo invertido del nivel 7")

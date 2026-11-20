@@ -26,7 +26,7 @@ func _run() -> void:
 	await _wait_physics(30)
 
 	_check(level.level_variant == 2, "El nivel 2 usa la variante atardecer")
-	_check(level.level_name == "NIVEL 2", "El nivel se identifica como NIVEL 2")
+	_check(level.level_name == "NIVEL 1-2", "El nivel se identifica como NIVEL 1-2")
 	_check(level.next_level_path == LEVEL_THREE, "El nivel 2 continúa hacia el nivel 3")
 	_check(level.get_node_or_null("LevelTwoGenerated") != null, "Se generó el contenido del nivel 2")
 	_check(level.get_node("Platforms").get_child_count() == 0, "Se limpiaron las plataformas del nivel 1")

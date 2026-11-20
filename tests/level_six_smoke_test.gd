@@ -26,7 +26,7 @@ func _run() -> void:
 	var player: Player = level.get_node("Player")
 
 	_check(level.level_variant == 6, "El nivel 6 usa la variante FORTALEZA")
-	_check(level.level_name == "NIVEL 6", "El nivel se identifica como NIVEL 6")
+	_check(level.level_name == "NIVEL 2-1", "El nivel se identifica como NIVEL 2-1")
 	_check(level.next_level_path == NEXT_SCENE, "El nivel 6 lleva al nivel 7")
 	_check(level.time_limit == 70.0, "El nivel 6 tiene 70 segundos")
 	_check(level.get_node_or_null("LevelSixGenerated") != null, "Se generó la fortaleza del nivel 6")

@@ -24,6 +24,7 @@ func _ready() -> void:
 	active_time = 2.5
 	cooldown_time = 0.4
 	_build()
+	set_process(false)  # solo se anima al agrietarse y caer
 
 
 func _build() -> void:
@@ -102,6 +103,7 @@ func _process(delta: float) -> void:
 
 
 func _on_state_entered(new_state: int) -> void:
+	set_process(new_state == State.WARNING or new_state == State.ACTIVE)
 	match new_state:
 		State.ACTIVE:
 			_shape.set_deferred("disabled", true)
@@ -115,6 +117,7 @@ func _on_state_entered(new_state: int) -> void:
 
 
 func _on_reset() -> void:
+	set_process(false)
 	_restore_visual()
 	_visual.modulate.a = 1.0
 	if _shape != null:

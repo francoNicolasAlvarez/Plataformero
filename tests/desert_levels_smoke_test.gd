@@ -81,7 +81,7 @@ func _is_slug(e: Node) -> bool:
 func _check_common(level: Node, number: int) -> void:
 	var label := "Nivel %d" % number
 	_check(level.level_variant == number, "%s usa su variante" % label)
-	_check(level.level_name == "NIVEL %d" % number, "%s se identifica como NIVEL %d" % [label, number])
+	_check(level.level_name == "NIVEL %d-%d" % [(number - 1) / 5 + 1, (number - 1) % 5 + 1], "%s se identifica por su código zona-nivel" % label)
 	_check(level.next_level_path == NEXT[number], "%s encadena con la escena siguiente" % label)
 	_check(level.time_limit == 70.0, "%s tiene 70 segundos" % label)
 	_check(LevelRegistry.is_implemented(number) and LevelRegistry.get_level(number).display_name == NAMES[number], "%s está en el registro como %s" % [label, NAMES[number]])

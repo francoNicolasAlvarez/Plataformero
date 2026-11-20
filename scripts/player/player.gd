@@ -1,18 +1,13 @@
 class_name Player
 extends CharacterBody2D
 ## Controlador principal del personaje.
-## Mantiene separadas las estadísticas (PlayerStats) y los datos de ataque
-## (AttackData) para poder reutilizarlos con otros personajes y armas.
+## Mantiene las estadísticas en un recurso aparte (PlayerStats) para poder
+## reutilizarlas con otros personajes. El juego no tiene combate del jugador.
 
 signal jumped
 signal dashed
 signal landed
-signal attack_started(attack: AttackData)
-signal attack_finished
 signal died
-signal weapon_range_changed(current_range: int)
-
-const BASE_WEAPON_RANGE := 20
 
 const ANIM_IDLE := &"idle"
 const ANIM_WALK := &"walk"
@@ -22,9 +17,6 @@ const ANIM_FALL := &"fall"
 const ANIM_DEATH := &"death"
 
 @export var stats: PlayerStats
-@export var basic_attack: AttackData
-@export_range(1, 999, 1) var weapon_range: int = BASE_WEAPON_RANGE
-@export_range(0.5, 20.0, 0.1) var range_pixels_per_point: float = 2.3
 @export var inverted_gravity: bool = false
 @export var inverted_controls: bool = false
 ## Viento (2026-11-17): velocidad horizontal que le suma un WindField (px/s, el signo
@@ -34,20 +26,14 @@ var wind_speed: float = 0.0
 
 @onready var visual: AnimatedSprite2D = $Visual/AnimatedSprite2D
 @onready var visual_root: Node2D = $Visual
-@onready var slash: Polygon2D = $Visual/Slash
-@onready var attack_hitbox: AttackHitbox = $AttackHitbox
 @onready var health: Health = $Health
 
 var _facing: int = 1
 var _is_running: bool = false
-var _is_attacking: bool = false
-var _attack_cooldown_left: float = 0.0
-var _attack_time_left: float = 0.0
 var _coyote_left: float = 0.0
 var _jump_buffer_left: float = 0.0
 var _jump_hold_left: float = 0.0
 var _jumps_used: int = 0
-var _slash_tween: Tween
 var _death_tween: Tween
 var _squash_tween: Tween
 var _dust: CPUParticles2D
@@ -57,6 +43,11 @@ var _invulnerability_left: float = 0.0
 var _is_dead: bool = false
 var _dash_time_left: float = 0.0
 var _dash_cooldown_left: float = 0.0
+## Intangibilidad (2026-11-19): durante el impulso y un instante después el
+## jugador atraviesa a los enemigos (excepciones de colisión) y no recibe su daño.
+const DASH_GRACE_TIME := 0.15
+var _intangible_left: float = 0.0
+var _intangible_active: bool = false
 var _dash_direction: float = 1.0
 var _afterimage_left: float = 0.0
 
@@ -66,8 +57,6 @@ const AFTERIMAGE_INTERVAL := 0.035
 func _ready() -> void:
 	if stats == null:
 		stats = PlayerStats.new()
-	if basic_attack == null:
-		basic_attack = AttackData.new()
 
 	configure_gravity()
 	configure_controls()
@@ -108,6 +97,7 @@ func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
 	_update_jump_windows(delta)
 	_handle_dash_input()
+	_update_intangibility(delta)
 	if _dash_time_left > 0.0:
 		_run_dash(delta)
 	else:
@@ -133,18 +123,12 @@ func _physics_process(delta: float) -> void:
 
 func _tick_timers(delta: float) -> void:
 	_dash_cooldown_left = maxf(0.0, _dash_cooldown_left - delta)
-	_attack_cooldown_left = maxf(0.0, _attack_cooldown_left - delta)
 
 	if _invulnerability_left > 0.0:
 		_invulnerability_left = maxf(0.0, _invulnerability_left - delta)
 		visual.modulate.a = 0.45 if fmod(_invulnerability_left * 14.0, 2.0) > 1.0 else 1.0
 		if _invulnerability_left <= 0.0:
 			visual.modulate = Color.WHITE
-
-	if _is_attacking:
-		_attack_time_left -= delta
-		if _attack_time_left <= 0.0:
-			_finish_attack()
 
 
 func _update_jump_windows(delta: float) -> void:
@@ -271,6 +255,37 @@ func is_dashing() -> bool:
 	return _dash_time_left > 0.0
 
 
+## Cierto durante el impulso y los instantes posteriores (margen para no quedar
+## pegado a un enemigo atravesado y recibir daño al terminar).
+func is_intangible() -> bool:
+	return _dash_time_left > 0.0 or _intangible_left > 0.0
+
+
+func _update_intangibility(delta: float) -> void:
+	if _dash_time_left > 0.0:
+		_intangible_left = DASH_GRACE_TIME
+	elif _intangible_left > 0.0:
+		_intangible_left = maxf(0.0, _intangible_left - delta)
+	if is_intangible():
+		_set_enemy_exceptions(true)
+	elif _intangible_active:
+		_set_enemy_exceptions(false)
+
+
+## Añade o quita las excepciones de colisión con todos los enemigos que tengan
+## `intangible_during_dash` (se refresca cada fotograma para incluir a los que
+## aparecen durante el impulso).
+func _set_enemy_exceptions(enabled: bool) -> void:
+	_intangible_active = enabled
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not enemy is PhysicsBody2D or not bool(enemy.get("intangible_during_dash")):
+			continue
+		if enabled:
+			add_collision_exception_with(enemy)
+		else:
+			remove_collision_exception_with(enemy)
+
+
 func _apply_gravity(delta: float) -> void:
 	if is_on_floor():
 		velocity.y = _gravity_sign * maxf(velocity.y * _gravity_sign, 0.0)
@@ -348,7 +363,7 @@ func take_damage(amount: int, source: Node = null) -> void:
 	if _is_dead or _invulnerability_left > 0.0 or amount <= 0:
 		return
 	# Durante el impulso se atraviesan enemigos y proyectiles (no trampas).
-	if is_dashing() and _is_dash_ignored_source(source):
+	if is_intangible() and _is_dash_ignored_source(source):
 		return
 
 	# Cualquier golpe normal consume uno de los tres impactos permitidos.
@@ -381,8 +396,6 @@ func _apply_knockback(source: Node) -> void:
 
 func _on_health_died() -> void:
 	_is_dead = true
-	attack_hitbox.deactivate()
-	slash.visible = false
 	velocity = Vector2.ZERO
 	visual.play(ANIM_DEATH)
 	visual.modulate = Color(1.0, 0.55, 0.55, 1.0)
@@ -438,86 +451,7 @@ func revive(spawn_position: Vector2) -> void:
 	set_physics_process(true)
 
 
-func _handle_attack() -> void:
-	if not Input.is_action_just_pressed("attack"):
-		return
-	if _is_attacking or _attack_cooldown_left > 0.0:
-		return
-
-	_start_attack()
-
-
-func _start_attack() -> void:
-	_is_attacking = true
-	_attack_time_left = basic_attack.duration
-	_attack_cooldown_left = basic_attack.cooldown
-
-	var attack := build_attack_data()
-	Sfx.play("attack", -11.0)
-	visual.play(attack.animation_name)
-	attack_hitbox.activate(attack, _facing)
-	_show_slash(attack)
-	attack_started.emit(attack)
-
-
-func add_weapon_range(amount: int) -> void:
-	if amount <= 0:
-		return
-	weapon_range += amount
-	weapon_range_changed.emit(weapon_range)
-
-
-func build_attack_data() -> AttackData:
-	var extra_range := maxi(0, weapon_range - BASE_WEAPON_RANGE)
-	if extra_range == 0:
-		return basic_attack
-
-	var width := basic_attack.hitbox_size.x + float(extra_range) * range_pixels_per_point
-	var width_scale := width / basic_attack.hitbox_size.x
-	var attack := basic_attack.duplicate(true) as AttackData
-	attack.hitbox_size.x = width
-	attack.hitbox_offset.x = basic_attack.hitbox_offset.x * width_scale
-	return attack
-
-
-func _finish_attack() -> void:
-	_is_attacking = false
-	attack_hitbox.deactivate()
-	attack_finished.emit()
-	_update_animation()
-
-
-func _show_slash(attack: AttackData) -> void:
-	if _slash_tween != null and _slash_tween.is_valid():
-		_slash_tween.kill()
-
-	var width_scale := attack.hitbox_size.x / basic_attack.hitbox_size.x
-	slash.visible = true
-	slash.modulate.a = 1.0
-	slash.position = Vector2(attack.hitbox_offset.x * float(_facing), -2.0)
-	slash.scale = Vector2(float(_facing) * width_scale, 1.0)
-	slash.rotation = -0.15 * float(_facing)
-
-	_slash_tween = create_tween()
-	_slash_tween.tween_property(slash, "modulate:a", 0.0, attack.duration)
-	_slash_tween.parallel().tween_property(
-		slash,
-		"scale",
-		Vector2(float(_facing) * width_scale * 1.35, 1.35),
-		attack.duration
-	)
-	_slash_tween.tween_callback(_hide_slash)
-
-
-func _hide_slash() -> void:
-	slash.visible = false
-	slash.scale = Vector2.ONE
-
-
 func _update_animation() -> void:
-	if _is_attacking:
-		return
-
 	var next_animation := ANIM_IDLE
 
 	if not is_on_floor():

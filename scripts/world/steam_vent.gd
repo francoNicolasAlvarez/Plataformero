@@ -20,6 +20,7 @@ func _ready() -> void:
 	super._ready()
 	_build()
 	_apply_visual(State.IDLE)
+	set_process(false)  # la animación solo hace falta durante el aviso y el chorro
 
 
 func _build() -> void:
@@ -92,6 +93,7 @@ func _on_reset() -> void:
 func _apply_visual(for_state: int) -> void:
 	if _shape == null:
 		return
+	set_process(for_state == State.WARNING or for_state == State.ACTIVE)
 	_shape.set_deferred("disabled", for_state != State.ACTIVE)
 	_mouth.position.x = 0.0
 	match for_state:

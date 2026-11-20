@@ -17,7 +17,7 @@ const FALLBACK_SPEED := 700.0
 
 @export_range(100.0, 900.0, 10.0) var throw_range: float = 560.0
 @export_range(60.0, 400.0, 10.0) var min_range: float = 120.0
-@export_range(0.5, 6.0, 0.05) var throw_interval: float = 4.4
+@export_range(0.5, 6.0, 0.05) var throw_interval: float = 3.52
 @export_range(0.0, 3000.0, 10.0) var gravity: float = 1400.0
 @export var boulder_gravity: float = 1200.0
 

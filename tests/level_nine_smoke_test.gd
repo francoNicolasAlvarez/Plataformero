@@ -25,7 +25,7 @@ func _run() -> void:
 	var world := level.get_node_or_null("LevelNineGenerated")
 
 	_check(level.level_variant == 9, "El nivel 9 usa la variante RUINAS")
-	_check(level.level_name == "NIVEL 9", "El nivel se identifica como NIVEL 9")
+	_check(level.level_name == "NIVEL 2-4", "El nivel se identifica como NIVEL 2-4")
 	_check(level.next_level_path == "res://scenes/levels/level_ten.tscn", "El nivel 9 lleva al nivel 10")
 	_check(level.time_limit == 70.0, "El nivel 9 tiene 70 segundos")
 	_check(world != null, "Se generó el escenario del nivel 9")

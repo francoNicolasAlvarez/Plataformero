@@ -5,8 +5,9 @@ extends Control
 ## panel con el resumen y las opciones. Solo emite señales: quien la crea
 ## decide qué hacer (recargar nivel, menú, cerrar).
 ## Botones (nombres de nodo estables para los tests): RetryLevelButton,
-## RestartGroupButton (solo si el nivel no abre su grupo), FirstLevelButton
-## (solo si no se está ya en el nivel 1), MainMenuButton y QuitButton.
+## RestartGroupButton (solo si el nivel no es el primero de su zona),
+## FirstLevelButton (solo si no se está ya en la zona 1), MainMenuButton y
+## QuitButton.
 
 signal retry_requested
 signal group_restart_requested
@@ -26,7 +27,9 @@ var black: ColorRect
 var buttons: Array[Button] = []
 
 
-func build(level_number: int, level_name: String, group_name: String, group_first_level: int,
+## `level_code` es el código "zona-nivel" (p. ej. "3-4"); `world_number` e
+## `index_in_world` son sus dos partes.
+func build(level_code: String, level_name: String, world_number: int, index_in_world: int,
 		time_text: String, deaths: int) -> void:
 	name = "GameOverChoice"
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -87,7 +90,7 @@ func build(level_number: int, level_name: String, group_name: String, group_firs
 
 	column.add_child(_divider())
 
-	var subtitle := _label("Te has quedado sin vidas en el nivel %d · %s" % [level_number, level_name], 15, MenuStyle.CREAM)
+	var subtitle := _label("Te has quedado sin vidas en el nivel %s · %s" % [level_code, level_name], 15, MenuStyle.CREAM)
 	subtitle.name = "SubtitleLabel"
 	column.add_child(subtitle)
 	var stats := _label("Tiempo %s   ·   Muertes en este nivel: %d" % [time_text, deaths], 13, MenuStyle.SKY_PALE)
@@ -98,11 +101,11 @@ func build(level_number: int, level_name: String, group_name: String, group_firs
 	spacer.custom_minimum_size = Vector2(0.0, 6.0)
 	column.add_child(spacer)
 
-	_add_button(column, "RetryLevelButton", "REINTENTAR NIVEL %d" % level_number, MenuStyle.Variant.PRIMARY, retry_requested)
-	if group_first_level != level_number:
-		_add_button(column, "RestartGroupButton", "EMPEZAR «%s» DESDE EL NIVEL %d" % [group_name, group_first_level], MenuStyle.Variant.SECONDARY, group_restart_requested)
-	if level_number != 1 and group_first_level != 1:
-		_add_button(column, "FirstLevelButton", "VOLVER AL NIVEL 1", MenuStyle.Variant.SECONDARY, first_level_requested)
+	_add_button(column, "RetryLevelButton", "REINTENTAR NIVEL %s" % level_code, MenuStyle.Variant.PRIMARY, retry_requested)
+	if index_in_world != 1:
+		_add_button(column, "RestartGroupButton", "VOLVER A EMPEZAR ZONA %d" % world_number, MenuStyle.Variant.SECONDARY, group_restart_requested)
+	if world_number != 1:
+		_add_button(column, "FirstLevelButton", "VOLVER A ZONA 1", MenuStyle.Variant.SECONDARY, first_level_requested)
 	_add_button(column, "MainMenuButton", "VOLVER AL MENÚ PRINCIPAL", MenuStyle.Variant.SECONDARY, main_menu_requested)
 	_add_button(column, "QuitButton", "CERRAR JUEGO", MenuStyle.Variant.DANGER, quit_requested)
 

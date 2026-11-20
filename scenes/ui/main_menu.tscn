@@ -178,7 +178,7 @@ text = "CERRAR JUEGO"
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.827451, 0.247059, 1)
 theme_override_font_sizes/font_size = 14
-text = "NIVEL 1 DE 40 · MUNDO 1 DE 8"
+text = "NIVEL 1-1 · ZONA 1 DE 8"
 horizontal_alignment = 1
 
 [node name="InstructionsPanel" type="PanelContainer" parent="."]
@@ -286,7 +286,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(700, 0)
 theme_override_colors/font_color = Color(0.87, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "Vidas: tienes 3 por nivel; al morir reapareces en el último control con la cuenta regresiva reiniciada. Si se agotan, eliges repetir el nivel o empezar el mundo.
+text = "Vidas: tienes 3 por nivel; al morir reapareces en el último control con la cuenta regresiva reiniciada. Si se agotan, eliges repetir el nivel o volver a empezar la zona.
 Correr: el personaje corre siempre por defecto.
 Doble salto: disponible siempre en el aire; pulsa saltar otra vez para impulsarte.
 Impulso: pulsa Ctrl para lanzarte rápido hacia delante; no cuenta como salto y mientras dura atraviesas enemigos y proyectiles sin recibir daño (las trampas sí hacen daño).

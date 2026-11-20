@@ -42,7 +42,7 @@ func _run() -> void:
 	await _wait_physics(12)
 
 	_check(completed.visible, "Al tocar el portal aparece el mensaje de nivel completado")
-	_check(completed.text.begins_with("NIVEL 1 COMPLETADO"), "El mensaje indica el nivel completado")
+	_check(completed.text.begins_with("NIVEL 1-1 COMPLETADO"), "El mensaje indica el nivel completado")
 	_check(completed.text.contains("MEDALLA ORO"), "El resumen muestra la medalla conseguida")
 	_check(not completed.text.contains("Recursos"), "El resumen ya no cuenta recursos")
 	_check(not player.is_physics_processing(), "El jugador deja de moverse al completar el nivel")

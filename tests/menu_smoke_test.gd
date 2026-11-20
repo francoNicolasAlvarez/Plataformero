@@ -61,8 +61,8 @@ func _run() -> void:
 			arrow_kept = true
 	_check(arrow_kept, "Las flechas siguen moviendo al jugador tras aplicar los ajustes")
 	_check(
-		total_label.text.contains("NIVEL") and total_label.text.contains("DE 40")
-		and total_label.text.contains("MUNDO"),
+		total_label.text.contains("NIVEL") and total_label.text.contains("DE 8")
+		and total_label.text.contains("ZONA"),
 		"El menú muestra el nivel, los 40 niveles y el mundo"
 	)
 	var level_select: ScrollContainer = menu.get_node_or_null("LevelSelectPanel/Margin/VBox/LevelSelect")

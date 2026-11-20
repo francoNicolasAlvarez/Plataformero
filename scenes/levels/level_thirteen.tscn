@@ -5,5 +5,5 @@
 [node name="LevelThirteen" instance=ExtResource("1_base")]
 level_variant = 13
 next_level_path = "res://scenes/levels/level_fourteen.tscn"
-level_name = "NIVEL 13"
+level_name = "NIVEL 3-3"
 time_limit = 70.0

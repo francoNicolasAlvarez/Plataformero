@@ -47,7 +47,10 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if _hit:
 		return
-	if body is Player and (body as Player).is_dashing():
+	# Las rocas del bruto no chocan con su propia pila de rocas.
+	if body is RockPile:
+		return
+	if body is Player and (body as Player).is_intangible():
 		return
 	_hit = true
 	if body is Player:

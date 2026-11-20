@@ -1,9 +1,7 @@
 [gd_scene load_steps=19 format=3]
 
-[ext_resource type="Script" path="res://scripts/player/attacks/attack_hitbox.gd" id="1_hitbox"]
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="2_player"]
 [ext_resource type="Resource" path="res://resources/player/player_stats.tres" id="3_stats"]
-[ext_resource type="Resource" path="res://resources/player/attacks/basic_attack.tres" id="4_attack"]
 [ext_resource type="Texture2D" path="res://assets/player/player_idle_1.svg" id="5_idle1"]
 [ext_resource type="Texture2D" path="res://assets/player/player_idle_2.svg" id="6_idle2"]
 [ext_resource type="Texture2D" path="res://assets/player/player_walk_1.svg" id="7_walk1"]
@@ -12,16 +10,11 @@
 [ext_resource type="Texture2D" path="res://assets/player/player_run_2.svg" id="10_run2"]
 [ext_resource type="Texture2D" path="res://assets/player/player_jump.svg" id="11_jump"]
 [ext_resource type="Texture2D" path="res://assets/player/player_fall.svg" id="12_fall"]
-[ext_resource type="Texture2D" path="res://assets/player/player_attack.svg" id="13_attack"]
 [ext_resource type="Script" path="res://scripts/combat/health.gd" id="14_health"]
 [ext_resource type="Texture2D" path="res://assets/player/player_death.svg" id="15_death"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(30, 48)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
-resource_local_to_scene = true
-size = Vector2(46, 34)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_player"]
 animations = [{
@@ -76,14 +69,6 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("13_attack")
-}],
-"loop": false,
-"name": &"attack",
-"speed": 1.0
-}, {
-"frames": [{
-"duration": 1.0,
 "texture": ExtResource("15_death")
 }],
 "loop": false,
@@ -97,7 +82,6 @@ collision_mask = 5
 floor_snap_length = 6.0
 script = ExtResource("2_player")
 stats = ExtResource("3_stats")
-basic_attack = ExtResource("4_attack")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
@@ -115,23 +99,7 @@ sprite_frames = SubResource("SpriteFrames_player")
 animation = &"idle"
 autoplay = "idle"
 
-[node name="Slash" type="Polygon2D" parent="Visual"]
-visible = false
-position = Vector2(22, -2)
-color = Color(0.607843, 0.905882, 1, 0.85)
-polygon = PackedVector2Array(0, -30, 10, -22, 24, -12, 34, 0, 24, 12, 10, 22, 0, 30, 8, 10, 8, -10)
-
 [node name="Health" type="Node" parent="."]
 script = ExtResource("14_health")
 max_health = 3
 
-[node name="AttackHitbox" type="Area2D" parent="."]
-collision_layer = 8
-collision_mask = 4
-monitoring = false
-monitorable = false
-script = ExtResource("1_hitbox")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
-shape = SubResource("RectangleShape2D_attack")
-disabled = true

@@ -131,6 +131,21 @@ func _run() -> void:
 				near_pile = true
 		_check(near_pile, "%s está de pie junto a una pila de rocas" % level_brute.name)
 
+	# Las rocas del bruto no se frenan contra su propia pila de rocas.
+	var test_pile := RockPile.new()
+	test_pile.position = Vector2(2000.0, 640.0)
+	root.add_child(test_pile)
+	var passing := ThrownBoulder.new()
+	passing.velocity = Vector2.ZERO
+	passing.fall_gravity = 0.0
+	root.add_child(passing)
+	passing.global_position = Vector2(2000.0, 600.0)
+	await _wait_physics(10)
+	_check(is_instance_valid(passing) and not passing.is_queued_for_deletion(), "El peñasco no se rompe contra la pila de rocas")
+	var fresh_brute := BruteEnemy.new()
+	_check(is_equal_approx(fresh_brute.throw_interval, 4.4 / 1.25), "El bruto lanza un 25 %% más a menudo (%.2f s)" % fresh_brute.throw_interval)
+	fresh_brute.free()
+
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)

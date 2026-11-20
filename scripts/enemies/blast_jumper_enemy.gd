@@ -15,17 +15,17 @@ signal blasted(position: Vector2, radius: float)
 enum State { IDLE, WINDUP, AIR, REST }
 
 const FEET_OFFSET := 17.0
-const SHORT_DISTANCE := 380.0
-const LONG_DISTANCE := 540.0
+const SHORT_DISTANCE := 470.0
+const LONG_DISTANCE := 640.0
 
 @export var long_jump: bool = false
-@export_range(100.0, 900.0, 10.0) var detect_range: float = 420.0
+@export_range(100.0, 900.0, 10.0) var detect_range: float = 520.0
 @export_range(40.0, 400.0, 5.0) var detect_height: float = 200.0
 @export_range(0.0, 4000.0, 10.0) var gravity: float = 2000.0
 @export_range(200.0, 1400.0, 10.0) var jump_speed: float = 720.0
 @export_range(0.2, 3.0, 0.05) var windup_time: float = 0.7
 @export_range(0.5, 8.0, 0.1) var rest_time: float = 5.0
-@export_range(60.0, 400.0, 5.0) var wave_radius: float = 150.0
+@export_range(60.0, 400.0, 5.0) var wave_radius: float = 260.0
 
 var state: State = State.IDLE
 var max_distance: float = SHORT_DISTANCE
@@ -45,7 +45,7 @@ func _ready() -> void:
 		windup_time = maxf(windup_time, 1.1)
 		rest_time = maxf(rest_time, 6.0)
 		jump_speed = 820.0
-		wave_radius = 190.0
+		wave_radius = 340.0
 
 
 func _reset_state() -> void:
@@ -135,7 +135,12 @@ func _launch() -> void:
 	var target := get_tree().get_first_node_in_group("player") as Node2D
 	last_target_x = global_position.x
 	if target != null:
-		var dx := clampf(target.global_position.x - global_position.x, -max_distance, max_distance)
+		# Apunta a donde estará el jugador al aterrizar (2026-11-18) para que la
+		# explosión caiga lo más cerca posible de él.
+		var predicted_x := target.global_position.x
+		if target is CharacterBody2D:
+			predicted_x += (target as CharacterBody2D).velocity.x * air_time() * 0.85
+		var dx := clampf(predicted_x - global_position.x, -max_distance, max_distance)
 		# Si donde aterrizaría no hay suelo, acorta el salto (hasta saltar en el sitio).
 		for _attempt in 4:
 			if absf(dx) < 8.0 or _has_floor_at(global_position.x + dx):

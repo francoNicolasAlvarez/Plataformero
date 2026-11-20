@@ -37,7 +37,7 @@ func _run() -> void:
 	await _wait_physics(30)
 
 	_check(level.level_variant == 4, "El nivel 4 usa la variante del gran pozo")
-	_check(level.level_name == "NIVEL 4", "El nivel se identifica como NIVEL 4")
+	_check(level.level_name == "NIVEL 1-4", "El nivel se identifica como NIVEL 1-4")
 	_check(level.next_level_path == NEXT_SCENE, "El nivel 4 continúa hacia el nivel 5")
 	_check(level.time_limit == 70.0, "El nivel 4 tiene 70 segundos")
 	_check(level.get_node_or_null("LevelFourGenerated") != null, "Se generó el contenido del gran pozo")

@@ -103,7 +103,7 @@ func _run() -> void:
 	_check(apex_index > 3 and apex_index < heights.size() - 3, "Salta en parábola: sube y luego baja")
 	_check(air_frames <= 50, "El salto es rápido (%d frames en el aire)" % air_frames)
 	_check(absf(landing_x - 300.0) < 25.0, "Aterriza hacia la posición del jugador (x=%.0f)" % landing_x)
-	_check(blasts.size() >= 1 and is_equal_approx(blasts[0], 150.0), "Al aterrizar genera una onda expansiva de 150 px")
+	_check(blasts.size() >= 1 and is_equal_approx(blasts[0], 260.0), "Al aterrizar genera una onda expansiva de 260 px")
 	_check(wave_radius_early > 20.0, "La onda se expande (radio %.0f px a los 0,2 s)" % wave_radius_early)
 	_check(rest_frames >= 120, "Necesita unos segundos para volver a prepararse (%d frames)" % rest_frames)
 	world.queue_free()

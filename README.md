@@ -79,6 +79,26 @@ Durante la partida, **Enter** abre el menú de pausa: continuar, consultar la
 guía de controles, ajustar brillo/volumen/teclas, volver al menú principal o
 salir del juego.
 
+## Unidad de medida
+
+El juego mide en **píxeles** del mundo. Como referencia visual se usa la unidad
+**J (un Jugador)** = 48 px, la altura del personaje (su ancho es 30 px). Ejemplos:
+
+| Objeto | Píxeles | En J |
+| --- | --- | --- |
+| Jugador (alto) | 48 | 1 |
+| Muro bajo del laberinto | 96 | 2 |
+| Altura de un salto | 125 | 2,6 |
+| Impulso (distancia) | 205 | 4,3 |
+| Pasillo del laberinto (alto) | 288 | 6 |
+| Foso entre tramos | 300 | 6,3 |
+| Onda del saltador explosivo (radio) | 260 | 5,4 |
+| Pantalla | 1152 x 648 | 24 x 13,5 |
+| Correr | 532 px/s | 11 J/s |
+
+La utilidad `GameUnits` (`scripts/core/game_units.gd`) convierte entre píxeles,
+J y metros aproximados (jugador = 1,7 m).
+
 ## Elementos del nivel
 
 - **Hierba curativa:** restaura vida al recogerla.

@@ -48,13 +48,13 @@ func _ready() -> void:
 func _pass_status_text(config: LevelConfig) -> String:
 	if SaveGame.last_world_cleared > 0:
 		return "
-¡MUNDO %d SUPERADO! Se desbloquea el mundo %d." % [SaveGame.last_world_cleared, SaveGame.last_world_cleared + 1]
+¡ZONA %d SUPERADA! Se desbloquea la zona %d." % [SaveGame.last_world_cleared, SaveGame.last_world_cleared + 1]
 	if SaveGame.world_run == config.world_number and SaveGame.world_run > 0:
 		return "
-PASADA DEL MUNDO %d: %d/%d niveles seguidos." % [SaveGame.world_run, SaveGame.world_run_progress, SaveGame.world_run_total()]
+PASADA DE LA ZONA %d: %d/%d niveles seguidos." % [SaveGame.world_run, SaveGame.world_run_progress, SaveGame.world_run_total()]
 	if not SaveGame.is_world_cleared(config.world_number):
 		return "
-Práctica: para desbloquear el siguiente mundo completa sus niveles seguidos desde el primero."
+Práctica: para desbloquear la siguiente zona completa sus niveles seguidos desde el primero."
 	return ""
 
 

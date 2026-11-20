@@ -67,7 +67,7 @@ scenes/
   ui/level_results.tscn    # resultados por nivel: tiempo, medalla, muertes y mejor marca
   levels/test_level.tscn   # BASE de los 8 niveles (HUD, jugador, portal, cámara)
   levels/level_one|two|three|four|five|six|seven|eight.tscn  # variantes 1-8
-  player/player.tscn       # Player + AttackHitbox + Health
+  player/player.tscn       # Player + Health
   enemies/                 # training_dummy, walker, ranged, spread, projectile
   pickups/                 # healing_herb (monedas eliminadas, ver ítem 24)
   world/                   # platform, moving_platform, saw/spike_trap, fall_zone,
@@ -77,7 +77,6 @@ scenes/
 scripts/
   player/    # player.gd (movimiento, salto/doble salto, caída rápida, gravedad invertida y controles espejo),
              # player_stats.gd,
-             # attacks/ (attack_data.gd + attack_hitbox.gd)
   enemies/   # jerarquía: TrainingDummy -> RangedEnemy/SpreadEnemy/WalkerEnemy;
              # flying_enemy.gd + flying_spawner.gd (voladores ondulantes),
              # enemy_visual_variant.gd (sombrero triangular y ojos del nivel 7),
@@ -104,19 +103,19 @@ scripts/
   fx/        # particles.gd (class_name Fx: fábrica de partículas procedurales)
   world/, decor/, camera/, pickups/  # decor/mountain_builder.gd: capas de
              # detalle (nieve/cresta/sombra/arbolitos) para las colinas
-resources/player/  # player_stats.tres y basic_attack.tres (AttackData)
+resources/player/  # player_stats.tres
 resources/levels/  # level_config.gd y world_config.gd (configuración declarativa)
 assets/fx/spark.svg # textura de punto blanco para todas las partículas
 assets/enemies/    # fireball.svg y crossbow_bolt.svg (proyectiles de mago/soldado)
 assets/decor/      # tree/bush/cloud/bird/sun.svg (rediseñados con detalle)
-tests/       # smoke tests headless, uno por sistema (57 en total)
+tests/       # smoke tests headless, uno por sistema (59 en total)
 ```
 
 Decisiones clave:
 - Los 8 niveles son instancias de una misma escena base; cada variante limpia
   el contenido base y genera su mundo por código (`scripts/levels/*_layout.gd`).
-- Los datos sensibles van en `Resource` exportables (`PlayerStats`,
-  `AttackData`) para reutilizarlos con futuros personajes/armas.
+- Los datos sensibles van en `Resource` exportables (`PlayerStats`)
+  para reutilizarlos con futuros personajes.
 - Comunicación entre sistemas mediante señales de Godot.
 - El jugador muere con 3 golpes (cualquier daño normal consume 1 golpe;
   los valores >= 9999 son letales instantáneos: pozos y cronómetro). La
@@ -1459,6 +1458,71 @@ actualizar esos tests.
       (índice 18 en `Sfx._build_music`).
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
+74. **Pulido, limpieza y ajustes de enemigos (2026-11-18)**:
+    - **Babosa**: descansa 0,6-1,2 s entre saltos (antes 1,3-2,4 s).
+    - **Saltador explosivo**: onda de 260 px de radio (340 el de salto largo;
+      antes 150/190), detecta desde 520 px, salta hasta 470/640 px y apunta a
+      donde estará el jugador al aterrizar (posición + velocidad x tiempo de
+      vuelo x 0,85), para explotar lo más cerca posible.
+    - **Unidad de referencia**: `GameUnits` (`scripts/core/game_units.gd`) define
+      la unidad **J = 48 px** (altura del jugador; ancho 30 px) con conversiones
+      y una tabla en el README (muro del laberinto 2 J, salto 2,6 J, impulso
+      4,3 J, pantalla 24 J, correr 11 J/s). Todo el juego mide en píxeles.
+    - **Gráficos** (guías de game feel de Godot 4): `ScreenFx`
+      (`scripts/fx/screen_fx.gd`) añade una viñeta radial suave (capa 8, bajo
+      el HUD) a todos los niveles y un hit-stop de 0,07 s (tiempo al 6 %,
+      temporizador que ignora la escala de tiempo) al recibir daño; en headless no
+      hace nada para no alterar los tests. Ya existían squash & stretch,
+      polvo, estelas del impulso y sacudida de cámara.
+    - **Código en desuso eliminado**: todo el sistema de ataque del jugador
+      (`scripts/player/attacks/`, `basic_attack.tres`, nodo `AttackHitbox`, nodo
+      `Slash`, animación y textura `attack`, `_handle_attack`, `add_weapon_range`,
+      señales y variables de ataque) y funciones sin uso (`implemented_count`,
+      `medal_count`, `total_best_time`, `use_fire_style`, `MovingPlatform.
+      teleport_to`). Un análisis automático no encontró scripts, escenas, recursos
+      ni imágenes sin referencias.
+    - **Rendimiento**: medido en headless, el coste de física en régimen estable
+      es de 1-2,5 ms por fotograma en todos los niveles (los niveles 1 y 7, con
+      ~4800 nodos y 43 enemigos, son los más pesados); el único pico es la carga
+      inicial de escenas (~1 s la primera vez). Se apagan `_process` de las
+      plataformas que se derrumban, los respiraderos y las zonas oscuras cuando
+      no están animándose.
+    - Tests nuevos: `units_smoke_test` (9) y `screen_fx_smoke_test` (7);
+      actualizados `blast_jumper` (onda de 260) y `no_combat` (sin nodos de
+      ataque).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+75. **Impulso intangible y bruto (2026-11-19)**: el impulso ya no se atascaba
+    con los enemigos porque la capa de enemigos (4) está en la máscara del
+    jugador (5): solo evitaba el daño. Ahora `TrainingDummy` (y por herencia
+    todos los enemigos) tiene `intangible_during_dash = true` y `Player`
+    añade/quita excepciones de colisión con ellos mientras `is_intangible()`
+    (impulso + 0,15 s de margen, `DASH_GRACE_TIME`, para no quedar pegado a un
+    enemigo y recibir daño al terminar). El margen también ignora el daño de
+    enemigos y proyectiles. Las excepciones se refrescan cada fotograma, así
+    incluyen a los enemigos que aparecen durante el impulso.
+    - **Bruto**: sus peñascos (`ThrownBoulder`) ya no se rompen contra su pila
+      de rocas (`RockPile`); lanza un 25 % más a menudo (`throw_interval`
+      4,4 -> 3,52 s).
+    - Tests: `dash_pass_smoke_test` 12 (el enemigo sólido bloquea sin impulso y
+      se atraviesa con él; excepciones retiradas al terminar) y
+      `brute_enemy_smoke_test` (peñasco sobre la pila y frecuencia).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
+76. **Niveles siempre como "zona-nivel" (2026-11-20)**: todo el juego nombra
+    los niveles con su código `LevelConfig.code()` (p. ej. 3-4), igual que la
+    selección de niveles, y la palabra "mundo" pasa a "zona" en los textos del
+    jugador. `TestLevel._ready()` fija `level_name = "NIVEL zona-nivel"` desde
+    el registro (HUD, cartel de inicio, mensaje de completado); las escenas
+    `level_*.tscn` también lo llevan. Menú principal: "NIVEL 3-4 · ZONA 3 DE 8"
+    y "CONTINUAR · NIVEL 3-4". Pantalla de muerte (`GameOverScreen.build(
+    level_code, level_name, world_number, index_in_world, time_text, deaths)`):
+    subtítulo "...en el nivel 3-4", REINTENTAR NIVEL 3-4, VOLVER A EMPEZAR
+    ZONA 3 (si el nivel no es el primero de su zona) y VOLVER A ZONA 1 (si no
+    se está en la zona 1). Resultados: "¡ZONA n SUPERADA!" y "PASADA DE LA ZONA".
+    Tests ajustados (`survival`, `menu`, `exit`, `world_unlock`, `level_*`).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
 - Suite de 52 smoke tests en verde (verificado en esta sesión) tras aplicar
@@ -1495,7 +1559,7 @@ actualizar esos tests.
   amarillo y ojos almendrados. El nivel 8 reutiliza el nivel 2 como espejo
   horizontal con controles invertidos y recorrido de derecha a izquierda.
   El ejecutable de `dist/` incluye los ítems 18-46, todavía no del 47 en adelante.
-- Suite de 57 smoke tests en verde tras los ítems 49-70: 20 niveles jugables
+- Suite de 59 smoke tests en verde tras los ítems 49-70: 20 niveles jugables
   en 4 mundos (praderas, ruinas, desierto, cavernas), medallas calibradas por
   longitud de recorrido y la base de obstáculos `Hazard`/`GimmickZone`
   (plataformas que se derrumban, respiraderos, zonas oscuras).

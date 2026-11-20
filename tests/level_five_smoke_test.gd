@@ -30,7 +30,7 @@ func _run() -> void:
 		spawner.active = false
 
 	_check(level.level_variant == 5, "El nivel 5 usa la variante CIELO")
-	_check(level.level_name == "NIVEL 5", "El nivel se identifica como NIVEL 5")
+	_check(level.level_name == "NIVEL 1-5", "El nivel se identifica como NIVEL 1-5")
 	_check(level.next_level_path == NEXT_SCENE, "El nivel 5 continúa hacia el nivel 6")
 	_check(level.time_limit == 70.0, "El nivel 5 tiene 70 segundos")
 	_check(level.get_node_or_null("LevelFiveGenerated") != null, "Se generó el cielo del nivel 5")

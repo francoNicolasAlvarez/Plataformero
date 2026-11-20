@@ -49,9 +49,8 @@ func _ready() -> void:
 	instructions_panel.visible = false
 	_add_backdrop()
 	var world_number := LevelRegistry.get_world_for_level(SaveGame.level).number
-	total_label.text = "NIVEL %d DE %d · MUNDO %d DE %d" % [
-		SaveGame.level,
-		SaveGame.LAST_LEVEL,
+	total_label.text = "NIVEL %s · ZONA %d DE %d" % [
+		LevelRegistry.get_level(SaveGame.level).code(),
 		world_number,
 		LevelRegistry.WORLD_COUNT,
 	]
@@ -127,7 +126,7 @@ func _refresh_play_button() -> void:
 	## Con progreso guardado el botón avisa de que continúa; el nivel 1 sigue
 	## accesible desde SELECCIÓN DE NIVEL.
 	if SaveGame.level > SaveGame.FIRST_LEVEL and not SaveGame.completed:
-		play_button.text = "CONTINUAR · NIVEL %d" % SaveGame.level
+		play_button.text = "CONTINUAR · NIVEL %s" % LevelRegistry.get_level(SaveGame.level).code()
 	else:
 		play_button.text = "INICIO"
 
@@ -196,7 +195,7 @@ func _build_level_selector() -> void:
 
 	var rule := Label.new()
 	rule.name = "UnlockRuleLabel"
-	rule.text = "Practica cada nivel por separado. Para abrir el siguiente mundo, completa todos los del mundo seguidos en una misma pasada."
+	rule.text = "Practica cada nivel por separado. Para abrir la siguiente zona, completa todos los niveles de la zona seguidos en una misma pasada."
 	rule.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rule.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rule.add_theme_font_size_override("font_size", 12)

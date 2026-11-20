@@ -25,7 +25,7 @@ func _run() -> void:
 	var generated := level.get_node_or_null("LevelEightGenerated")
 
 	_check(level.level_variant == 8, "El nivel 8 usa la variante ESPEJO")
-	_check(level.level_name == "NIVEL 8", "El nivel se identifica como NIVEL 8")
+	_check(level.level_name == "NIVEL 2-3", "El nivel se identifica como NIVEL 2-3")
 	_check(level.time_limit == 70.0, "El nivel 8 tiene 70 segundos")
 	_check(level.next_level_path == COMPLETE_SCENE, "El nivel 8 lleva al nivel 9")
 	_check(generated != null, "Se generó el mundo espejo del nivel 2")

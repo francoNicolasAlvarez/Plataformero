@@ -37,13 +37,6 @@ func _ready() -> void:
 	apply_style()
 
 
-func use_fire_style() -> void:
-	## Orbe azul del mago (estilo por defecto).
-	_sentry_style = false
-	style = Style.FIRE
-	apply_style()
-
-
 func use_sentry_style() -> void:
 	## Descarga roja del centinela del nivel 6 (2026-11-16).
 	_sentry_style = true
@@ -104,7 +97,7 @@ func _physics_process(delta: float) -> void:
 
 func _on_body_entered(body: Node2D) -> void:
 	# El impulso del jugador atraviesa los proyectiles sin dañar ni detenerlos.
-	if body is Player and (body as Player).is_dashing():
+	if body is Player and (body as Player).is_intangible():
 		return
 	if body.has_method("take_damage") and not body.is_in_group("enemies"):
 		body.take_damage(_damage_against(body), self)

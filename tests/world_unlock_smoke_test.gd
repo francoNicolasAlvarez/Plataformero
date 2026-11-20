@@ -99,7 +99,7 @@ func _run() -> void:
 	button = results.find_child("ContinueButton", true, false)
 	_check(button.text == "SIGUIENTE NIVEL", "Tras superar el mundo 1 se ofrece el siguiente nivel")
 	var subtitle: Label = results.find_child("Subtitle", true, false)
-	_check(subtitle.text.contains("SUPERADO"), "El resultado anuncia el mundo superado")
+	_check(subtitle.text.contains("SUPERADA"), "El resultado anuncia la zona superada")
 
 	print("")
 	print("Comprobaciones: %d | Fallos: %d" % [_checks, _failures])
