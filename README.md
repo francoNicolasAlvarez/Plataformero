@@ -89,7 +89,7 @@ El juego mide en **píxeles** del mundo. Como referencia visual se usa la unidad
 | Jugador (alto) | 48 | 1 |
 | Muro bajo del laberinto | 96 | 2 |
 | Altura de un salto | 125 | 2,6 |
-| Impulso (distancia) | 205 | 4,3 |
+| Impulso (distancia) | 154 | 3,2 |
 | Pasillo del laberinto (alto) | 288 | 6 |
 | Foso entre tramos | 300 | 6,3 |
 | Onda del saltador explosivo (radio) | 260 | 5,4 |

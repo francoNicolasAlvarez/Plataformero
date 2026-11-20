@@ -28,10 +28,10 @@ extends Resource
 
 @export_group("Impulso")
 @export_range(0.0, 2500.0, 10.0) var dash_speed: float = 1140.0
-@export_range(0.05, 0.6, 0.01) var dash_time: float = 0.18
+@export_range(0.05, 0.6, 0.01) var dash_time: float = 0.135
 @export_range(0.0, 2.0, 0.05) var dash_cooldown: float = 0.4
 
 @export_group("Combate")
-@export_range(0.0, 5.0, 0.05) var invulnerability_time: float = 1.0
+@export_range(0.0, 5.0, 0.05) var invulnerability_time: float = 0.2
 @export_range(0.0, 1000.0, 10.0) var knockback_force: float = 260.0
 @export_range(0.0, 1000.0, 10.0) var knockback_up_force: float = 220.0

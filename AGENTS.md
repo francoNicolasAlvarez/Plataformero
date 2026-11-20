@@ -1523,6 +1523,15 @@ actualizar esos tests.
     Tests ajustados (`survival`, `menu`, `exit`, `world_unlock`, `level_*`).
     NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
 
+77. **Impulso 25 % más corto e invulnerabilidad de 0,2 s (2026-11-20)**:
+    `dash_time` 0,18 -> 0,135 s (~154 px, 3,2 J) y
+    `PlayerStats.invulnerability_time` 1,0 -> 0,2 s (el margen de
+    invulnerabilidad tras recibir un golpe; sustituye al valor del ítem 39). El margen de
+    intangibilidad del impulso (`DASH_GRACE_TIME` 0,15 s) no cambia. Tests
+    `dash_pass`, `units` ajustados. `level_six_smoke_test` puede fallar de forma
+    intermitente con la suite en paralelo (pasa solo).
+    NOTA: el exe de `dist/` NO incluye este cambio; re-exportar cuando se pida.
+
 ## 5. En progreso / estado actual
 
 - Suite de 52 smoke tests en verde (verificado en esta sesión) tras aplicar

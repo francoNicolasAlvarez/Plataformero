@@ -21,6 +21,6 @@ jump_hold_time = 0.25
 jump_hold_acceleration = 385.0
 coyote_time = 0.1
 jump_buffer_time = 0.12
-invulnerability_time = 1.0
+invulnerability_time = 0.2
 knockback_force = 260.0
 knockback_up_force = 220.0

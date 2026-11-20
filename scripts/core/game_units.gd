@@ -11,7 +11,7 @@ extends RefCounted
 ##   muro bajo del laberinto    96   ->  2
 ##   salto normal (altura)     125   -> 2,6
 ##   salto del doble salto     ~250  -> 5,2
-##   impulso (distancia)       205   -> 4,3
+##   impulso (distancia)       154   -> 3,2
 ##   foso de los niveles       300   -> 6,3
 ##   pasillo del laberinto     288   -> 6
 ##   onda del saltador         260   -> 5,4  (radio)
@@ -39,6 +39,6 @@ static func to_meters(pixels: float) -> float:
 	return pixels / PIXELS_PER_METER
 
 
-## Texto legible: "205 px = 4,3 J".
+## Texto legible: "154 px = 3,2 J".
 static func describe(pixels: float) -> String:
 	return "%d px = %.1f J" % [roundi(pixels), to_players(pixels)]

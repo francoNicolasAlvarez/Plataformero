@@ -22,7 +22,7 @@ func _run() -> void:
 	_check(is_equal_approx(GameUnits.from_players(6.0), 288.0), "Un pasillo del laberinto mide 6 J")
 	_check(is_equal_approx(GameUnits.to_players(player.stats.run_speed), 532.0 / 48.0), "Correr son ~11 J por segundo")
 	var dash := player.stats.dash_speed * player.stats.dash_time
-	_check(absf(GameUnits.to_players(dash) - 4.3) < 0.1, "El impulso recorre ~4,3 J (%s)" % GameUnits.describe(dash))
+	_check(absf(GameUnits.to_players(dash) - 3.2) < 0.1, "El impulso recorre ~3,2 J (%s)" % GameUnits.describe(dash))
 	_check(GameUnits.to_players(1152.0) == 24.0, "La pantalla mide 24 J de ancho")
 	_check(absf(GameUnits.to_meters(48.0) - 1.7) < 0.001, "Con 1,7 m por jugador, 48 px son 1,7 m")
 	_check(GameUnits.describe(205.0) == "205 px = 4.3 J", "describe() da un texto legible")

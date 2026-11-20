@@ -24,9 +24,9 @@ func _run() -> void:
 		enemy.queue_free()
 	await _wait_physics(2)
 
-	_check(is_equal_approx(player.stats.dash_time, 0.18), "El impulso dura 0,18 s (la mitad)")
+	_check(is_equal_approx(player.stats.dash_time, 0.135), "El impulso dura 0,135 s (un 25 % menos)")
 	var distance := player.stats.dash_speed * player.stats.dash_time
-	_check(distance > 190.0 and distance < 220.0, "El impulso recorre unos 205 px (%.0f)" % distance)
+	_check(distance > 145.0 and distance < 160.0, "El impulso recorre unos 154 px (%.0f)" % distance)
 
 	var walker := (load("res://scenes/enemies/walker_enemy.tscn") as PackedScene).instantiate() as TrainingDummy
 	level.add_child(walker)
